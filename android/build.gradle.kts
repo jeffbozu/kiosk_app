@@ -1,3 +1,19 @@
+// --- Inicio bloque buildscript para Google Services ---
+buildscript {
+  repositories {
+    google()
+    mavenCentral()
+  }
+  dependencies {
+    // Plugin Android normal
+    classpath("com.android.tools.build:gradle:7.4.1")
+    // Plugin de Google Services para Firebase
+    classpath("com.google.gms:google-services:4.3.15")
+  }
+}
+// --- Fin bloque buildscript para Google Services ---
+
+
 allprojects {
     repositories {
         google()

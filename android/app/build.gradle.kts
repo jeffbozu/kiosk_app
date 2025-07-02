@@ -1,14 +1,19 @@
 plugins {
-    id("com.android.application")
-    id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
-    id("dev.flutter.flutter-gradle-plugin")
+  // 1) Plugin de Android
+  id("com.android.application")
+  // 2) Plugin de Kotlin
+  id("kotlin-android")
+  // 3) Plugin de Google Services (Firebase)
+  id("com.google.gms.google-services")
+  // 4) Plugin de Flutter (SIEMPRE al final)
+  id("dev.flutter.flutter-gradle-plugin")
 }
 
 android {
     namespace = "com.example.kiosk_app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+        // Forzar la versión de NDK requerida por Firebase plugins:
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

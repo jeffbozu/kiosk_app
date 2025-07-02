@@ -16,15 +16,15 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # Dependencias de Firebase para la app Kiosk
-  firebase_core: ^2.19.0
-  cloud_firestore: ^4.8.3
-  firebase_auth: ^4.4.3
+  firebase_core: ^3.15.0
+  cloud_firestore: ^5.6.10
+  firebase_auth: ^5.0.0
 
 # Dependencias solo para desarrollo y testing
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 # Configuración específica de Flutter
 flutter:

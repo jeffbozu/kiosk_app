@@ -7,7 +7,6 @@ version: 1.0.0+1
 environment:
   sdk: "^3.8.1"
 
-# Dependencias de tu aplicación
 dependencies:
   flutter:
     sdk: flutter
@@ -20,15 +19,14 @@ dependencies:
   cloud_firestore: ^5.6.10
   firebase_auth: ^5.0.0
 
-# Dependencias solo para desarrollo y testing
+  # Añadimos QR y envío de email
+  qr_flutter: ^4.0.0         # Para generar código QR
+  url_launcher: ^6.1.5       # Para abrir mailto: en el navegador o app
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
 
-# Configuración específica de Flutter
 flutter:
   uses-material-design: true
-
-
-

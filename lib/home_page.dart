@@ -1,5 +1,3 @@
-// lib/home_page.dart
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -40,7 +38,7 @@ class _HomePageState extends State<HomePage> {
 
   DateTime _currentTime = DateTime.now();
   Timer? _clockTimer;
-  bool _intlReady = false;    // para saber si Intl ya cargó
+  bool _intlReady = false;     // para saber si Intl ya cargó
 
   @override
   void initState() {
@@ -88,6 +86,9 @@ class _HomePageState extends State<HomePage> {
 
     final items = <DropdownMenuItem<int>>[];
     final prices = <int, double>{};
+    double newBasePrice = 0.0;
+    double newIncrement = 0.0;
+
     for (final doc in snap.docs) {
       final d = doc.data();
       final dur = d['duration'] as int;
@@ -96,11 +97,17 @@ class _HomePageState extends State<HomePage> {
         prices[dur] = (d['price'] as num).toDouble();
       }
       if (d.containsKey('basePrice')) {
-        _basePrice = (d['basePrice'] as num).toDouble();
+        newBasePrice = (d['basePrice'] as num).toDouble();
       }
       if (d.containsKey('increment')) {
-        _increment = (d['increment'] as num).toDouble();
+        newIncrement = (d['increment'] as num).toDouble();
       }
+    }
+
+    items.sort((a, b) => a.value!.compareTo(b.value!));
+    int newSelectedDuration = _selectedDuration;
+    if (!items.any((i) => i.value == newSelectedDuration)) {
+      newSelectedDuration = items.isNotEmpty ? items.first.value! : 10;
     }
 
     setState(() {
@@ -108,10 +115,9 @@ class _HomePageState extends State<HomePage> {
       _durationPrices
         ..clear()
         ..addAll(prices);
-      if (!_durationItems.any((i) => i.value == _selectedDuration)) {
-        _selectedDuration =
-            _durationItems.isNotEmpty ? _durationItems.first.value! : 10;
-      }
+      _basePrice = newBasePrice;
+      _increment = newIncrement;
+      _selectedDuration = newSelectedDuration;
       _updatePrice();
       _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
     });
@@ -243,42 +249,55 @@ class _HomePageState extends State<HomePage> {
       if (email != null) await _launchEmail(email);
     }
 
-    // 4) Temporizador de regreso
-    _startBackTimer();
+    // 4) Mostrar QR y temporizador de regreso
+    setState(() {
+      _ticketId = doc.id;
+      _backSeconds = 5;
+    });
+    _backTimer?.cancel();
+    _backTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (_backSeconds > 1) {
+        setState(() => _backSeconds--);
+      } else {
+        t.cancel();
+        setState(() {
+          _ticketId = null;
+          _plateCtrl.clear();
+          _selectedDuration = 10;
+          _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+        });
+      }
+    });
   }
 
   Future<String?> _askForEmail() async {
-    return showDialog<String?>(
+    String email = '';
+    return await showDialog<String>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) {
-        final ctrl = TextEditingController();
-        String? error;
-        return StatefulBuilder(builder: (ctx2, setState2) {
-          return AlertDialog(
-            title: const Text('Email de destino'),
-            content: TextField(
-              controller: ctrl,
-              decoration: InputDecoration(labelText: 'Email', errorText: error),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx2, null), child: const Text('Cancelar')),
-              ElevatedButton(
-                onPressed: () {
-                  final e = ctrl.text.trim();
-                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(e)) {
-                    setState2(() => error = 'Formato incorrecto');
-                    return;
-                  }
-                  Navigator.pop(ctx2, e);
-                },
-                child: const Text('Enviar'),
-              ),
-            ],
-          );
-        });
-      },
+      builder: (ctx) => AlertDialog(
+        title: const Text('Introduce tu email'),
+        content: TextField(
+          autofocus: true,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(hintText: 'correo@ejemplo.com'),
+          onChanged: (v) => email = v,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, null),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$").hasMatch(email)) {
+                Navigator.pop(ctx, email);
+              }
+            },
+            child: const Text('Enviar'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -286,28 +305,11 @@ class _HomePageState extends State<HomePage> {
     final uri = Uri(
       scheme: 'mailto',
       path: email,
-      query: Uri.encodeFull(
-        'subject=Tu ticket&body=ID: $_ticketId\nVálido hasta: $_paidUntilFormatted\nPrecio: ${_price.toStringAsFixed(2)} €\nDuración: $_selectedDuration min'
-      ),
+      query: 'subject=Ticket Kiosk&body=Tu ticket: $_ticketId',
     );
-    await launchUrl(uri);
-  }
-
-  void _startBackTimer() {
-    _backTimer?.cancel();
-    _backSeconds = 5;
-    _backTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (_backSeconds == 0) {
-        t.cancel();
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const HomePage()),
-          (route) => false,
-        );
-      } else {
-        setState(() => _backSeconds--);
-      }
-    });
-    setState(() {});
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
   }
 
   @override

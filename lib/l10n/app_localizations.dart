@@ -4,6 +4,11 @@ class AppLocalizations {
   final Locale locale;
   AppLocalizations(this.locale);
 
+  /// Retrieve the localization instance from the closest [BuildContext].
+  static AppLocalizations of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
+  }
+
   static const supportedLocales = [
     Locale('es'),
     Locale('ca'),

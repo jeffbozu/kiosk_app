@@ -131,36 +131,41 @@ class _HomePageState extends State<HomePage> {
 
   void _increaseDuration() {
     int? next;
-    final idx = _durationItems.indexWhere((i) => i.value == _selectedDuration);
-    if (idx != -1 && idx < _durationItems.length - 1) {
-      next = _durationItems[idx + 1].value;
-    } else if (_durationItems.isEmpty) {
-      next = _selectedDuration + 5;
+    if (_durationItems.isNotEmpty) {
+      final durations = _durationItems.map((e) => e.value!).toList()..sort();
+      for (final d in durations) {
+        if (d > _selectedDuration) {
+          next = d;
+          break;
+        }
+      }
     }
-    if (next != null) {
-      setState(() {
-        _selectedDuration = next!;
-        _updatePrice();
-        _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
-      });
-    }
+    next ??= _selectedDuration + 5;
+    setState(() {
+      _selectedDuration = next!;
+      _updatePrice();
+      _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+    });
   }
 
   void _decreaseDuration() {
     int? prev;
-    final idx = _durationItems.indexWhere((i) => i.value == _selectedDuration);
-    if (idx > 0) {
-      prev = _durationItems[idx - 1].value;
-    } else if (_durationItems.isEmpty && _selectedDuration > 10) {
-      prev = _selectedDuration - 5;
+    if (_durationItems.isNotEmpty) {
+      final durations = _durationItems.map((e) => e.value!).toList()..sort();
+      for (final d in durations.reversed) {
+        if (d < _selectedDuration) {
+          prev = d;
+          break;
+        }
+      }
     }
-    if (prev != null && prev >= 10) {
-      setState(() {
-        _selectedDuration = prev!;
-        _updatePrice();
-        _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
-      });
-    }
+    prev ??= _selectedDuration - 5;
+    if (prev < 10) return;
+    setState(() {
+      _selectedDuration = prev!;
+      _updatePrice();
+      _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+    });
   }
 
   String get _paidUntilFormatted {

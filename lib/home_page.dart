@@ -306,23 +306,22 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Zona (placeholder si no hay selección)
-                  _selectedZoneId == null
-                      ? const Text('Escoge zona…', style: TextStyle(color: Colors.grey))
-                      : DropdownButtonFormField<String>(
-                          decoration: const InputDecoration(labelText: 'Zona'),
-                          items: _zoneItems,
-                          value: _selectedZoneId,
-                          onChanged: (v) {
-                            setState(() {
-                              _selectedZoneId = v;
-                              _selectedDuration = 10;
-                              _durationItems = [];
-                              _updatePrice();
-                            });
-                            if (v != null) _loadDurations(v);
-                          },
-                        ),
+                  // Selector de zona
+                  DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(labelText: 'Zona'),
+                    items: _zoneItems,
+                    value: _selectedZoneId,
+                    hint: const Text('Escoge zona…'),
+                    onChanged: (v) {
+                      setState(() {
+                        _selectedZoneId = v;
+                        _selectedDuration = 10;
+                        _durationItems = [];
+                        _updatePrice();
+                      });
+                      if (v != null) _loadDurations(v);
+                    },
+                  ),
                   const SizedBox(height: 16),
 
                   // Matrícula

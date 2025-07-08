@@ -32,6 +32,7 @@ class _HomePageState extends State<HomePage> {
   int _backSeconds = 5;
 
   double _price = 0.0;
+  double _basePrice = 1.0; // valor base variable según zona
 
   DateTime _currentTime = DateTime.now();
   Timer? _clockTimer;
@@ -74,17 +75,21 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadDurations(String zoneId) async {
-    final snap = await _firestore
+    final query = await _firestore
         .collection('tariffs')
         .where('zoneId', isEqualTo: zoneId)
         .get();
 
     final items = <DropdownMenuItem<int>>[];
 
-    for (final doc in snap.docs) {
+    double zoneBasePrice = 1.0; // default
+    for (final doc in query.docs) {
       final d = doc.data();
       final dur = d['duration'] as int;
       items.add(DropdownMenuItem(value: dur, child: Text('$dur min')));
+      if (d.containsKey('basePrice')) {
+        zoneBasePrice = (d['basePrice'] as num).toDouble();
+      }
     }
 
     items.sort((a, b) => a.value!.compareTo(b.value!));
@@ -95,6 +100,7 @@ class _HomePageState extends State<HomePage> {
 
     setState(() {
       _durationItems = items;
+      _basePrice = zoneBasePrice;
       _selectedDuration = newSelectedDuration;
       _updatePrice();
       _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
@@ -104,10 +110,20 @@ class _HomePageState extends State<HomePage> {
   void _updatePrice() {
     final blocks = (_selectedDuration / 10).ceil();
 
+    double extraBlockPrice = 0.25; // por defecto
+
+    if (_selectedZoneId == 'centro') {
+      extraBlockPrice = 0.20;
+    } else if (_selectedZoneId == 'ensanche') {
+      extraBlockPrice = 0.25;
+    } else if (_selectedZoneId == 'playa-norte') {
+      extraBlockPrice = 0.30;
+    }
+
     if (blocks <= 1) {
-      _price = 1.0; // precio mínimo por 10 minutos
+      _price = _basePrice;
     } else {
-      _price = 1.0 + 0.25 * (blocks - 1);
+      _price = _basePrice + extraBlockPrice * (blocks - 1);
     }
   }
 

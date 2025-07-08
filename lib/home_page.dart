@@ -32,13 +32,10 @@ class _HomePageState extends State<HomePage> {
   int _backSeconds = 5;
 
   double _price = 0.0;
-  double _basePrice = 0.0;    // precio base (primer bloque)
-  double _increment = 0.0;    // incremento por bloque extra
-  final Map<int, double> _durationPrices = {}; // precio por duración
 
   DateTime _currentTime = DateTime.now();
   Timer? _clockTimer;
-  bool _intlReady = false;     // para saber si Intl ya cargó
+  bool _intlReady = false; // para saber si Intl ya cargó
 
   @override
   void initState() {
@@ -83,19 +80,11 @@ class _HomePageState extends State<HomePage> {
         .get();
 
     final items = <DropdownMenuItem<int>>[];
-    double? basePrice;
-    double? multiplier;
 
     for (final doc in snap.docs) {
       final d = doc.data();
       final dur = d['duration'] as int;
       items.add(DropdownMenuItem(value: dur, child: Text('$dur min')));
-      if (basePrice == null && d.containsKey('basePrice')) {
-        basePrice = (d['basePrice'] as num).toDouble();
-      }
-      if (multiplier == null && d.containsKey('multiplier')) {
-        multiplier = (d['multiplier'] as num).toDouble();
-      }
     }
 
     items.sort((a, b) => a.value!.compareTo(b.value!));
@@ -106,8 +95,6 @@ class _HomePageState extends State<HomePage> {
 
     setState(() {
       _durationItems = items;
-      _basePrice = basePrice ?? 0.0;
-      _increment = multiplier ?? 0.0;
       _selectedDuration = newSelectedDuration;
       _updatePrice();
       _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
@@ -115,8 +102,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _updatePrice() {
-    final blocks = (_selectedDuration / 5).ceil();
-    _price = _basePrice * _increment * blocks;
+    final blocks = (_selectedDuration / 10).ceil();
+
+    if (blocks <= 1) {
+      _price = 1.0; // precio mínimo por 10 minutos
+    } else {
+      _price = 1.0 + 0.25 * (blocks - 1);
+    }
   }
 
   void _increaseDuration() {
@@ -130,7 +122,7 @@ class _HomePageState extends State<HomePage> {
         }
       }
     }
-    next ??= _selectedDuration + 5;
+    next ??= _selectedDuration + 10;
     setState(() {
       _selectedDuration = next!;
       _updatePrice();
@@ -149,7 +141,7 @@ class _HomePageState extends State<HomePage> {
         }
       }
     }
-    prev ??= _selectedDuration - 5;
+    prev ??= _selectedDuration - 10;
     if (prev < 10) return;
     setState(() {
       _selectedDuration = prev!;
@@ -188,7 +180,10 @@ class _HomePageState extends State<HomePage> {
     );
     if (ok != true) return;
 
-    setState(() { _saving = true; _ticketId = null; });
+    setState(() {
+      _saving = true;
+      _ticketId = null;
+    });
 
     final now = DateTime.now();
     final paidUntil = now.add(Duration(minutes: _selectedDuration));
@@ -225,6 +220,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
+
     if (send == true) {
       final email = await _askForEmail();
       if (email != null) await _launchEmail(email);
@@ -234,6 +230,7 @@ class _HomePageState extends State<HomePage> {
       _ticketId = doc.id;
       _backSeconds = 5;
     });
+
     _backTimer?.cancel();
     _backTimer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (_backSeconds > 1) {
@@ -294,9 +291,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final allReady = !_saving
-      && _selectedZoneId != null
-      && _plateCtrl.text.trim().isNotEmpty;
+    final allReady = !_saving &&
+        _selectedZoneId != null &&
+        _plateCtrl.text.trim().isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Kiosk App')),
@@ -313,14 +310,14 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(width: 8),
                       Text(
                         _intlReady
-                          ? DateFormat('EEEE, d MMM y • HH:mm:ss').format(_currentTime)
-                          : '',
+                            ? DateFormat('EEEE, d MMM y • HH:mm:ss')
+                                .format(_currentTime)
+                            : '',
                         style: const TextStyle(fontSize: 14),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-
                   DropdownButtonFormField<String>(
                     decoration: const InputDecoration(labelText: 'Zona'),
                     items: _zoneItems,
@@ -331,23 +328,18 @@ class _HomePageState extends State<HomePage> {
                         _selectedZoneId = v;
                         _selectedDuration = 10;
                         _durationItems = [];
-                        _durationPrices.clear();
-                        _basePrice = 0.0;
-                        _increment = 0.0;
                         _updatePrice();
                       });
                       if (v != null) _loadDurations(v);
                     },
                   ),
                   const SizedBox(height: 16),
-
                   TextField(
                     controller: _plateCtrl,
                     decoration: const InputDecoration(labelText: 'Matrícula'),
                     onChanged: (_) => setState(() {}),
                   ),
                   const SizedBox(height: 16),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -363,7 +355,8 @@ class _HomePageState extends State<HomePage> {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           '$_selectedDuration min',
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
                         ),
                       ),
                       ElevatedButton(
@@ -377,7 +370,6 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   const SizedBox(height: 8),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -385,19 +377,22 @@ class _HomePageState extends State<HomePage> {
                         'Precio: ${_intlReady ? NumberFormat.currency(
                           symbol: '€', locale: 'es_ES', decimalDigits: 2
                         ).format(_price) : _price.toStringAsFixed(2) + ' €'}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       Text(
                         'Hasta: $_paidUntilFormatted',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
-
                   if (_ticketId != null) ...[
-                    const Text('Ticket generado correctamente.',
-                      style: TextStyle(color: Colors.green)),
+                    const Text(
+                      'Ticket generado correctamente.',
+                      style: TextStyle(color: Colors.green),
+                    ),
                     const SizedBox(height: 8),
                     Center(
                       child: QrImageView(
@@ -407,29 +402,34 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text('Regresando en $_backSeconds s…',
-                      textAlign: TextAlign.center),
+                    Text(
+                      'Regresando en $_backSeconds s…',
+                      textAlign: TextAlign.center,
+                    ),
                     const SizedBox(height: 24),
                   ],
-
                   ElevatedButton(
                     onPressed: allReady ? _confirmAndPay : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: allReady
-                        ? const Color(0xFFE62144) 
-                        : Colors.grey,
+                      backgroundColor:
+                          allReady ? const Color(0xFFE62144) : Colors.grey,
                     ),
                     child: _saving
-                      ? const SizedBox(
-                          width: 24, height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2),
-                        )
-                      : const Text('Pagar',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          )),
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Pagar',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ],
               ),

@@ -19,8 +19,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final _firestore = FirebaseFirestore.instance;
   final _user = FirebaseAuth.instance.currentUser;
-  bool _loading = true;
-  bool _saving = false;
+  bool _loading = true, _saving = false;
 
   List<DropdownMenuItem<String>> _zoneItems = [];
   List<DropdownMenuItem<int>> _durationItems = [];
@@ -35,25 +34,27 @@ class _HomePageState extends State<HomePage> {
   int _backSeconds = 5;
 
   double _price = 0.0;
-  double _basePrice = 0.0; // precio para los primeros 5 minutos
-  double _increment = 0.0; // incremento por cada bloque extra
+  double _basePrice = 0.0;    // precio base (primer bloque)
+  double _increment = 0.0;    // incremento por bloque extra
 
   DateTime _currentTime = DateTime.now();
   Timer? _clockTimer;
-  bool _intlReady = false; // para saber si Intl está inicializado
+  bool _intlReady = false;    // para saber si Intl ya cargó
 
   @override
   void initState() {
     super.initState();
     Intl.defaultLocale = 'es_ES';
-    // Carga datos de localización para fechas y monedas
+    // Inicializa símbolos de fecha y moneda
     initializeDateFormatting('es_ES', null).then((_) {
       setState(() => _intlReady = true);
     });
+
     _loadZones();
     _updatePrice();
     _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
-    // Actualiza la hora actual cada segundo
+
+    // Reloj en pantalla
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() => _currentTime = DateTime.now());
     });
@@ -83,21 +84,23 @@ class _HomePageState extends State<HomePage> {
         .collection('tariffs')
         .where('zoneId', isEqualTo: zoneId)
         .get();
+
     if (snap.docs.isNotEmpty) {
-      final first = snap.docs.first.data();
-      _basePrice = (first['basePrice'] as num).toDouble();
-      _increment = (first['increment'] as num).toDouble();
+      final data = snap.docs.first.data();
+      _basePrice = (data['basePrice'] as num).toDouble();
+      _increment = (data['increment'] as num).toDouble();
     }
+
     _durationItems = snap.docs.map((doc) {
-      final data = doc.data();
+      final d = doc.data();
       return DropdownMenuItem(
-        value: data['duration'] as int,
-        child: Text('${data['duration']} min'),
+        value: d['duration'] as int,
+        child: Text('${d['duration']} min'),
       );
     }).toList();
 
-    // Si la duración actual no está en la lista, reiniciamos a 10
-    if (!_durationItems.any((item) => item.value == _selectedDuration)) {
+    // Si la duración seleccionada ya no está en la lista, reset a 10
+    if (!_durationItems.any((i) => i.value == _selectedDuration)) {
       _selectedDuration = 10;
     }
 
@@ -107,6 +110,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _updatePrice() {
+    // bloques de 5 minutos: 10→2 bloques, 15→3, etc.
     final blocks = (_selectedDuration / 5).round();
     _price = _basePrice + _increment * (blocks - 1);
   }
@@ -136,9 +140,9 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _confirmAndPay() async {
     if (_selectedZoneId == null ||
-        _selectedDuration == null ||
         _plateCtrl.text.trim().isEmpty) return;
 
+    // 1) Confirmar matrícula
     final matricula = _plateCtrl.text.trim();
     final ok = await showDialog<bool>(
       context: context,
@@ -148,31 +152,21 @@ class _HomePageState extends State<HomePage> {
         content: Text(matricula),
         actions: [
           TextButton(
-            style: TextButton.styleFrom(
-              backgroundColor: const Color(0xFF7F7F7F),
-            ),
+            style: TextButton.styleFrom(backgroundColor: const Color(0xFF7F7F7F)),
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text(
-              'No',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
+            child: const Text('No', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(
-              'Sí',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
+            child: const Text('Sí', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     );
     if (ok != true) return;
 
-    setState(() {
-      _saving = true;
-      _ticketId = null;
-    });
+    // 2) Crear ticket
+    setState(() { _saving = true; _ticketId = null; });
 
     final now = DateTime.now();
     final paidUntil = now.add(Duration(minutes: _selectedDuration));
@@ -188,43 +182,34 @@ class _HomePageState extends State<HomePage> {
 
     _paidUntil = paidUntil;
     _ticketId = doc.id;
-
     setState(() => _saving = false);
 
-    final sendEmail = await showDialog<bool>(
+    // 3) ¿Enviar por email?
+    final send = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         title: const Text('¿Enviar ticket por email?'),
         actions: [
           TextButton(
-            style: TextButton.styleFrom(
-              backgroundColor: const Color(0xFF7F7F7F),
-            ),
+            style: TextButton.styleFrom(backgroundColor: const Color(0xFF7F7F7F)),
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text(
-              'No',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
+            child: const Text('No', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE62144),
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE62144)),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(
-              'Sí',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
+            child: const Text('Sí', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     );
-    if (sendEmail == true) {
+    if (send == true) {
       final email = await _askForEmail();
       if (email != null) await _launchEmail(email);
     }
 
+    // 4) Temporizador de regreso
     _startBackTimer();
   }
 
@@ -267,7 +252,9 @@ class _HomePageState extends State<HomePage> {
     final uri = Uri(
       scheme: 'mailto',
       path: email,
-      query: Uri.encodeFull('subject=Tu ticket&body=ID: $_ticketId\nVálido hasta: $_paidUntil\nPrecio: $_price €\nDuración: $_selectedDuration min'),
+      query: Uri.encodeFull(
+        'subject=Tu ticket&body=ID: $_ticketId\nVálido hasta: $_paidUntilFormatted\nPrecio: ${_price.toStringAsFixed(2)} €\nDuración: $_selectedDuration min'
+      ),
     );
     await launchUrl(uri);
   }
@@ -286,15 +273,14 @@ class _HomePageState extends State<HomePage> {
         setState(() => _backSeconds--);
       }
     });
-    setState(() {}); // refresca para mostrar contador
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final allReady = !_saving &&
-        _selectedZoneId != null &&
-        _selectedDuration != null &&
-        _plateCtrl.text.trim().isNotEmpty;
+    final allReady = !_saving
+      && _selectedZoneId != null
+      && _plateCtrl.text.trim().isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Kiosk App')),
@@ -312,19 +298,17 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(width: 8),
                       Text(
                         _intlReady
-                            ? DateFormat('EEEE, d MMM y • HH:mm:ss')
-                                .format(_currentTime)
-                            : '',
+                          ? DateFormat('EEEE, d MMM y • HH:mm:ss').format(_currentTime)
+                          : '',
+                        style: const TextStyle(fontSize: 14),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // Zona
+
+                  // Zona (placeholder si no hay selección)
                   _selectedZoneId == null
-                      ? const Text(
-                          'Escoge zona…',
-                          style: TextStyle(color: Colors.grey),
-                        )
+                      ? const Text('Escoge zona…', style: TextStyle(color: Colors.grey))
                       : DropdownButtonFormField<String>(
                           decoration: const InputDecoration(labelText: 'Zona'),
                           items: _zoneItems,
@@ -349,7 +333,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Botones duración y duración actual en el centro
+                  // Control de duración (- 10min +)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -380,17 +364,14 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 8),
 
-                  // Precio actualizado y hora final pagada
+                  // Precio y hora final
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Precio: ' +
-                            (_intlReady
-                                ? NumberFormat.currency(
-                                        symbol: '€', locale: 'es_ES', decimalDigits: 2)
-                                    .format(_price)
-                                : _price.toStringAsFixed(2) + ' €'),
+                        'Precio: ${_intlReady ? NumberFormat.currency(
+                          symbol: '€', locale: 'es_ES', decimalDigits: 2
+                        ).format(_price) : _price.toStringAsFixed(2) + ' €'}',
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       Text(
@@ -401,12 +382,10 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Mostrar ticket + QR si existe
+                  // Ticket y QR ya generado
                   if (_ticketId != null) ...[
-                    const Text(
-                      'Ticket generado correctamente.',
-                      style: TextStyle(color: Colors.green),
-                    ),
+                    const Text('Ticket generado correctamente.',
+                      style: TextStyle(color: Colors.green)),
                     const SizedBox(height: 8),
                     Center(
                       child: QrImageView(
@@ -416,7 +395,8 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text('Regresando en $_backSeconds s…', textAlign: TextAlign.center),
+                    Text('Regresando en $_backSeconds s…',
+                      textAlign: TextAlign.center),
                     const SizedBox(height: 24),
                   ],
 
@@ -424,18 +404,21 @@ class _HomePageState extends State<HomePage> {
                   ElevatedButton(
                     onPressed: allReady ? _confirmAndPay : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: allReady ? const Color(0xFFE62144) : Colors.grey,
+                      backgroundColor: allReady
+                        ? const Color(0xFFE62144) 
+                        : Colors.grey,
                     ),
                     child: _saving
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                          )
-                        : const Text(
-                            'Pagar',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                          ),
+                      ? const SizedBox(
+                          width: 24, height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2),
+                        )
+                      : const Text('Pagar',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          )),
                   ),
                 ],
               ),
@@ -443,4 +426,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-

@@ -7,6 +7,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'login_page.dart';
+import 'l10n/app_localizations.dart';
+import 'payment_method_page.dart';
+import 'language_selector.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -174,27 +177,45 @@ class _HomePageState extends State<HomePage> {
   Future<void> _confirmAndPay() async {
     if (_selectedZoneId == null || _plateCtrl.text.trim().isEmpty) return;
 
-    final matricula = _plateCtrl.text.trim();
+    final matricula = _plateCtrl.text.trim().toUpperCase();
+    if (!RegExp(r'^[0-9]{4}[A-Z]{3}\$').hasMatch(matricula)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).t('invalidPlate'))),
+      );
+      return;
+    }
     final ok = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: const Text('¿Es correcta la matrícula?'),
+        title: Text(AppLocalizations.of(context).t('correctPlate')),
         content: Text(matricula),
         actions: [
           TextButton(
             style: TextButton.styleFrom(backgroundColor: const Color(0xFF7F7F7F)),
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('No', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context).t('no')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Sí', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context).t('yes')),
           ),
         ],
       ),
     );
     if (ok != true) return;
+    final paid = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => PaymentMethodPage(
+          zoneId: _selectedZoneId!,
+          plate: matricula,
+          duration: _selectedDuration,
+          price: _price,
+        ),
+      ),
+    );
+
+    if (paid != true) return;
 
     setState(() {
       _saving = true;
@@ -221,17 +242,17 @@ class _HomePageState extends State<HomePage> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: const Text('¿Enviar ticket por email?'),
+        title: Text(AppLocalizations.of(context).t('sendTicketEmail')),
         actions: [
           TextButton(
             style: TextButton.styleFrom(backgroundColor: const Color(0xFF7F7F7F)),
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('No', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context).t('no')),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE62144)),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Sí', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context).t('yes')),
           ),
         ],
       ),
@@ -269,7 +290,7 @@ class _HomePageState extends State<HomePage> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: const Text('Introduce tu email'),
+        title: Text(AppLocalizations.of(context).t('enterEmail')),
         content: TextField(
           autofocus: true,
           keyboardType: TextInputType.emailAddress,
@@ -279,7 +300,7 @@ class _HomePageState extends State<HomePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, null),
-            child: const Text('Cancelar'),
+            child: Text(AppLocalizations.of(context).t('cancel')),
           ),
           ElevatedButton(
             onPressed: () {
@@ -287,7 +308,7 @@ class _HomePageState extends State<HomePage> {
                 Navigator.pop(ctx, email);
               }
             },
-            child: const Text('Enviar'),
+            child: Text(AppLocalizations.of(context).t('send')),
           ),
         ],
       ),
@@ -312,7 +333,10 @@ class _HomePageState extends State<HomePage> {
         _plateCtrl.text.trim().isNotEmpty;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Kiosk App')),
+      appBar: AppBar(
+        title: const Text('Kiosk App'),
+        actions: const [LanguageSelector()],
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -335,10 +359,11 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    decoration: const InputDecoration(labelText: 'Zona'),
+                    decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context).t('zone')),
                     items: _zoneItems,
                     value: _selectedZoneId,
-                    hint: const Text('Escoge zona…'),
+                    hint: Text(AppLocalizations.of(context).t('chooseZone')),
                     onChanged: (v) {
                       setState(() {
                         _selectedZoneId = v;
@@ -352,7 +377,8 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 16),
                   TextField(
                     controller: _plateCtrl,
-                    decoration: const InputDecoration(labelText: 'Matrícula'),
+                    decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context).t('plate')),
                     onChanged: (_) => setState(() {}),
                   ),
                   const SizedBox(height: 16),
@@ -390,14 +416,14 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Precio: ${_intlReady ? NumberFormat.currency(
+                        '${AppLocalizations.of(context).t('price')}: ${_intlReady ? NumberFormat.currency(
                           symbol: '€', locale: 'es_ES', decimalDigits: 2
                         ).format(_price) : _price.toStringAsFixed(2) + ' €'}',
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       Text(
-                        'Hasta: $_paidUntilFormatted',
+                        '${AppLocalizations.of(context).t('until')}: $_paidUntilFormatted',
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),
@@ -405,9 +431,9 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 24),
                   if (_ticketId != null) ...[
-                    const Text(
-                      'Ticket generado correctamente.',
-                      style: TextStyle(color: Colors.green),
+                    Text(
+                      AppLocalizations.of(context).t('ticketCreated'),
+                      style: const TextStyle(color: Colors.green),
                     ),
                     const SizedBox(height: 8),
                     Center(
@@ -419,7 +445,8 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Regresando en $_backSeconds s…',
+                      AppLocalizations.of(context)
+                          .t('returningIn', params: {'seconds': '$_backSeconds'}),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
@@ -439,12 +466,8 @@ class _HomePageState extends State<HomePage> {
                               strokeWidth: 2,
                             ),
                           )
-                        : const Text(
-                            'Pagar',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        : Text(
+                            AppLocalizations.of(context).t('pay'),
                           ),
                   ),
                 ],

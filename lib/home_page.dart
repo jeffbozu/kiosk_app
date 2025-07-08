@@ -83,22 +83,18 @@ class _HomePageState extends State<HomePage> {
         .get();
 
     final items = <DropdownMenuItem<int>>[];
-    final prices = <int, double>{};
-    double newBasePrice = 0.0;
-    double newIncrement = 0.0;
+    double? basePrice;
+    double? multiplier;
 
     for (final doc in snap.docs) {
       final d = doc.data();
       final dur = d['duration'] as int;
       items.add(DropdownMenuItem(value: dur, child: Text('$dur min')));
-      if (d.containsKey('price')) {
-        prices[dur] = (d['price'] as num).toDouble();
+      if (basePrice == null && d.containsKey('basePrice')) {
+        basePrice = (d['basePrice'] as num).toDouble();
       }
-      if (d.containsKey('basePrice')) {
-        newBasePrice = (d['basePrice'] as num).toDouble();
-      }
-      if (d.containsKey('increment')) {
-        newIncrement = (d['increment'] as num).toDouble();
+      if (multiplier == null && d.containsKey('multiplier')) {
+        multiplier = (d['multiplier'] as num).toDouble();
       }
     }
 
@@ -110,11 +106,8 @@ class _HomePageState extends State<HomePage> {
 
     setState(() {
       _durationItems = items;
-      _durationPrices
-        ..clear()
-        ..addAll(prices);
-      _basePrice = newBasePrice;
-      _increment = newIncrement;
+      _basePrice = basePrice ?? 0.0;
+      _increment = multiplier ?? 0.0;
       _selectedDuration = newSelectedDuration;
       _updatePrice();
       _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
@@ -122,12 +115,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _updatePrice() {
-    if (_durationPrices.containsKey(_selectedDuration)) {
-      _price = _durationPrices[_selectedDuration]!;
-      return;
-    }
     final blocks = (_selectedDuration / 5).ceil();
-    _price = _basePrice + _increment * (blocks - 1);
+    _price = _basePrice * _increment * blocks;
   }
 
   void _increaseDuration() {

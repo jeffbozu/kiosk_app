@@ -6,6 +6,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -33,18 +35,34 @@ class _HomePageState extends State<HomePage> {
   int _backSeconds = 5;
 
   double _price = 0.0;
+  double _basePrice = 0.0; // precio para los primeros 5 minutos
+  double _increment = 0.0; // incremento por cada bloque extra
+
+  DateTime _currentTime = DateTime.now();
+  Timer? _clockTimer;
+  bool _intlReady = false; // para saber si Intl está inicializado
 
   @override
   void initState() {
     super.initState();
+    Intl.defaultLocale = 'es_ES';
+    // Carga datos de localización para fechas y monedas
+    initializeDateFormatting('es_ES', null).then((_) {
+      setState(() => _intlReady = true);
+    });
     _loadZones();
     _updatePrice();
     _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+    // Actualiza la hora actual cada segundo
+    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() => _currentTime = DateTime.now());
+    });
   }
 
   @override
   void dispose() {
     _backTimer?.cancel();
+    _clockTimer?.cancel();
     super.dispose();
   }
 
@@ -65,11 +83,16 @@ class _HomePageState extends State<HomePage> {
         .collection('tariffs')
         .where('zoneId', isEqualTo: zoneId)
         .get();
+    if (snap.docs.isNotEmpty) {
+      final first = snap.docs.first.data();
+      _basePrice = (first['basePrice'] as num).toDouble();
+      _increment = (first['increment'] as num).toDouble();
+    }
     _durationItems = snap.docs.map((doc) {
       final data = doc.data();
       return DropdownMenuItem(
         value: data['duration'] as int,
-        child: Text('${data['duration']} min – €${data['basePrice']}'),
+        child: Text('${data['duration']} min'),
       );
     }).toList();
 
@@ -84,20 +107,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _updatePrice() {
-    // Busca el precio para la duración seleccionada
-    final item = _durationItems.firstWhere(
-      (item) => item.value == _selectedDuration,
-      orElse: () => DropdownMenuItem(value: 10, child: const Text('10 min')),
-    );
-    final text = item.child as Text;
-    // Extraer el precio del texto, ejemplo: "10 min - €1.50"
-    final regex = RegExp(r'€([\d.,]+)');
-    final match = regex.firstMatch(text.data ?? '');
-    if (match != null) {
-      _price = double.tryParse(match.group(1)!.replaceAll(',', '.')) ?? 0.0;
-    } else {
-      _price = 0.0;
-    }
+    final blocks = (_selectedDuration / 5).round();
+    _price = _basePrice + _increment * (blocks - 1);
   }
 
   void _increaseDuration() {
@@ -294,21 +305,40 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Zona
-                  DropdownButtonFormField<String>(
-                    decoration: const InputDecoration(labelText: 'Zona'),
-                    items: _zoneItems,
-                    value: _selectedZoneId,
-                    onChanged: (v) {
-                      setState(() {
-                        _selectedZoneId = v;
-                        _selectedDuration = 10;
-                        _durationItems = [];
-                        _updatePrice();
-                      });
-                      if (v != null) _loadDurations(v);
-                    },
+                  // Hora y fecha actuales
+                  Row(
+                    children: [
+                      const Icon(Icons.access_time, color: Color(0xFFE62144)),
+                      const SizedBox(width: 8),
+                      Text(
+                        _intlReady
+                            ? DateFormat('EEEE, d MMM y • HH:mm:ss')
+                                .format(_currentTime)
+                            : '',
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 16),
+                  // Zona
+                  _selectedZoneId == null
+                      ? const Text(
+                          'Escoge zona…',
+                          style: TextStyle(color: Colors.grey),
+                        )
+                      : DropdownButtonFormField<String>(
+                          decoration: const InputDecoration(labelText: 'Zona'),
+                          items: _zoneItems,
+                          value: _selectedZoneId,
+                          onChanged: (v) {
+                            setState(() {
+                              _selectedZoneId = v;
+                              _selectedDuration = 10;
+                              _durationItems = [];
+                              _updatePrice();
+                            });
+                            if (v != null) _loadDurations(v);
+                          },
+                        ),
                   const SizedBox(height: 16),
 
                   // Matrícula
@@ -354,8 +384,19 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Precio: €${_price.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      Text('Hasta: $_paidUntilFormatted', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(
+                        'Precio: ' +
+                            (_intlReady
+                                ? NumberFormat.currency(
+                                        symbol: '€', locale: 'es_ES', decimalDigits: 2)
+                                    .format(_price)
+                                : _price.toStringAsFixed(2) + ' €'),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      Text(
+                        'Hasta: $_paidUntilFormatted',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 24),

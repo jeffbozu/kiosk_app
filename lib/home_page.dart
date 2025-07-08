@@ -44,7 +44,6 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     Intl.defaultLocale = 'es_ES';
-    // Inicializa símbolos de fecha y moneda
     initializeDateFormatting('es_ES', null).then((_) {
       setState(() => _intlReady = true);
     });
@@ -53,7 +52,6 @@ class _HomePageState extends State<HomePage> {
     _updatePrice();
     _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
 
-    // Reloj en pantalla
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() => _currentTime = DateTime.now());
     });
@@ -124,13 +122,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _updatePrice() {
-    // Primero intenta usar la tarifa específica para la duración
     if (_durationPrices.containsKey(_selectedDuration)) {
       _price = _durationPrices[_selectedDuration]!;
       return;
     }
-    // Si no hay precio específico, usa base e incremento por bloques de 5 min
-    final blocks = (_selectedDuration / 5).round();
+    final blocks = (_selectedDuration / 5).ceil();
     _price = _basePrice + _increment * (blocks - 1);
   }
 
@@ -179,10 +175,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _confirmAndPay() async {
-    if (_selectedZoneId == null ||
-        _plateCtrl.text.trim().isEmpty) return;
+    if (_selectedZoneId == null || _plateCtrl.text.trim().isEmpty) return;
 
-    // 1) Confirmar matrícula
     final matricula = _plateCtrl.text.trim();
     final ok = await showDialog<bool>(
       context: context,
@@ -205,7 +199,6 @@ class _HomePageState extends State<HomePage> {
     );
     if (ok != true) return;
 
-    // 2) Crear ticket
     setState(() { _saving = true; _ticketId = null; });
 
     final now = DateTime.now();
@@ -224,7 +217,6 @@ class _HomePageState extends State<HomePage> {
     _ticketId = doc.id;
     setState(() => _saving = false);
 
-    // 3) ¿Enviar por email?
     final send = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -249,7 +241,6 @@ class _HomePageState extends State<HomePage> {
       if (email != null) await _launchEmail(email);
     }
 
-    // 4) Mostrar QR y temporizador de regreso
     setState(() {
       _ticketId = doc.id;
       _backSeconds = 5;
@@ -327,7 +318,6 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Hora y fecha actuales
                   Row(
                     children: [
                       const Icon(Icons.access_time, color: Color(0xFFE62144)),
@@ -342,7 +332,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Selector de zona
                   DropdownButtonFormField<String>(
                     decoration: const InputDecoration(labelText: 'Zona'),
                     items: _zoneItems,
@@ -363,7 +352,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Matrícula
                   TextField(
                     controller: _plateCtrl,
                     decoration: const InputDecoration(labelText: 'Matrícula'),
@@ -371,7 +359,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Control de duración (- 10min +)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -402,7 +389,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 8),
 
-                  // Precio y hora final
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -420,7 +406,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Ticket y QR ya generado
                   if (_ticketId != null) ...[
                     const Text('Ticket generado correctamente.',
                       style: TextStyle(color: Colors.green)),
@@ -438,7 +423,6 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 24),
                   ],
 
-                  // Botón Pagar
                   ElevatedButton(
                     onPressed: allReady ? _confirmAndPay : null,
                     style: ElevatedButton.styleFrom(

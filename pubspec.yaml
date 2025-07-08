@@ -10,6 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   # Iconos de Cupertino (iOS)
   cupertino_icons: ^1.0.8
@@ -23,6 +25,7 @@ dependencies:
   qr_flutter: ^4.0.0         # Para generar código QR
   url_launcher: ^6.1.5       # Para abrir mailto: en el navegador o app
   intl: ^0.19.0              # Formateo de fechas y monedas
+  provider: ^6.1.2
 
 dev_dependencies:
   flutter_test:
@@ -31,3 +34,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/logo.png

@@ -36,6 +36,7 @@ class _HomePageState extends State<HomePage> {
   double _price = 0.0;
   double _basePrice = 0.0;    // precio base (primer bloque)
   double _increment = 0.0;    // incremento por bloque extra
+  final Map<int, double> _durationPrices = {}; // precio por duración
 
   DateTime _currentTime = DateTime.now();
   Timer? _clockTimer;
@@ -85,52 +86,85 @@ class _HomePageState extends State<HomePage> {
         .where('zoneId', isEqualTo: zoneId)
         .get();
 
-    if (snap.docs.isNotEmpty) {
-      final data = snap.docs.first.data();
-      _basePrice = (data['basePrice'] as num).toDouble();
-      _increment = (data['increment'] as num).toDouble();
-    }
-
-    _durationItems = snap.docs.map((doc) {
+    final items = <DropdownMenuItem<int>>[];
+    final prices = <int, double>{};
+    for (final doc in snap.docs) {
       final d = doc.data();
-      return DropdownMenuItem(
-        value: d['duration'] as int,
-        child: Text('${d['duration']} min'),
-      );
-    }).toList();
-
-    // Si la duración seleccionada ya no está en la lista, reset a 10
-    if (!_durationItems.any((i) => i.value == _selectedDuration)) {
-      _selectedDuration = 10;
+      final dur = d['duration'] as int;
+      items.add(DropdownMenuItem(value: dur, child: Text('$dur min')));
+      if (d.containsKey('price')) {
+        prices[dur] = (d['price'] as num).toDouble();
+      }
+      if (d.containsKey('basePrice')) {
+        _basePrice = (d['basePrice'] as num).toDouble();
+      }
+      if (d.containsKey('increment')) {
+        _increment = (d['increment'] as num).toDouble();
+      }
     }
 
-    _updatePrice();
-    _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
-    setState(() {});
+    setState(() {
+      _durationItems = items;
+      _durationPrices
+        ..clear()
+        ..addAll(prices);
+      if (!_durationItems.any((i) => i.value == _selectedDuration)) {
+        _selectedDuration =
+            _durationItems.isNotEmpty ? _durationItems.first.value! : 10;
+      }
+      _updatePrice();
+      _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+    });
   }
 
   void _updatePrice() {
-    // bloques de 5 minutos: 10→2 bloques, 15→3, etc.
+    // Primero intenta usar la tarifa específica para la duración
+    if (_durationPrices.containsKey(_selectedDuration)) {
+      _price = _durationPrices[_selectedDuration]!;
+      return;
+    }
+    // Si no hay precio específico, usa base e incremento por bloques de 5 min
     final blocks = (_selectedDuration / 5).round();
     _price = _basePrice + _increment * (blocks - 1);
   }
 
   void _increaseDuration() {
+    int? next;
+    if (_durationItems.isNotEmpty) {
+      final durations = _durationItems.map((e) => e.value!).toList()..sort();
+      for (final d in durations) {
+        if (d > _selectedDuration) {
+          next = d;
+          break;
+        }
+      }
+    }
+    next ??= _selectedDuration + 5;
     setState(() {
-      _selectedDuration += 5;
+      _selectedDuration = next!;
       _updatePrice();
       _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
     });
   }
 
   void _decreaseDuration() {
-    if (_selectedDuration > 10) {
-      setState(() {
-        _selectedDuration -= 5;
-        _updatePrice();
-        _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
-      });
+    int? prev;
+    if (_durationItems.isNotEmpty) {
+      final durations = _durationItems.map((e) => e.value!).toList()..sort();
+      for (final d in durations.reversed) {
+        if (d < _selectedDuration) {
+          prev = d;
+          break;
+        }
+      }
     }
+    prev ??= _selectedDuration - 5;
+    if (prev < 10) return;
+    setState(() {
+      _selectedDuration = prev!;
+      _updatePrice();
+      _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+    });
   }
 
   String get _paidUntilFormatted {
@@ -306,23 +340,25 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Zona (placeholder si no hay selección)
-                  _selectedZoneId == null
-                      ? const Text('Escoge zona…', style: TextStyle(color: Colors.grey))
-                      : DropdownButtonFormField<String>(
-                          decoration: const InputDecoration(labelText: 'Zona'),
-                          items: _zoneItems,
-                          value: _selectedZoneId,
-                          onChanged: (v) {
-                            setState(() {
-                              _selectedZoneId = v;
-                              _selectedDuration = 10;
-                              _durationItems = [];
-                              _updatePrice();
-                            });
-                            if (v != null) _loadDurations(v);
-                          },
-                        ),
+                  // Selector de zona
+                  DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(labelText: 'Zona'),
+                    items: _zoneItems,
+                    value: _selectedZoneId,
+                    hint: const Text('Escoge zona…'),
+                    onChanged: (v) {
+                      setState(() {
+                        _selectedZoneId = v;
+                        _selectedDuration = 10;
+                        _durationItems = [];
+                        _durationPrices.clear();
+                        _basePrice = 0.0;
+                        _increment = 0.0;
+                        _updatePrice();
+                      });
+                      if (v != null) _loadDurations(v);
+                    },
+                  ),
                   const SizedBox(height: 16),
 
                   // Matrícula

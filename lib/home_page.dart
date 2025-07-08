@@ -86,36 +86,35 @@ class _HomePageState extends State<HomePage> {
         .where('zoneId', isEqualTo: zoneId)
         .get();
 
-    _durationItems = [];
-    _durationPrices.clear();
-
+    final items = <DropdownMenuItem<int>>[];
+    final prices = <int, double>{};
     for (final doc in snap.docs) {
       final d = doc.data();
       final dur = d['duration'] as int;
-      _durationItems.add(DropdownMenuItem(value: dur, child: Text('$dur min')));
+      items.add(DropdownMenuItem(value: dur, child: Text('$dur min')));
       if (d.containsKey('price')) {
-        _durationPrices[dur] = (d['price'] as num).toDouble();
+        prices[dur] = (d['price'] as num).toDouble();
+      }
+      if (d.containsKey('basePrice')) {
+        _basePrice = (d['basePrice'] as num).toDouble();
+      }
+      if (d.containsKey('increment')) {
+        _increment = (d['increment'] as num).toDouble();
       }
     }
 
-    if (snap.docs.isNotEmpty) {
-      final data = snap.docs.first.data();
-      if (data.containsKey('basePrice')) {
-        _basePrice = (data['basePrice'] as num).toDouble();
+    setState(() {
+      _durationItems = items;
+      _durationPrices
+        ..clear()
+        ..addAll(prices);
+      if (!_durationItems.any((i) => i.value == _selectedDuration)) {
+        _selectedDuration =
+            _durationItems.isNotEmpty ? _durationItems.first.value! : 10;
       }
-      if (data.containsKey('increment')) {
-        _increment = (data['increment'] as num).toDouble();
-      }
-    }
-
-    // Selecciona la primera duración disponible si la actual no existe
-    if (!_durationItems.any((i) => i.value == _selectedDuration)) {
-      _selectedDuration = _durationItems.isNotEmpty ? _durationItems.first.value! : 10;
-    }
-
-    _updatePrice();
-    _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
-    setState(() {});
+      _updatePrice();
+      _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+    });
   }
 
   void _updatePrice() {
@@ -352,6 +351,9 @@ class _HomePageState extends State<HomePage> {
                         _selectedZoneId = v;
                         _selectedDuration = 10;
                         _durationItems = [];
+                        _durationPrices.clear();
+                        _basePrice = 0.0;
+                        _increment = 0.0;
                         _updatePrice();
                       });
                       if (v != null) _loadDurations(v);

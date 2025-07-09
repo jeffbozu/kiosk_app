@@ -12,16 +12,16 @@ class LanguageSelector extends StatelessWidget {
     final prov = Provider.of<LocaleProvider>(context);
     return Row(
       children: [
-        _flagButton(context, prov, 'es', flagEs),
+        _flagButton(context, prov, 'es', flagEs, 'ESP'),
         const SizedBox(width: 8),
-        _flagButton(context, prov, 'ca', flagCt),
+        _flagButton(context, prov, 'ca', flagCt, 'CAT'),
         const SizedBox(width: 8),
-        _flagButton(context, prov, 'en', flagUk),
+        _flagButton(context, prov, 'en', flagUk, 'ENG'),
       ],
     );
   }
 
-  Widget _flagButton(BuildContext context, LocaleProvider prov, String code, Uint8List bytes) {
+  Widget _flagButton(BuildContext context, LocaleProvider prov, String code, Uint8List bytes, String label) {
     final selected = prov.locale.languageCode == code;
     return InkWell(
       onTap: () => prov.setLocale(Locale(code)),
@@ -36,7 +36,12 @@ class LanguageSelector extends StatelessWidget {
             width: 2,
           ),
         ),
-        child: Image.memory(bytes, width: 32, height: 24),
+        child: Column(
+          children: [
+            Image.memory(bytes, width: 32, height: 24),
+            Text(label, style: const TextStyle(fontSize: 10)),
+          ],
+        ),
       ),
     );
   }

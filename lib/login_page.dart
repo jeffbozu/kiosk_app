@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'l10n/app_localizations.dart';
 import 'language_selector.dart';
+import 'theme_mode_button.dart'; // Incluido para modo oscuro
 
 /// Pantalla de login con email/contraseña, mensajes en español
 /// y estilo de botón/título actualizado.
@@ -78,9 +79,16 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Align(
+              Align(
                 alignment: Alignment.topRight,
-                child: LanguageSelector(),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    LanguageSelector(),
+                    SizedBox(width: 8),
+                    ThemeModeButton(),
+                  ],
+                ),
               ),
               // Título de bienvenida
               Text(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'l10n/app_localizations.dart';
 import 'language_selector.dart';
+import 'theme_mode_button.dart';
 
 class PaymentMethodPage extends StatefulWidget {
   final String zoneId;
@@ -49,7 +50,11 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
       appBar: AppBar(
         title: Text(l.t('selectMethod')),
         leading: BackButton(onPressed: () => Navigator.pop(context)),
-        actions: const [LanguageSelector()],
+        actions: const [
+          LanguageSelector(),
+          SizedBox(width: 8),
+          ThemeModeButton(),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

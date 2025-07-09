@@ -3,10 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:provider/provider.dart';
 import 'login_page.dart';
+import 'l10n/app_localizations.dart';
+import 'payment_method_page.dart';
+import 'language_selector.dart';
+import 'theme_mode_button.dart';
+import 'payment_success_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -28,8 +33,6 @@ class _HomePageState extends State<HomePage> {
   String? _ticketId;
   DateTime? _paidUntil;
 
-  Timer? _backTimer;
-  int _backSeconds = 5;
 
   double _price = 0.0;
   double _basePrice = 1.0; // valor base variable según zona
@@ -41,11 +44,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    Intl.defaultLocale = 'es_ES';
-    initializeDateFormatting('es_ES', null).then((_) {
-      setState(() => _intlReady = true);
-    });
-
     _loadZones();
     _updatePrice();
     _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
@@ -56,8 +54,24 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final locale = Provider.of<LocaleProvider>(context).locale;
+    final localeName = locale.languageCode == 'es'
+        ? 'es_ES'
+        : locale.languageCode == 'ca'
+            ? 'ca_ES'
+            : 'en_GB';
+    if (Intl.defaultLocale != localeName) {
+      Intl.defaultLocale = localeName;
+      initializeDateFormatting(localeName, null).then((_) {
+        if (mounted) setState(() => _intlReady = true);
+      });
+    }
+  }
+
+  @override
   void dispose() {
-    _backTimer?.cancel();
     _clockTimer?.cancel();
     super.dispose();
   }
@@ -172,29 +186,47 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _confirmAndPay() async {
-    if (_selectedZoneId == null || _plateCtrl.text.trim().isEmpty) return;
+    if (_selectedZoneId == null) return;
 
-    final matricula = _plateCtrl.text.trim();
+    final matricula = _plateCtrl.text.trim().toUpperCase();
+    if (matricula.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).t('plateRequired'))),
+      );
+      return;
+    }
     final ok = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: const Text('¿Es correcta la matrícula?'),
+        title: Text(AppLocalizations.of(context).t('correctPlate')),
         content: Text(matricula),
         actions: [
           TextButton(
             style: TextButton.styleFrom(backgroundColor: const Color(0xFF7F7F7F)),
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('No', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context).t('no')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Sí', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context).t('yes')),
           ),
         ],
       ),
     );
     if (ok != true) return;
+    final paid = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => PaymentMethodPage(
+          zoneId: _selectedZoneId!,
+          plate: matricula,
+          duration: _selectedDuration,
+          price: _price,
+        ),
+      ),
+    );
+
+    if (paid != true) return;
 
     setState(() {
       _saving = true;
@@ -217,93 +249,18 @@ class _HomePageState extends State<HomePage> {
     _ticketId = doc.id;
     setState(() => _saving = false);
 
-    final send = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: const Text('¿Enviar ticket por email?'),
-        actions: [
-          TextButton(
-            style: TextButton.styleFrom(backgroundColor: const Color(0xFF7F7F7F)),
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('No', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE62144)),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Sí', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-
-    if (send == true) {
-      final email = await _askForEmail();
-      if (email != null) await _launchEmail(email);
-    }
+    await Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => PaymentSuccessPage(ticketId: _ticketId!),
+    ));
 
     setState(() {
-      _ticketId = doc.id;
-      _backSeconds = 5;
-    });
-
-    _backTimer?.cancel();
-    _backTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (_backSeconds > 1) {
-        setState(() => _backSeconds--);
-      } else {
-        t.cancel();
-        setState(() {
-          _ticketId = null;
-          _plateCtrl.clear();
-          _selectedDuration = 10;
-          _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
-        });
-      }
+      _ticketId = null;
+      _plateCtrl.clear();
+      _selectedDuration = 10;
+      _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
     });
   }
 
-  Future<String?> _askForEmail() async {
-    String email = '';
-    return await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Introduce tu email'),
-        content: TextField(
-          autofocus: true,
-          keyboardType: TextInputType.emailAddress,
-          decoration: const InputDecoration(hintText: 'correo@ejemplo.com'),
-          onChanged: (v) => email = v,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, null),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$").hasMatch(email)) {
-                Navigator.pop(ctx, email);
-              }
-            },
-            child: const Text('Enviar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _launchEmail(String email) async {
-    final uri = Uri(
-      scheme: 'mailto',
-      path: email,
-      query: 'subject=Ticket Kiosk&body=Tu ticket: $_ticketId',
-    );
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -312,7 +269,10 @@ class _HomePageState extends State<HomePage> {
         _plateCtrl.text.trim().isNotEmpty;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Kiosk App')),
+      appBar: AppBar(
+        title: const Text('Kiosk App'),
+        actions: const [LanguageSelector(), SizedBox(width: 8), ThemeModeButton()],
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -326,7 +286,7 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(width: 8),
                       Text(
                         _intlReady
-                            ? DateFormat('EEEE, d MMM y • HH:mm:ss')
+                            ? DateFormat('EEEE, d MMM y • HH:mm:ss', Intl.defaultLocale)
                                 .format(_currentTime)
                             : '',
                         style: const TextStyle(fontSize: 14),
@@ -335,10 +295,11 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    decoration: const InputDecoration(labelText: 'Zona'),
+                    decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context).t('zone')),
                     items: _zoneItems,
                     value: _selectedZoneId,
-                    hint: const Text('Escoge zona…'),
+                    hint: Text(AppLocalizations.of(context).t('chooseZone')),
                     onChanged: (v) {
                       setState(() {
                         _selectedZoneId = v;
@@ -352,7 +313,8 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 16),
                   TextField(
                     controller: _plateCtrl,
-                    decoration: const InputDecoration(labelText: 'Matrícula'),
+                    decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context).t('plate')),
                     onChanged: (_) => setState(() {}),
                   ),
                   const SizedBox(height: 16),
@@ -390,40 +352,20 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Precio: ${_intlReady ? NumberFormat.currency(
-                          symbol: '€', locale: 'es_ES', decimalDigits: 2
+                        '${AppLocalizations.of(context).t('price')}: ${_intlReady ? NumberFormat.currency(
+                          symbol: '€', locale: Intl.defaultLocale, decimalDigits: 2
                         ).format(_price) : _price.toStringAsFixed(2) + ' €'}',
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       Text(
-                        'Hasta: $_paidUntilFormatted',
+                        '${AppLocalizations.of(context).t('until')}: $_paidUntilFormatted',
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
-                  if (_ticketId != null) ...[
-                    const Text(
-                      'Ticket generado correctamente.',
-                      style: TextStyle(color: Colors.green),
-                    ),
-                    const SizedBox(height: 8),
-                    Center(
-                      child: QrImageView(
-                        data: _ticketId!,
-                        version: QrVersions.auto,
-                        size: 200,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Regresando en $_backSeconds s…',
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                  ],
                   ElevatedButton(
                     onPressed: allReady ? _confirmAndPay : null,
                     style: ElevatedButton.styleFrom(
@@ -439,12 +381,8 @@ class _HomePageState extends State<HomePage> {
                               strokeWidth: 2,
                             ),
                           )
-                        : const Text(
-                            'Pagar',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        : Text(
+                            AppLocalizations.of(context).t('pay'),
                           ),
                   ),
                 ],

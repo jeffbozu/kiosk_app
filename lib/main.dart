@@ -20,17 +20,14 @@ Future<void> main() async {
   ]);
 
   try {
-    // Espera hasta 10s a que Firebase init complete
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     ).timeout(const Duration(seconds: 10));
   } catch (e, st) {
-    // Imprime la excepción y stacktrace para ver qué pasa
     debugPrint('❌ Error inicializando Firebase: $e');
     debugPrint('$st');
   }
 
-  // Aunque Firebase haya fallado, arranca tu app
   runApp(const MyApp());
 }
 
@@ -162,18 +159,15 @@ class AuthGate extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // Mientras comprobamos el estado, mostramos un indicador
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        // Si no hay usuario, mostramos LoginPage
         final user = snapshot.data;
         if (user == null) {
           return const LoginPage();
         }
-        // Si ya hay sesión, vamos a HomePage
         return const HomePage();
       },
     );

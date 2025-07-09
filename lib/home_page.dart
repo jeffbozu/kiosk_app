@@ -10,8 +10,8 @@ import 'login_page.dart';
 import 'l10n/app_localizations.dart';
 import 'payment_method_page.dart';
 import 'language_selector.dart';
-import 'theme_mode_button.dart';
-import 'payment_success_page.dart';
+// import 'theme_mode_button.dart';
+// import 'payment_success_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -27,19 +27,18 @@ class _HomePageState extends State<HomePage> {
   List<DropdownMenuItem<String>> _zoneItems = [];
   List<DropdownMenuItem<int>> _durationItems = [];
   String? _selectedZoneId;
-  int _selectedDuration = 10; // empieza en 10 minutos
+  int _selectedDuration = 10;
   final _plateCtrl = TextEditingController();
 
   String? _ticketId;
   DateTime? _paidUntil;
 
-
   double _price = 0.0;
-  double _basePrice = 1.0; // valor base variable según zona
+  double _basePrice = 1.0;
 
   DateTime _currentTime = DateTime.now();
   Timer? _clockTimer;
-  bool _intlReady = false; // para saber si Intl ya cargó
+  bool _intlReady = false;
 
   @override
   void initState() {
@@ -96,7 +95,7 @@ class _HomePageState extends State<HomePage> {
 
     final items = <DropdownMenuItem<int>>[];
 
-    double zoneBasePrice = 1.0; // default
+    double zoneBasePrice = 1.0;
     for (final doc in query.docs) {
       final d = doc.data();
       final dur = d['duration'] as int;
@@ -124,7 +123,7 @@ class _HomePageState extends State<HomePage> {
   void _updatePrice() {
     final blocks = (_selectedDuration / 10).ceil();
 
-    double extraBlockPrice = 0.25; // por defecto
+    double extraBlockPrice = 0.25;
 
     if (_selectedZoneId == 'centro') {
       extraBlockPrice = 0.20;
@@ -189,12 +188,20 @@ class _HomePageState extends State<HomePage> {
     if (_selectedZoneId == null) return;
 
     final matricula = _plateCtrl.text.trim().toUpperCase();
+
     if (matricula.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).t('plateRequired'))),
       );
       return;
     }
+    if (!RegExp(r'^[0-9]{4}[A-Z]{3}$').hasMatch(matricula)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).t('invalidPlate'))),
+      );
+      return;
+    }
+
     final ok = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -215,6 +222,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
     if (ok != true) return;
+
     final paid = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => PaymentMethodPage(
@@ -249,9 +257,30 @@ class _HomePageState extends State<HomePage> {
     _ticketId = doc.id;
     setState(() => _saving = false);
 
-    await Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => PaymentSuccessPage(ticketId: _ticketId!),
-    ));
+    final send = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context).t('sendTicketEmail')),
+        actions: [
+          TextButton(
+            style: TextButton.styleFrom(backgroundColor: const Color(0xFF7F7F7F)),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppLocalizations.of(context).t('no')),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE62144)),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(AppLocalizations.of(context).t('yes')),
+          ),
+        ],
+      ),
+    );
+
+    if (send == true) {
+      final email = await _askForEmail();
+      if (email != null) await _launchEmail(email);
+    }
 
     setState(() {
       _ticketId = null;
@@ -261,6 +290,47 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Future<String?> _askForEmail() async {
+    String email = '';
+    return await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context).t('enterEmail')),
+        content: TextField(
+          autofocus: true,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(hintText: 'correo@ejemplo.com'),
+          onChanged: (v) => email = v,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, null),
+            child: Text(AppLocalizations.of(context).t('cancel')),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$").hasMatch(email)) {
+                Navigator.pop(ctx, email);
+              }
+            },
+            child: Text(AppLocalizations.of(context).t('send')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _launchEmail(String email) async {
+    final uri = Uri(
+      scheme: 'mailto',
+      path: email,
+      query: 'subject=Ticket Kiosk&body=Tu ticket: $_ticketId',
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -271,7 +341,11 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kiosk App'),
-        actions: const [LanguageSelector(), SizedBox(width: 8), ThemeModeButton()],
+        actions: const [
+          LanguageSelector(),
+          // SizedBox(width: 8),
+          // ThemeModeButton(),
+        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -366,6 +440,27 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   const SizedBox(height: 24),
+                  if (_ticketId != null) ...[
+                    Text(
+                      AppLocalizations.of(context).t('ticketCreated'),
+                      style: const TextStyle(color: Colors.green),
+                    ),
+                    const SizedBox(height: 8),
+                    Center(
+                      child: QrImageView(
+                        data: _ticketId!,
+                        version: QrVersions.auto,
+                        size: 200,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      AppLocalizations.of(context)
+                          .t('returningIn', params: {'seconds': '$_backSeconds'}),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                  ],
                   ElevatedButton(
                     onPressed: allReady ? _confirmAndPay : null,
                     style: ElevatedButton.styleFrom(

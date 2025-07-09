@@ -6,12 +6,13 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import 'login_page.dart';
 import 'l10n/app_localizations.dart';
 import 'payment_method_page.dart';
 import 'language_selector.dart';
-// import 'theme_mode_button.dart';
-// import 'payment_success_page.dart';
+import 'locale_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -27,18 +28,20 @@ class _HomePageState extends State<HomePage> {
   List<DropdownMenuItem<String>> _zoneItems = [];
   List<DropdownMenuItem<int>> _durationItems = [];
   String? _selectedZoneId;
-  int _selectedDuration = 10;
+  int _selectedDuration = 10; // empieza en 10 minutos
   final _plateCtrl = TextEditingController();
 
   String? _ticketId;
   DateTime? _paidUntil;
 
+  int _backSeconds = 5; // Variable declarada para el temporizador
+
   double _price = 0.0;
-  double _basePrice = 1.0;
+  double _basePrice = 1.0; // valor base variable según zona
 
   DateTime _currentTime = DateTime.now();
   Timer? _clockTimer;
-  bool _intlReady = false;
+  bool _intlReady = false; // para saber si Intl ya cargó
 
   @override
   void initState() {
@@ -95,7 +98,7 @@ class _HomePageState extends State<HomePage> {
 
     final items = <DropdownMenuItem<int>>[];
 
-    double zoneBasePrice = 1.0;
+    double zoneBasePrice = 1.0; // default
     for (final doc in query.docs) {
       final d = doc.data();
       final dur = d['duration'] as int;
@@ -123,7 +126,7 @@ class _HomePageState extends State<HomePage> {
   void _updatePrice() {
     final blocks = (_selectedDuration / 10).ceil();
 
-    double extraBlockPrice = 0.25;
+    double extraBlockPrice = 0.25; // por defecto
 
     if (_selectedZoneId == 'centro') {
       extraBlockPrice = 0.20;
@@ -195,6 +198,8 @@ class _HomePageState extends State<HomePage> {
       );
       return;
     }
+
+    // Validación de matrícula con expresión regular corregida (sin el $ extra)
     if (!RegExp(r'^[0-9]{4}[A-Z]{3}$').hasMatch(matricula)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).t('invalidPlate'))),
@@ -222,7 +227,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
     if (ok != true) return;
-
     final paid = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => PaymentMethodPage(
@@ -341,11 +345,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kiosk App'),
-        actions: const [
-          LanguageSelector(),
-          // SizedBox(width: 8),
-          // ThemeModeButton(),
-        ],
+        actions: const [LanguageSelector()],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())

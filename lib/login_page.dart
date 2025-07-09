@@ -99,9 +99,6 @@ class _LoginPageState extends State<LoginPage> {
                 decoration: InputDecoration(
                   labelText: AppLocalizations.of(context).t('email'),
                   prefixIcon: const Icon(Icons.email),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
                 ),
                 keyboardType: TextInputType.emailAddress,
               ),
@@ -113,9 +110,6 @@ class _LoginPageState extends State<LoginPage> {
                 decoration: InputDecoration(
                   labelText: AppLocalizations.of(context).t('password'),
                   prefixIcon: const Icon(Icons.lock),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
                 ),
                 obscureText: true,
               ),

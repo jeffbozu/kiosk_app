@@ -175,10 +175,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _confirmAndPay() async {
-    if (_selectedZoneId == null || _plateCtrl.text.trim().isEmpty) return;
+    if (_selectedZoneId == null) return;
 
     final matricula = _plateCtrl.text.trim().toUpperCase();
-    if (!RegExp(r'^[0-9]{4}[A-Z]{3}\$').hasMatch(matricula)) {
+
+    // Validación de matrícula con expresión regular corregida (sin el \$ extra)
+    if (!RegExp(r'^[0-9]{4}[A-Z]{3}$').hasMatch(matricula)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).t('invalidPlate'))),
       );

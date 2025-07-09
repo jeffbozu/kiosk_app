@@ -12,20 +12,32 @@ class LanguageSelector extends StatelessWidget {
     final prov = Provider.of<LocaleProvider>(context);
     return Row(
       children: [
-        _flagButton(context, 'es', flagEs),
+        _flagButton(context, prov, 'es', flagEs),
         const SizedBox(width: 8),
-        _flagButton(context, 'ca', flagCt),
+        _flagButton(context, prov, 'ca', flagCt),
         const SizedBox(width: 8),
-        _flagButton(context, 'en', flagUk),
+        _flagButton(context, prov, 'en', flagUk),
       ],
     );
   }
 
-  Widget _flagButton(BuildContext context, String code, Uint8List bytes) {
-    final prov = Provider.of<LocaleProvider>(context, listen: false);
-    return GestureDetector(
+  Widget _flagButton(BuildContext context, LocaleProvider prov, String code, Uint8List bytes) {
+    final selected = prov.locale.languageCode == code;
+    return InkWell(
       onTap: () => prov.setLocale(Locale(code)),
-      child: Image.memory(bytes, width: 32, height: 24),
+      borderRadius: BorderRadius.circular(8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: selected ? Theme.of(context).colorScheme.primary : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Image.memory(bytes, width: 32, height: 24),
+      ),
     );
   }
 }

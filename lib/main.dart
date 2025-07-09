@@ -139,6 +139,12 @@ class MyApp extends StatelessWidget {
               textTheme: const TextTheme(
                 bodyLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                 bodyMedium: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                titleLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                titleMedium: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                titleSmall: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                labelLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                labelMedium: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                labelSmall: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
               ),
             ),
             themeMode: themeProv.mode,

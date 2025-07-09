@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'l10n/app_localizations.dart';
+import 'language_selector.dart';
 
 /// Pantalla de login con email/contraseña, mensajes en español
 /// y estilo de botón/título actualizado.
@@ -34,31 +36,33 @@ class _LoginPageState extends State<LoginPage> {
       // TODO: Navegar a la pantalla principal
     } on FirebaseAuthException catch (e) {
       // Traducción de los códigos de error de FirebaseAuth
+      final l = AppLocalizations.of(context);
       switch (e.code) {
         case 'invalid-email':
-          _error = 'La dirección de correo tiene un formato incorrecto.';
+          _error = l.t('invalidEmail');
           break;
         case 'user-disabled':
-          _error = 'La cuenta de usuario está desactivada.';
+          _error = l.t('userDisabled');
           break;
         case 'user-not-found':
-          _error = 'No existe ningún usuario con ese correo.';
+          _error = l.t('userNotFound');
           break;
         case 'wrong-password':
-          _error = 'Correo o contraseña incorrectos.';
+          _error = l.t('wrongPassword');
           break;
         case 'too-many-requests':
-          _error = 'Se han intentado demasiados accesos. Intenta más tarde.';
+          _error = l.t('tooManyRequests');
           break;
         case 'invalid-credential':
-          _error = 'La credencial proporcionada es incorrecta o ha expirado.';
+          _error = l.t('invalidCredential');
           break;
         default:
-          _error = 'Error al iniciar sesión: ${e.message}';
+          _error = l.t('loginError', params: {'error': e.message ?? ''});
       }
     } catch (e) {
       // Cualquier otro error
-      _error = 'Ha ocurrido un error inesperado.';
+      final l = AppLocalizations.of(context);
+      _error = l.t('unexpectedError');
     } finally {
       setState(() => _loading = false);
     }
@@ -74,9 +78,13 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              const Align(
+                alignment: Alignment.topRight,
+                child: LanguageSelector(),
+              ),
               // Título de bienvenida
               Text(
-                'Bienvenido a Meypar Optima App',
+                AppLocalizations.of(context).t('welcome'),
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: const Color(0xFFE62144), // Rojo marca
@@ -89,11 +97,8 @@ class _LoginPageState extends State<LoginPage> {
               TextField(
                 controller: _emailCtrl,
                 decoration: InputDecoration(
-                  labelText: 'Email',
+                  labelText: AppLocalizations.of(context).t('email'),
                   prefixIcon: const Icon(Icons.email),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
                 ),
                 keyboardType: TextInputType.emailAddress,
               ),
@@ -103,11 +108,8 @@ class _LoginPageState extends State<LoginPage> {
               TextField(
                 controller: _passCtrl,
                 decoration: InputDecoration(
-                  labelText: 'Contraseña',
+                  labelText: AppLocalizations.of(context).t('password'),
                   prefixIcon: const Icon(Icons.lock),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
                 ),
                 obscureText: true,
               ),
@@ -137,13 +139,7 @@ class _LoginPageState extends State<LoginPage> {
                             strokeWidth: 2,
                           ),
                         )
-                      : const Text(
-                          'Iniciar sesión',
-                          style: TextStyle(
-                            color: Colors.white,         // Texto blanco
-                            fontWeight: FontWeight.bold,  // Negrita
-                          ),
-                        ),
+                      : Text(AppLocalizations.of(context).t('signIn')),
                 ),
               ),
             ],

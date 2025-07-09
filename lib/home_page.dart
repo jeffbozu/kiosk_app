@@ -178,9 +178,11 @@ class _HomePageState extends State<HomePage> {
     if (_selectedZoneId == null) return;
 
     final matricula = _plateCtrl.text.trim().toUpperCase();
-    if (matricula.isEmpty) {
+
+    // Validación de matrícula con expresión regular corregida (sin el \$ extra)
+    if (!RegExp(r'^[0-9]{4}[A-Z]{3}$').hasMatch(matricula)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).t('plateRequired'))),
+        SnackBar(content: Text(AppLocalizations.of(context).t('invalidPlate'))),
       );
       return;
     }

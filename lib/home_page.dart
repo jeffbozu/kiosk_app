@@ -6,12 +6,13 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import 'login_page.dart';
 import 'l10n/app_localizations.dart';
 import 'payment_method_page.dart';
 import 'language_selector.dart';
-import 'theme_mode_button.dart';
-import 'payment_success_page.dart';
+import 'locale_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -33,6 +34,7 @@ class _HomePageState extends State<HomePage> {
   String? _ticketId;
   DateTime? _paidUntil;
 
+  int _backSeconds = 5; // Temporizador para retorno
 
   double _price = 0.0;
   double _basePrice = 1.0; // valor base variable según zona
@@ -189,12 +191,22 @@ class _HomePageState extends State<HomePage> {
     if (_selectedZoneId == null) return;
 
     final matricula = _plateCtrl.text.trim().toUpperCase();
+
     if (matricula.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).t('plateRequired'))),
       );
       return;
     }
+
+    // Validación matrícula
+    if (!RegExp(r'^[0-9]{4}[A-Z]{3}$').hasMatch(matricula)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).t('invalidPlate'))),
+      );
+      return;
+    }
+
     final ok = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -249,9 +261,30 @@ class _HomePageState extends State<HomePage> {
     _ticketId = doc.id;
     setState(() => _saving = false);
 
-    await Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => PaymentSuccessPage(ticketId: _ticketId!),
-    ));
+    final send = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context).t('sendTicketEmail')),
+        actions: [
+          TextButton(
+            style: TextButton.styleFrom(backgroundColor: const Color(0xFF7F7F7F)),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppLocalizations.of(context).t('no')),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE62144)),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(AppLocalizations.of(context).t('yes')),
+          ),
+        ],
+      ),
+    );
+
+    if (send == true) {
+      final email = await _askForEmail();
+      if (email != null) await _launchEmail(email);
+    }
 
     setState(() {
       _ticketId = null;
@@ -261,6 +294,47 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Future<String?> _askForEmail() async {
+    String email = '';
+    return await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context).t('enterEmail')),
+        content: TextField(
+          autofocus: true,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(hintText: 'correo@ejemplo.com'),
+          onChanged: (v) => email = v,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, null),
+            child: Text(AppLocalizations.of(context).t('cancel')),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$").hasMatch(email)) {
+                Navigator.pop(ctx, email);
+              }
+            },
+            child: Text(AppLocalizations.of(context).t('send')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _launchEmail(String email) async {
+    final uri = Uri(
+      scheme: 'mailto',
+      path: email,
+      query: 'subject=Ticket Kiosk&body=Tu ticket: $_ticketId',
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -271,7 +345,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kiosk App'),
-        actions: const [LanguageSelector(), SizedBox(width: 8), ThemeModeButton()],
+        actions: const [LanguageSelector()],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -366,6 +440,27 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   const SizedBox(height: 24),
+                  if (_ticketId != null) ...[
+                    Text(
+                      AppLocalizations.of(context).t('ticketCreated'),
+                      style: const TextStyle(color: Colors.green),
+                    ),
+                    const SizedBox(height: 8),
+                    Center(
+                      child: QrImageView(
+                        data: _ticketId!,
+                        version: QrVersions.auto,
+                        size: 200,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      AppLocalizations.of(context)
+                          .t('returningIn', params: {'seconds': '$_backSeconds'}),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                  ],
                   ElevatedButton(
                     onPressed: allReady ? _confirmAndPay : null,
                     style: ElevatedButton.styleFrom(

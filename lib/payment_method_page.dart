@@ -50,7 +50,11 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
       appBar: AppBar(
         title: Text(l.t('selectMethod')),
         leading: BackButton(onPressed: () => Navigator.pop(context)),
-        actions: const [LanguageSelector(), SizedBox(width: 8), ThemeModeButton()],
+        actions: const [
+          LanguageSelector(),
+          SizedBox(width: 8),
+          ThemeModeButton(),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

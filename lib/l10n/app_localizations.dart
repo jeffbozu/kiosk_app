@@ -1,178 +1,488 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class AppLocalizations {
-  final Locale locale;
-  AppLocalizations(this.locale);
+import 'login_page.dart';
+import 'l10n/app_localizations.dart';
+import 'payment_method_page.dart';
+import 'language_selector.dart';
+import 'locale_provider.dart';
 
-  /// Retrieve the localization instance from the closest [BuildContext].
-  static AppLocalizations of(BuildContext context) {
-    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
-  }
-
-  static const supportedLocales = [
-    Locale('es'),
-    Locale('ca'),
-    Locale('en'),
-  ];
-
-  static const _localizedValues = <String, Map<String, String>>{
-    'es': {
-      'welcome': 'Bienvenido a Meypar Optima App',
-      'email': 'Email',
-      'password': 'Contraseña',
-      'signIn': 'Iniciar sesión',
-      'invalidEmail': 'La dirección de correo tiene un formato incorrecto.',
-      'userDisabled': 'La cuenta de usuario está desactivada.',
-      'userNotFound': 'No existe ningún usuario con ese correo.',
-      'wrongPassword': 'Correo o contraseña incorrectos.',
-      'tooManyRequests': 'Se han intentado demasiados accesos. Intenta más tarde.',
-      'invalidCredential': 'La credencial proporcionada es incorrecta o ha expirado.',
-      'loginError': 'Error al iniciar sesión: {error}',
-      'unexpectedError': 'Ha ocurrido un error inesperado.',
-      'zone': 'Zona',
-      'chooseZone': 'Escoge zona…',
-      'plate': 'Matrícula',
-      'plateRequired': 'La matrícula es obligatoria.',
-      'price': 'Precio',
-      'until': 'Hasta',
-      'pay': 'Pagar',
-      'correctPlate': '¿Es correcta la matrícula?',
-      'yes': 'Sí',
-      'no': 'No',
-      'sendTicketEmail': '¿Enviar ticket por email?',
-      'enterEmail': 'Introduce tu email',
-      'cancel': 'Cancelar',
-      'send': 'Enviar',
-      'ticketCreated': 'Ticket generado correctamente.',
-      'returningIn': 'Regresando en {seconds} s…',
-      'selectMethod': 'Selecciona el método de pago',
-      'cardPayment': 'Pago con tarjeta',
-      'qrPayment': 'Pago con QR',
-      'selectMethodError': 'Debes seleccionar un método antes de continuar.',
-      'processingPayment': 'Procesando pago…',
-      'paymentSuccess': 'Pago realizado con éxito',
-      'digitalTicket': 'Su ticket es digital.',
-      'emailSent': 'Correo enviado con éxito.',
-      'continue': 'Continuar',
-      'showQrIn': 'Mostrando QR en {seconds} s…',
-      'paymentError': 'Error al procesar el pago',
-      'goHome': 'Volver a la pantalla principal',
-      'back': 'Atrás',
-    },
-    'ca': {
-      'welcome': 'Benvingut a Meypar Optima App',
-      'email': 'Email',
-      'password': 'Contrasenya',
-      'signIn': 'Iniciar sessió',
-      'invalidEmail': "L'adreça de correu té un format incorrecte.",
-      'userDisabled': 'El compte està desactivat.',
-      'userNotFound': 'No existeix cap usuari amb aquest correu.',
-      'wrongPassword': 'Correu o contrasenya incorrectes.',
-      'tooManyRequests': "S'han intentat massa accessos. Intenta més tard.",
-      'invalidCredential': 'La credencial és incorrecta o ha expirat.',
-      'loginError': 'Error en iniciar sessió: {error}',
-      'unexpectedError': 'Ha ocorregut un error inesperat.',
-      'zone': 'Zona',
-      'chooseZone': 'Escull zona…',
-      'plate': 'Matrícula',
-      'plateRequired': 'La matrícula és obligatòria.',
-      'price': 'Preu',
-      'until': 'Fins',
-      'pay': 'Pagar',
-      'correctPlate': 'És correcta la matrícula?',
-      'yes': 'Sí',
-      'no': 'No',
-      'sendTicketEmail': 'Enviar tiquet per email?',
-      'enterEmail': "Introdueix el teu email",
-      'cancel': 'Cancel·lar',
-      'send': 'Enviar',
-      'ticketCreated': 'Tiquet generat correctament.',
-      'returningIn': 'Tornant en {seconds} s…',
-      'selectMethod': 'Selecciona el mètode de pagament',
-      'cardPayment': 'Pagament amb targeta',
-      'qrPayment': 'Pagament amb QR',
-      'selectMethodError': 'Has de seleccionar un mètode abans de continuar.',
-      'processingPayment': 'Processant pagament…',
-      'paymentSuccess': 'Pagament completat',
-      'digitalTicket': 'El tiquet és digital.',
-      'emailSent': 'Correu enviat correctament.',
-      'continue': 'Continuar',
-      'showQrIn': 'Mostrant QR en {seconds} s…',
-      'paymentError': 'Error en processar el pagament',
-      'goHome': "Tornar a l'inici",
-      'back': 'Enrere',
-    },
-    'en': {
-      'welcome': 'Welcome to Meypar Optima App',
-      'email': 'Email',
-      'password': 'Password',
-      'signIn': 'Sign in',
-      'invalidEmail': 'The email address is badly formatted.',
-      'userDisabled': 'The user account is disabled.',
-      'userNotFound': 'There is no user with that email.',
-      'wrongPassword': 'Incorrect email or password.',
-      'tooManyRequests': 'Too many attempts. Try again later.',
-      'invalidCredential': 'The credential is invalid or has expired.',
-      'loginError': 'Error signing in: {error}',
-      'unexpectedError': 'An unexpected error occurred.',
-      'zone': 'Zone',
-      'chooseZone': 'Choose zone…',
-      'plate': 'Plate',
-      'plateRequired': 'Plate is required.',
-      'price': 'Price',
-      'until': 'Until',
-      'pay': 'Pay',
-      'correctPlate': 'Is the plate correct?',
-      'yes': 'Yes',
-      'no': 'No',
-      'sendTicketEmail': 'Send ticket by email?',
-      'enterEmail': 'Enter your email',
-      'cancel': 'Cancel',
-      'send': 'Send',
-      'ticketCreated': 'Ticket generated correctly.',
-      'returningIn': 'Returning in {seconds}s…',
-      'selectMethod': 'Select payment method',
-      'cardPayment': 'Card payment',
-      'qrPayment': 'QR payment',
-      'selectMethodError': 'Select a method before continuing.',
-      'processingPayment': 'Processing payment…',
-      'paymentSuccess': 'Payment completed successfully',
-      'digitalTicket': 'Your ticket is digital.',
-      'emailSent': 'Email sent successfully.',
-      'continue': 'Continue',
-      'showQrIn': 'Showing QR in {seconds}s…',
-      'paymentError': 'Payment error',
-      'goHome': 'Return to main screen',
-      'back': 'Back',
-    },
-  };
-
-  String _get(String key) {
-    return _localizedValues[locale.languageCode]?[key] ??
-        _localizedValues['es']![key] ?? key;
-  }
-
-  String t(String key, {Map<String, String>? params}) {
-    var text = _get(key);
-    params?.forEach((k, v) {
-      text = text.replaceAll('{$k}', v);
-    });
-    return text;
-  }
+class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
+  @override
+  State<HomePage> createState() => _HomePageState();
 }
 
-class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
-  const AppLocalizationsDelegate();
+class _HomePageState extends State<HomePage> {
+  final _firestore = FirebaseFirestore.instance;
+  final _user = FirebaseAuth.instance.currentUser;
+  bool _loading = true, _saving = false;
+
+  List<DropdownMenuItem<String>> _zoneItems = [];
+  List<DropdownMenuItem<int>> _durationItems = [];
+  String? _selectedZoneId;
+  int _selectedDuration = 10; // empieza en 10 minutos
+  final _plateCtrl = TextEditingController();
+
+  String? _ticketId;
+  DateTime? _paidUntil;
+
+  int _backSeconds = 5; // Temporizador para retorno
+
+  double _price = 0.0;
+  double _basePrice = 1.0; // valor base variable según zona
+
+  DateTime _currentTime = DateTime.now();
+  Timer? _clockTimer;
+  bool _intlReady = false; // para saber si Intl ya cargó
 
   @override
-  bool isSupported(Locale locale) =>
-      ['es', 'ca', 'en'].contains(locale.languageCode);
+  void initState() {
+    super.initState();
+    _loadZones();
+    _updatePrice();
+    _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
 
-  @override
-  Future<AppLocalizations> load(Locale locale) async {
-    return AppLocalizations(locale);
+    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() => _currentTime = DateTime.now());
+    });
   }
 
   @override
-  bool shouldReload(LocalizationsDelegate<AppLocalizations> old) => false;
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final locale = Provider.of<LocaleProvider>(context).locale;
+    final localeName = locale.languageCode == 'es'
+        ? 'es_ES'
+        : locale.languageCode == 'ca'
+            ? 'ca_ES'
+            : 'en_GB';
+    if (Intl.defaultLocale != localeName) {
+      Intl.defaultLocale = localeName;
+      initializeDateFormatting(localeName, null).then((_) {
+        if (mounted) setState(() => _intlReady = true);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _clockTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadZones() async {
+    final snap = await _firestore.collection('zones').get();
+    _zoneItems = snap.docs.map((doc) {
+      final data = doc.data();
+      return DropdownMenuItem(
+        value: doc.id,
+        child: Text(data['name'] as String),
+      );
+    }).toList();
+    setState(() => _loading = false);
+  }
+
+  Future<void> _loadDurations(String zoneId) async {
+    final query = await _firestore
+        .collection('tariffs')
+        .where('zoneId', isEqualTo: zoneId)
+        .get();
+
+    final items = <DropdownMenuItem<int>>[];
+
+    double zoneBasePrice = 1.0; // default
+    for (final doc in query.docs) {
+      final d = doc.data();
+      final dur = d['duration'] as int;
+      items.add(DropdownMenuItem(value: dur, child: Text('$dur min')));
+      if (d.containsKey('basePrice')) {
+        zoneBasePrice = (d['basePrice'] as num).toDouble();
+      }
+    }
+
+    items.sort((a, b) => a.value!.compareTo(b.value!));
+    int newSelectedDuration = _selectedDuration;
+    if (!items.any((i) => i.value == newSelectedDuration)) {
+      newSelectedDuration = items.isNotEmpty ? items.first.value! : 10;
+    }
+
+    setState(() {
+      _durationItems = items;
+      _basePrice = zoneBasePrice;
+      _selectedDuration = newSelectedDuration;
+      _updatePrice();
+      _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+    });
+  }
+
+  void _updatePrice() {
+    final blocks = (_selectedDuration / 10).ceil();
+
+    double extraBlockPrice = 0.25; // por defecto
+
+    if (_selectedZoneId == 'centro') {
+      extraBlockPrice = 0.20;
+    } else if (_selectedZoneId == 'ensanche') {
+      extraBlockPrice = 0.25;
+    } else if (_selectedZoneId == 'playa-norte') {
+      extraBlockPrice = 0.30;
+    }
+
+    if (blocks <= 1) {
+      _price = _basePrice;
+    } else {
+      _price = _basePrice + extraBlockPrice * (blocks - 1);
+    }
+  }
+
+  void _increaseDuration() {
+    int? next;
+    if (_durationItems.isNotEmpty) {
+      final durations = _durationItems.map((e) => e.value!).toList()..sort();
+      for (final d in durations) {
+        if (d > _selectedDuration) {
+          next = d;
+          break;
+        }
+      }
+    }
+    next ??= _selectedDuration + 10;
+    setState(() {
+      _selectedDuration = next!;
+      _updatePrice();
+      _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+    });
+  }
+
+  void _decreaseDuration() {
+    int? prev;
+    if (_durationItems.isNotEmpty) {
+      final durations = _durationItems.map((e) => e.value!).toList()..sort();
+      for (final d in durations.reversed) {
+        if (d < _selectedDuration) {
+          prev = d;
+          break;
+        }
+      }
+    }
+    prev ??= _selectedDuration - 10;
+    if (prev < 10) return;
+    setState(() {
+      _selectedDuration = prev!;
+      _updatePrice();
+      _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+    });
+  }
+
+  String get _paidUntilFormatted {
+    if (_paidUntil == null) return '--:--';
+    return '${_paidUntil!.hour.toString().padLeft(2, '0')}:${_paidUntil!.minute.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _confirmAndPay() async {
+    if (_selectedZoneId == null) return;
+
+    final matricula = _plateCtrl.text.trim().toUpperCase();
+
+    if (matricula.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).t('plateRequired'))),
+      );
+      return;
+    }
+
+    // Validación matrícula
+    if (!RegExp(r'^[0-9]{4}[A-Z]{3}$').hasMatch(matricula)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).t('invalidPlate'))),
+      );
+      return;
+    }
+
+    final ok = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context).t('correctPlate')),
+        content: Text(matricula),
+        actions: [
+          TextButton(
+            style: TextButton.styleFrom(backgroundColor: const Color(0xFF7F7F7F)),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppLocalizations.of(context).t('no')),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(AppLocalizations.of(context).t('yes')),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    final paid = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => PaymentMethodPage(
+          zoneId: _selectedZoneId!,
+          plate: matricula,
+          duration: _selectedDuration,
+          price: _price,
+        ),
+      ),
+    );
+
+    if (paid != true) return;
+
+    setState(() {
+      _saving = true;
+      _ticketId = null;
+    });
+
+    final now = DateTime.now();
+    final paidUntil = now.add(Duration(minutes: _selectedDuration));
+    final doc = await _firestore.collection('tickets').add({
+      'userId': _user?.email,
+      'zoneId': _selectedZoneId,
+      'plate': matricula,
+      'paidUntil': Timestamp.fromDate(paidUntil),
+      'status': 'paid',
+      'price': _price,
+      'duration': _selectedDuration,
+    });
+
+    _paidUntil = paidUntil;
+    _ticketId = doc.id;
+    setState(() => _saving = false);
+
+    final send = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context).t('sendTicketEmail')),
+        actions: [
+          TextButton(
+            style: TextButton.styleFrom(backgroundColor: const Color(0xFF7F7F7F)),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppLocalizations.of(context).t('no')),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE62144)),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(AppLocalizations.of(context).t('yes')),
+          ),
+        ],
+      ),
+    );
+
+    if (send == true) {
+      final email = await _askForEmail();
+      if (email != null) await _launchEmail(email);
+    }
+
+    setState(() {
+      _ticketId = null;
+      _plateCtrl.clear();
+      _selectedDuration = 10;
+      _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+    });
+  }
+
+  Future<String?> _askForEmail() async {
+    String email = '';
+    return await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context).t('enterEmail')),
+        content: TextField(
+          autofocus: true,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(hintText: 'correo@ejemplo.com'),
+          onChanged: (v) => email = v,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, null),
+            child: Text(AppLocalizations.of(context).t('cancel')),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$").hasMatch(email)) {
+                Navigator.pop(ctx, email);
+              }
+            },
+            child: Text(AppLocalizations.of(context).t('send')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _launchEmail(String email) async {
+    final uri = Uri(
+      scheme: 'mailto',
+      path: email,
+      query: 'subject=Ticket Kiosk&body=Tu ticket: $_ticketId',
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final allReady = !_saving &&
+        _selectedZoneId != null &&
+        _plateCtrl.text.trim().isNotEmpty;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Kiosk App'),
+        actions: const [LanguageSelector()],
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.access_time, color: Color(0xFFE62144)),
+                      const SizedBox(width: 8),
+                      Text(
+                        _intlReady
+                            ? DateFormat('EEEE, d MMM y • HH:mm:ss', Intl.defaultLocale)
+                                .format(_currentTime)
+                            : '',
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context).t('zone')),
+                    items: _zoneItems,
+                    value: _selectedZoneId,
+                    hint: Text(AppLocalizations.of(context).t('chooseZone')),
+                    onChanged: (v) {
+                      setState(() {
+                        _selectedZoneId = v;
+                        _selectedDuration = 10;
+                        _durationItems = [];
+                        _updatePrice();
+                      });
+                      if (v != null) _loadDurations(v);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _plateCtrl,
+                    decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context).t('plate')),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: _decreaseDuration,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE62144),
+                          minimumSize: const Size(40, 40),
+                        ),
+                        child: const Icon(Icons.remove, color: Colors.white),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          '$_selectedDuration min',
+                          style: const TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: _increaseDuration,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE62144),
+                          minimumSize: const Size(40, 40),
+                        ),
+                        child: const Icon(Icons.add, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${AppLocalizations.of(context).t('price')}: ${_intlReady ? NumberFormat.currency(
+                          symbol: '€', locale: Intl.defaultLocale, decimalDigits: 2
+                        ).format(_price) : _price.toStringAsFixed(2) + ' €'}',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      Text(
+                        '${AppLocalizations.of(context).t('until')}: $_paidUntilFormatted',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  if (_ticketId != null) ...[
+                    Text(
+                      AppLocalizations.of(context).t('ticketCreated'),
+                      style: const TextStyle(color: Colors.green),
+                    ),
+                    const SizedBox(height: 8),
+                    Center(
+                      child: QrImageView(
+                        data: _ticketId!,
+                        version: QrVersions.auto,
+                        size: 200,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      AppLocalizations.of(context)
+                          .t('returningIn', params: {'seconds': '$_backSeconds'}),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                  ElevatedButton(
+                    onPressed: allReady ? _confirmAndPay : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          allReady ? const Color(0xFFE62144) : Colors.grey,
+                    ),
+                    child: _saving
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            AppLocalizations.of(context).t('pay'),
+                          ),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
 }

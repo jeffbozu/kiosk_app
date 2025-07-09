@@ -14,10 +14,8 @@ class PaymentSuccessPage extends StatefulWidget {
   State<PaymentSuccessPage> createState() => _PaymentSuccessPageState();
 }
 
-enum _Stage { askEmail, emailSent, showQr }
-
 class _PaymentSuccessPageState extends State<PaymentSuccessPage> {
-  _Stage _stage = _Stage.askEmail;
+  bool _askEmailDone = false;
   int _seconds = 10;
   Timer? _timer;
 
@@ -27,7 +25,7 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage> {
     super.dispose();
   }
 
-  void _startCountdown(VoidCallback onDone) {
+  void _startCountdown() {
     _timer?.cancel();
     _seconds = 10;
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
@@ -35,25 +33,16 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage> {
         setState(() => _seconds--);
       } else {
         t.cancel();
-        onDone();
+        Navigator.of(context).popUntil((r) => r.isFirst);
       }
     });
   }
 
   Future<void> _sendEmail() async {
     final email = await _askForEmail();
-    if (email != null) {
-      await _launchEmail(email);
-      setState(() => _stage = _Stage.emailSent);
-      _startCountdown(_showQr);
-    } else {
-      _showQr();
-    }
-  }
-
-  void _showQr() {
-    setState(() => _stage = _Stage.showQr);
-    _startCountdown(() => Navigator.of(context).popUntil((r) => r.isFirst));
+    if (email != null) await _launchEmail(email);
+    setState(() => _askEmailDone = true);
+    _startCountdown();
   }
 
   Future<String?> _askForEmail() async {
@@ -106,27 +95,28 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage> {
       appBar: AppBar(
         title: Text(l.t('paymentSuccess')),
         automaticallyImplyLeading: false,
-        actions: const [LanguageSelector(), SizedBox(width: 8), ThemeModeButton()],
+        actions: const [
+          LanguageSelector(),
+          SizedBox(width: 8),
+          ThemeModeButton(),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (_stage == _Stage.showQr || _stage == _Stage.askEmail) ...[
-              Text(l.t('digitalTicket'), textAlign: TextAlign.center),
-              const SizedBox(height: 16),
-              Center(
-                child: QrImageView(
-                  data: widget.ticketId,
-                  version: QrVersions.auto,
-                  size: 200,
-                ),
+            Text(l.t('digitalTicket'), textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            Center(
+              child: QrImageView(
+                data: widget.ticketId,
+                version: QrVersions.auto,
+                size: 200,
               ),
-              const Spacer(),
-            ] else
-              const Spacer(),
-            if (_stage == _Stage.askEmail) ...[
+            ),
+            const Spacer(),
+            if (!_askEmailDone) ...[
               Text(l.t('sendTicketEmail'), textAlign: TextAlign.center),
               const SizedBox(height: 16),
               Row(
@@ -134,7 +124,8 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage> {
                 children: [
                   TextButton(
                     onPressed: () {
-                      _showQr();
+                      setState(() => _askEmailDone = true);
+                      _startCountdown();
                     },
                     child: Text(l.t('no')),
                   ),
@@ -144,19 +135,7 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage> {
                   ),
                 ],
               ),
-            ] else if (_stage == _Stage.emailSent) ...[
-              Text(l.t('emailSent'), textAlign: TextAlign.center),
-              const SizedBox(height: 16),
-              Text(
-                l.t('showQrIn', params: {'seconds': '$_seconds'}),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _showQr,
-                child: Text(l.t('continue')),
-              ),
-            ] else if (_stage == _Stage.showQr) ...[
+            ] else ...[
               Text(
                 l.t('returningIn', params: {'seconds': '$_seconds'}),
                 textAlign: TextAlign.center,

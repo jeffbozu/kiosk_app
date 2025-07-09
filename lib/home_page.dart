@@ -6,15 +6,13 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import 'login_page.dart';
 import 'l10n/app_localizations.dart';
 import 'payment_method_page.dart';
 import 'language_selector.dart';
 import 'locale_provider.dart';
 import 'theme_mode_button.dart';
-import 'payment_success_page.dart';
+import 'ticket_success_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -31,7 +29,9 @@ class _HomePageState extends State<HomePage> {
   List<DropdownMenuItem<int>> _durationItems = [];
   String? _selectedZoneId;
   int _selectedDuration = 10; // empieza en 10 minutos
-  final int _minDuration = 10;
+  int _minDuration = 10;
+  int _maxDuration = 120;
+  int _increment = 10;
   final _plateCtrl = TextEditingController();
 
   String? _ticketId;
@@ -110,9 +110,16 @@ class _HomePageState extends State<HomePage> {
     }
 
     items.sort((a, b) => a.value!.compareTo(b.value!));
+    if (items.isNotEmpty) {
+      _minDuration = items.first.value!;
+      _maxDuration = items.last.value!;
+      if (items.length > 1) {
+        _increment = items[1].value! - items.first.value!;
+      }
+    }
     int newSelectedDuration = _selectedDuration;
     if (!items.any((i) => i.value == newSelectedDuration)) {
-      newSelectedDuration = items.isNotEmpty ? items.first.value! : 10;
+      newSelectedDuration = items.isNotEmpty ? items.first.value! : _minDuration;
     }
 
     setState(() {
@@ -145,16 +152,16 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _increaseDuration() {
-    final next = _selectedDuration + 10;
+    final next = _selectedDuration + _increment;
     setState(() {
-      _selectedDuration = next;
+      _selectedDuration = next > _maxDuration ? _maxDuration : next;
       _updatePrice();
       _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
     });
   }
 
   void _decreaseDuration() {
-    final prev = _selectedDuration - 10;
+    final prev = _selectedDuration - _increment;
     if (prev < _minDuration) return;
     setState(() {
       _selectedDuration = prev;
@@ -180,13 +187,6 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    // Validación matrícula
-    if (!RegExp(r'^[0-9]{4}[A-Z]{3}$').hasMatch(matricula)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).t('invalidPlate'))),
-      );
-      return;
-    }
 
     final ok = await showDialog<bool>(
       context: context,
@@ -242,34 +242,10 @@ class _HomePageState extends State<HomePage> {
     _ticketId = doc.id;
     setState(() => _saving = false);
 
-    final send = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Text(AppLocalizations.of(context).t('sendTicketEmail')),
-        actions: [
-          TextButton(
-            style: TextButton.styleFrom(backgroundColor: const Color(0xFF7F7F7F)),
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(AppLocalizations.of(context).t('no')),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE62144)),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(AppLocalizations.of(context).t('yes')),
-          ),
-        ],
-      ),
-    );
-
-    if (send == true) {
-      final email = await _askForEmail();
-      if (email != null) await _launchEmail(email);
-    }
 
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => PaymentSuccessPage(ticketId: _ticketId!),
+        builder: (_) => TicketSuccessPage(ticketId: _ticketId!),
       ),
     );
 
@@ -281,47 +257,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<String?> _askForEmail() async {
-    String email = '';
-    return await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Text(AppLocalizations.of(context).t('enterEmail')),
-        content: TextField(
-          autofocus: true,
-          keyboardType: TextInputType.emailAddress,
-          decoration: const InputDecoration(hintText: 'correo@ejemplo.com'),
-          onChanged: (v) => email = v,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, null),
-            child: Text(AppLocalizations.of(context).t('cancel')),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$").hasMatch(email)) {
-                Navigator.pop(ctx, email);
-              }
-            },
-            child: Text(AppLocalizations.of(context).t('send')),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _launchEmail(String email) async {
-    final uri = Uri(
-      scheme: 'mailto',
-      path: email,
-      query: 'subject=Ticket Kiosk&body=Tu ticket: $_ticketId',
-    );
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -368,7 +303,7 @@ class _HomePageState extends State<HomePage> {
                     onChanged: (v) {
                       setState(() {
                         _selectedZoneId = v;
-                        _selectedDuration = 10;
+                        _selectedDuration = _minDuration;
                         _durationItems = [];
                         _updatePrice();
                       });

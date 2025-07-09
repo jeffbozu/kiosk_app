@@ -16,7 +16,7 @@ class PaymentSuccessPage extends StatefulWidget {
 
 class _PaymentSuccessPageState extends State<PaymentSuccessPage> {
   bool _askEmailDone = false;
-  int _seconds = 20;
+  int _seconds = 10;
   Timer? _timer;
 
   @override
@@ -27,6 +27,7 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage> {
 
   void _startCountdown() {
     _timer?.cancel();
+    _seconds = 10;
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (_seconds > 1) {
         setState(() => _seconds--);
@@ -94,7 +95,11 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage> {
       appBar: AppBar(
         title: Text(l.t('paymentSuccess')),
         automaticallyImplyLeading: false,
-        actions: const [LanguageSelector(), SizedBox(width: 8), ThemeModeButton()],
+        actions: const [
+          LanguageSelector(),
+          SizedBox(width: 8),
+          ThemeModeButton(),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

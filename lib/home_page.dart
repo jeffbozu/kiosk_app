@@ -34,7 +34,7 @@ class _HomePageState extends State<HomePage> {
   String? _ticketId;
   DateTime? _paidUntil;
 
-  int _backSeconds = 5; // Variable declarada para el temporizador
+  int _backSeconds = 5; // Temporizador para retorno
 
   double _price = 0.0;
   double _basePrice = 1.0; // valor base variable según zona
@@ -199,7 +199,7 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    // Validación de matrícula con expresión regular corregida (sin el $ extra)
+    // Validación matrícula
     if (!RegExp(r'^[0-9]{4}[A-Z]{3}$').hasMatch(matricula)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).t('invalidPlate'))),

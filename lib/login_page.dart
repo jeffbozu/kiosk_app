@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'l10n/app_localizations.dart';
 import 'language_selector.dart';
-import 'theme_mode_button.dart'; // Incluido para modo oscuro
+import 'theme_mode_button.dart';
 
 /// Pantalla de login con email/contraseña, mensajes en español
 /// y estilo de botón/título actualizado.

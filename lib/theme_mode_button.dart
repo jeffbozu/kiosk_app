@@ -10,6 +10,8 @@ class ThemeModeButton extends StatelessWidget {
     final prov = Provider.of<ThemeProvider>(context);
     final isDark = prov.mode == ThemeMode.dark;
     return IconButton(
+      iconSize: 32,
+      color: Theme.of(context).colorScheme.primary,
       icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
       onPressed: prov.toggle,
     );

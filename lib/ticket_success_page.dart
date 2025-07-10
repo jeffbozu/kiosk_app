@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'l10n/app_localizations.dart';
 import 'language_selector.dart';
@@ -17,11 +18,46 @@ class TicketSuccessPage extends StatefulWidget {
 class _TicketSuccessPageState extends State<TicketSuccessPage> {
   int _seconds = 20;
   Timer? _timer;
+  String? _qrData;
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
     _startCountdown(20);
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    // No modificar el código para cambiar los campos del QR.
+    // Edita el array qrFields en Firestore (settings/qrConfig).
+    try {
+      final fs = FirebaseFirestore.instance;
+      final ticketDoc = await fs.collection('tickets').doc(widget.ticketId).get();
+      final ticketData = ticketDoc.data() ?? {};
+      final configDoc =
+          await fs.collection('settings').doc('qrConfig').get();
+      final fields = List<String>.from(configDoc.data()?['qrFields'] ?? []);
+
+      final lines = <String>[];
+      for (final field in fields) {
+        dynamic value;
+        if (field == 'ticketId') {
+          value = widget.ticketId;
+        } else {
+          value = ticketData[field];
+          if (value is Timestamp) value = value.toDate();
+        }
+        if (value != null) lines.add('$field: $value');
+      }
+      setState(() {
+        _qrData = lines.join('\n');
+        _loading = false;
+      });
+    } catch (e) {
+      debugPrint('Error loading QR data: $e');
+      setState(() => _loading = false);
+    }
   }
 
   void _startCountdown(int secs) {
@@ -91,19 +127,22 @@ class _TicketSuccessPageState extends State<TicketSuccessPage> {
             const SizedBox(height: 16),
             Expanded(
               child: Center(
-                child: Builder(
-                  builder: (context) {
-                    final isDark = Theme.of(context).brightness == Brightness.dark;
-                    return Container(
-                      color: isDark ? Colors.white : Colors.transparent,
-                      child: QrImageView(
-                        data: widget.ticketId,
-                        version: QrVersions.auto,
-                        size: 250,
+                child: _loading
+                    ? const CircularProgressIndicator()
+                    : Builder(
+                        builder: (context) {
+                          final isDark =
+                              Theme.of(context).brightness == Brightness.dark;
+                          return Container(
+                            color: isDark ? Colors.white : Colors.transparent,
+                            child: QrImageView(
+                              data: _qrData ?? widget.ticketId,
+                              version: QrVersions.auto,
+                              size: 250,
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
             ),
             const SizedBox(height: 8),

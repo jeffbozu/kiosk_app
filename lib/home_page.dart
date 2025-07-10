@@ -440,15 +440,6 @@ class _HomePageState extends State<HomePage> {
                             AppLocalizations.of(context).t('pay'),
                           ),
                   ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('¡Gracias!')),
-                      );
-                    },
-                    child: const Text('GRACIAS'),
-                  ),
                 ],
               ),
             ),

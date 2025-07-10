@@ -1,8 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math' as math;
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +12,8 @@ import 'language_selector.dart';
 import 'locale_provider.dart';
 import 'theme_mode_button.dart';
 import 'ticket_success_page.dart';
+import 'ticket_scanner_page.dart';
+import 'qr_config_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -24,6 +26,7 @@ class _HomePageState extends State<HomePage> {
   bool _loading = true, _saving = false;
 
   List<DropdownMenuItem<String>> _zoneItems = [];
+  final Map<String, String> _zoneNames = {};
   List<DropdownMenuItem<int>> _durationItems = [];
   String? _selectedZoneId;
   int _selectedDuration = 10; // empieza en 10 minutos
@@ -81,9 +84,11 @@ class _HomePageState extends State<HomePage> {
     final snap = await _firestore.collection('zones').get();
     _zoneItems = snap.docs.map((doc) {
       final data = doc.data();
+      final name = data['name'] as String;
+      _zoneNames[doc.id] = name;
       return DropdownMenuItem(
         value: doc.id,
-        child: Text(data['name'] as String),
+        child: Text(name),
       );
     }).toList();
     setState(() => _loading = false);
@@ -215,7 +220,7 @@ class _HomePageState extends State<HomePage> {
     );
     if (ok != true) return;
 
-    final paid = await Navigator.of(context).push<bool>(
+    final method = await Navigator.of(context).push<String>(
       MaterialPageRoute(
         builder: (_) => PaymentMethodPage(
           zoneId: _selectedZoneId!,
@@ -225,8 +230,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
-
-    if (paid != true) return;
+    if (method == null) return;
 
     setState(() {
       _saving = true;
@@ -235,22 +239,36 @@ class _HomePageState extends State<HomePage> {
 
     final now = DateTime.now();
     final paidUntil = now.add(Duration(minutes: _selectedDuration));
-    final doc = await _firestore.collection('tickets').add({
+    final docRef = await _firestore.collection('tickets').add({
       'zoneId': _selectedZoneId,
+      'zoneName': _zoneNames[_selectedZoneId] ?? '',
       'plate': matricula,
       'paidUntil': Timestamp.fromDate(paidUntil),
       'status': 'paid',
       'price': _price,
       'duration': _selectedDuration,
+      'paymentMethod': method,
     });
 
     _paidUntil = paidUntil;
-    _ticketId = doc.id;
+    _ticketId = docRef.id;
+    final snap = await docRef.get();
+    final data = snap.data() ?? {};
+    final qrFields = context.read<QrConfig>().qrFields;
+    final qrMap = <String, dynamic>{};
+    for (final f in qrFields) {
+      if (f == 'ticketId') {
+        qrMap['ticketId'] = docRef.id;
+      } else if (data.containsKey(f)) {
+        qrMap[f] = data[f];
+      }
+    }
+    final qrJson = jsonEncode(qrMap);
     setState(() => _saving = false);
 
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => TicketSuccessPage(ticketId: _ticketId!),
+        builder: (_) => TicketSuccessPage(qrData: qrJson),
       ),
     );
 
@@ -271,10 +289,20 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kiosk App'),
-        actions: const [
-          LanguageSelector(),
-          SizedBox(width: 8),
-          ThemeModeButton(),
+        actions: [
+          const LanguageSelector(),
+          const SizedBox(width: 8),
+          const ThemeModeButton(),
+          IconButton(
+            icon: const Icon(Icons.qr_code_scanner),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const TicketScannerPage(),
+                ),
+              );
+            },
+          ),
         ],
       ),
       body: _loading

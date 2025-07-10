@@ -220,7 +220,7 @@ class _HomePageState extends State<HomePage> {
     );
     if (ok != true) return;
 
-    final method = await Navigator.of(context).push<String>(
+    final result = await Navigator.of(context).push<Map<String, dynamic>>(
       MaterialPageRoute(
         builder: (_) => PaymentMethodPage(
           zoneId: _selectedZoneId!,
@@ -230,7 +230,8 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
-    if (method == null) return;
+    if (result == null || result['paid'] != true) return;
+    final method = result['method'] as String? ?? 'unknown';
 
     setState(() {
       _saving = true;
@@ -268,7 +269,10 @@ class _HomePageState extends State<HomePage> {
 
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => TicketSuccessPage(qrData: qrJson),
+        builder: (_) => TicketSuccessPage(
+          ticketId: _ticketId!,
+          qrData: qrJson,
+        ),
       ),
     );
 

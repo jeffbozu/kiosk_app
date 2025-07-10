@@ -40,7 +40,12 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
       _message = AppLocalizations.of(context).t('paymentSuccess');
     });
     await Future.delayed(const Duration(seconds: 2));
-    if (mounted) Navigator.pop(context, _selectedMethod);
+    if (mounted) {
+      Navigator.pop(context, {
+        'paid': true,
+        'method': _selectedMethod,
+      });
+    }
   }
 
   @override

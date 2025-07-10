@@ -7,8 +7,9 @@ import 'language_selector.dart';
 import 'theme_mode_button.dart';
 
 class TicketSuccessPage extends StatefulWidget {
+  final String ticketId;
   final String qrData;
-  const TicketSuccessPage({super.key, required this.qrData});
+  const TicketSuccessPage({super.key, required this.ticketId, required this.qrData});
 
   @override
   State<TicketSuccessPage> createState() => _TicketSuccessPageState();
@@ -50,13 +51,12 @@ class _TicketSuccessPageState extends State<TicketSuccessPage> {
     );
     if (!mounted) return;
     if (email != null) {
-      await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => EmailSentDialog(onClose: _goHome),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).t('emailSent'))),
       );
+      _startCountdown(10);
     } else {
-      _startCountdown(20);
+      _startCountdown(_seconds);
     }
   }
 
@@ -84,47 +84,43 @@ class _TicketSuccessPageState extends State<TicketSuccessPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              l.t('paymentDone'),
+              '✅ ${l.t('paymentSuccess')}',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge,
+              style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 16),
             Expanded(
               child: Center(
-                child: Builder(
-                  builder: (context) {
-                    final isDark = Theme.of(context).brightness == Brightness.dark;
-                    return Container(
-                      color: isDark ? Colors.white : Colors.transparent,
-                      child: QrImageView(
-                        data: widget.qrData,
-                        version: QrVersions.auto,
-                        size: 250,
-                      ),
-                    );
-                  },
+                child: Container(
+                  color: Colors.white,
+                  child: QrImageView(
+                    data: widget.qrData,
+                    version: QrVersions.auto,
+                    size: 250,
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              l.t('saveTicketQr'),
+              l.t('scanToSave'),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            Text(
-              l.t('returningIn', params: {'seconds': '$_seconds'}),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _goHome,
-              child: Text(l.t('goHome')),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _showEmailDialog,
+                    child: Text(l.t('sendByEmail')),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             TextButton(
-              onPressed: _showEmailDialog,
-              child: Text(l.t('sendByEmail')),
+              onPressed: _goHome,
+              child: Text(l.t('closeAndReturn')),
             ),
           ],
         ),
@@ -141,6 +137,7 @@ class EmailDialog extends StatefulWidget {
 }
 
 class _EmailDialogState extends State<EmailDialog> {
+  final _formKey = GlobalKey<FormState>();
   String _email = '';
 
   @override
@@ -148,74 +145,36 @@ class _EmailDialogState extends State<EmailDialog> {
     final l = AppLocalizations.of(context);
     return AlertDialog(
       title: Text(l.t('enterEmail')),
-      content: TextField(
-        autofocus: true,
-        keyboardType: TextInputType.emailAddress,
-        onChanged: (v) => _email = v,
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          autofocus: true,
+          keyboardType: TextInputType.emailAddress,
+          onChanged: (v) => _email = v,
+          validator: (v) {
+            final value = v?.trim() ?? '';
+            if (value.isEmpty) return l.t('invalidEmail');
+            final reg = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+            if (!reg.hasMatch(value)) return l.t('invalidEmail');
+            return null;
+          },
+        ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(l.t('cancel')),
+          child: Text(l.t('no')),
         ),
         ElevatedButton(
-          onPressed: () => Navigator.pop(context, _email.trim()),
-          child: Text(l.t('send')),
+          onPressed: () {
+            if (_formKey.currentState?.validate() ?? false) {
+              Navigator.pop(context, _email.trim());
+            }
+          },
+          child: Text(l.t('yes')),
         ),
       ],
     );
   }
 }
 
-class EmailSentDialog extends StatefulWidget {
-  final VoidCallback onClose;
-  const EmailSentDialog({super.key, required this.onClose});
-
-  @override
-  State<EmailSentDialog> createState() => _EmailSentDialogState();
-}
-
-class _EmailSentDialogState extends State<EmailSentDialog> {
-  int _seconds = 10;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (_seconds > 1) {
-        setState(() => _seconds--);
-      } else {
-        t.cancel();
-        widget.onClose();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    return AlertDialog(
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(l.t('emailSent')),
-          const SizedBox(height: 8),
-          Text(l.t('returningIn', params: {'seconds': '$_seconds'})),
-        ],
-      ),
-      actions: [
-        ElevatedButton(
-          onPressed: widget.onClose,
-          child: Text(l.t('close')),
-        ),
-      ],
-    );
-  }
-}

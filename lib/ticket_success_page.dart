@@ -91,10 +91,18 @@ class _TicketSuccessPageState extends State<TicketSuccessPage> {
             const SizedBox(height: 16),
             Expanded(
               child: Center(
-                child: QrImageView(
-                  data: widget.ticketId,
-                  version: QrVersions.auto,
-                  size: 250,
+                child: Builder(
+                  builder: (context) {
+                    final isDark = Theme.of(context).brightness == Brightness.dark;
+                    return Container(
+                      color: isDark ? Colors.white : Colors.transparent,
+                      child: QrImageView(
+                        data: widget.ticketId,
+                        version: QrVersions.auto,
+                        size: 250,
+                      ),
+                    );
+                  },
                 ),
               ),
             ),

@@ -152,7 +152,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _increaseDuration() {
-    final next = _selectedDuration + _increment;
+    final next = _selectedDuration + 10;
     setState(() {
       _selectedDuration = next > _maxDuration ? _maxDuration : next;
       _updatePrice();
@@ -161,10 +161,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _decreaseDuration() {
-    final prev = _selectedDuration - _increment;
-    if (prev < _minDuration) return;
+    final prev = _selectedDuration - 10;
     setState(() {
-      _selectedDuration = prev;
+      _selectedDuration = prev < _minDuration ? _minDuration : prev;
       _updatePrice();
       _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
     });

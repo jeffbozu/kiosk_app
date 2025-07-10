@@ -127,7 +127,7 @@ class _HomePageState extends State<HomePage> {
         if (!_durationItems.any((d) => d.value == _selectedDuration)) {
           _selectedDuration = _minDuration;
         }
-        _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+        _paidUntil = _calculatePaidUntil(DateTime.now(), _selectedDuration);
         _updatePrice();
         if (mounted) setState(() {});
       },
@@ -150,7 +150,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _selectedDuration = next;
       _updatePrice();
-      _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+      _paidUntil = _calculatePaidUntil(DateTime.now(), _selectedDuration);
     });
   }
 
@@ -159,7 +159,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _selectedDuration = prev;
       _updatePrice();
-      _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+      _paidUntil = _calculatePaidUntil(DateTime.now(), _selectedDuration);
     });
   }
 
@@ -171,6 +171,20 @@ class _HomePageState extends State<HomePage> {
     final m = int.tryParse(parts[1]);
     if (h == null || m == null) return null;
     return TimeOfDay(hour: h, minute: m);
+  }
+
+  DateTime _calculatePaidUntil(DateTime start, int minutes) {
+    var end = start.add(Duration(minutes: minutes));
+    if (_startTime == null || _endTime == null) return end;
+    final endToday = DateTime(start.year, start.month, start.day,
+        _endTime!.hour, _endTime!.minute);
+    if (end.isAfter(endToday)) {
+      final startNext = DateTime(start.year, start.month, start.day,
+              _startTime!.hour, _startTime!.minute)
+          .add(const Duration(days: 1));
+      end = startNext.add(end.difference(endToday));
+    }
+    return end;
   }
 
   bool _isWithinSchedule(DateTime now) {
@@ -262,7 +276,7 @@ class _HomePageState extends State<HomePage> {
     });
 
     final now = DateTime.now();
-    final paidUntil = now.add(Duration(minutes: _selectedDuration));
+    final paidUntil = _calculatePaidUntil(now, _selectedDuration);
     final doc = await _firestore.collection('tickets').add({
       'zoneId': _selectedZoneId,
       'plate': matricula,
@@ -286,7 +300,7 @@ class _HomePageState extends State<HomePage> {
       _ticketId = null;
       _plateCtrl.clear();
       _selectedDuration = _minDuration;
-      _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+      _paidUntil = _calculatePaidUntil(DateTime.now(), _selectedDuration);
     });
   }
 
@@ -294,7 +308,8 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final allReady = !_saving &&
         _selectedZoneId != null &&
-        _plateCtrl.text.trim().isNotEmpty;
+        _plateCtrl.text.trim().isNotEmpty &&
+        !_emergencyActive;
 
     return Scaffold(
       appBar: AppBar(
@@ -424,15 +439,6 @@ class _HomePageState extends State<HomePage> {
                         : Text(
                             AppLocalizations.of(context).t('pay'),
                           ),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('¡Gracias!')),
-                      );
-                    },
-                    child: const Text('GRACIAS'),
                   ),
                 ],
               ),

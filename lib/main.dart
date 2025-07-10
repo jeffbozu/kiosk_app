@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'firebase_options.dart';
-import 'login_page.dart';
 import 'home_page.dart';
 import 'l10n/app_localizations.dart';
 import 'locale_provider.dart';
@@ -148,34 +146,10 @@ class MyApp extends StatelessWidget {
               ),
             ),
             themeMode: themeProv.mode,
-            home: const AuthGate(),
+            home: const HomePage(),
           );
         },
       ),
-    );
-  }
-}
-
-/// Comprueba el estado de autenticación y muestra LoginPage o HomePage
-class AuthGate extends StatelessWidget {
-  const AuthGate({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-        final user = snapshot.data;
-        if (user == null) {
-          return const LoginPage();
-        }
-        return const HomePage();
-      },
     );
   }
 }

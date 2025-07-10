@@ -61,6 +61,8 @@ class AppLocalizations {
       'paymentError': 'Error al procesar el pago',
       'goHome': 'Volver a la pantalla principal',
       'back': 'Atrás',
+      'invalidSchedule': 'Fuera de horario o día permitido.',
+      'emergencyActive': 'Tarifa gratuita por emergencia: {reason}',
     },
     'ca': {
       'welcome': 'Benvingut a Meypar Optima App',
@@ -108,6 +110,8 @@ class AppLocalizations {
       'paymentError': 'Error en processar el pagament',
       'goHome': "Tornar a l'inici",
       'back': 'Enrere',
+      'invalidSchedule': 'Fora de l\'horari o dia vàlid.',
+      'emergencyActive': 'Tarifa gratuïta per emergència: {reason}',
     },
     'en': {
       'welcome': 'Welcome to Meypar Optima App',
@@ -155,6 +159,8 @@ class AppLocalizations {
       'paymentError': 'Payment error',
       'goHome': 'Return to main screen',
       'back': 'Back',
+      'invalidSchedule': 'Payment not allowed at this time or day.',
+      'emergencyActive': 'Free due to emergency: {reason}',
     },
   };
 

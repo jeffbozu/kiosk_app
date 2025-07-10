@@ -28,7 +28,7 @@ class _HomePageState extends State<HomePage> {
   String? _selectedZoneId;
   int _selectedDuration = 10; // empieza en 10 minutos
   int _minDuration = 10;
-  int _maxDuration = 120;
+  int _maxDuration = 120; // máximo configurable según zona
   int _increment = 10;
   final _plateCtrl = TextEditingController();
 
@@ -150,7 +150,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _increaseDuration() {
-    final next = math.min(_selectedDuration + 10, _maxDuration);
+    final next = math.min(_selectedDuration + _increment, _maxDuration);
     setState(() {
       _selectedDuration = next;
       _updatePrice();
@@ -159,7 +159,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _decreaseDuration() {
-    final prev = math.max(_selectedDuration - 10, _minDuration);
+    final prev = math.max(_selectedDuration - _increment, _minDuration);
     setState(() {
       _selectedDuration = prev;
       _updatePrice();
@@ -184,6 +184,15 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
+    // Opcional: quitar la validación estricta si no quieres formato
+    /*
+    if (!RegExp(r'^[0-9]{4}[A-Z]{3}$').hasMatch(matricula)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).t('invalidPlate'))),
+      );
+      return;
+    }
+    */
 
     final ok = await showDialog<bool>(
       context: context,
@@ -205,6 +214,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
     if (ok != true) return;
+
     final paid = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => PaymentMethodPage(
@@ -238,7 +248,6 @@ class _HomePageState extends State<HomePage> {
     _ticketId = doc.id;
     setState(() => _saving = false);
 
-
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => TicketSuccessPage(ticketId: _ticketId!),
@@ -252,7 +261,6 @@ class _HomePageState extends State<HomePage> {
       _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
     });
   }
-
 
   @override
   Widget build(BuildContext context) {

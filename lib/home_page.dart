@@ -30,6 +30,13 @@ class _HomePageState extends State<HomePage> {
   int _minDuration = 10;
   int _maxDuration = 120; // máximo configurable según zona
   int _increment = 10;
+  double _extraBlockPrice = 0.25;
+  TimeOfDay? _startTime;
+  TimeOfDay? _endTime;
+  List<int> _validDays = [1, 2, 3, 4, 5, 6, 7];
+  bool _emergencyActive = false;
+  String _emergencyReason = '';
+  StreamSubscription<DocumentSnapshot>? _tariffSub;
   final _plateCtrl = TextEditingController();
 
   String? _ticketId;
@@ -74,6 +81,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _clockTimer?.cancel();
+    _tariffSub?.cancel();
     super.dispose();
   }
 
@@ -89,64 +97,48 @@ class _HomePageState extends State<HomePage> {
     setState(() => _loading = false);
   }
 
-  Future<void> _loadDurations(String zoneId) async {
-    final query = await _firestore
-        .collection('tariffs')
-        .where('zoneId', isEqualTo: zoneId)
-        .get();
+  void _listenTariff(String zoneId) {
+    _tariffSub?.cancel();
+    _tariffSub = _firestore.collection('tariffs').doc(zoneId).snapshots().listen(
+      (snap) {
+        final data = snap.data();
+        if (data == null) return;
 
-    final items = <DropdownMenuItem<int>>[];
+        _basePrice = (data['basePrice'] as num?)?.toDouble() ?? 1.0;
+        _minDuration = (data['minDuration'] as num?)?.toInt() ?? 10;
+        _maxDuration = (data['maxDuration'] as num?)?.toInt() ?? 120;
+        _increment = (data['increment'] as num?)?.toInt() ?? 10;
+        _extraBlockPrice = (data['extraBlockPrice'] as num?)?.toDouble() ?? 0.25;
+        _startTime = _parseTimeOfDay(data['startTime'] as String?);
+        _endTime = _parseTimeOfDay(data['endTime'] as String?);
+        _validDays = List<int>.from(data['validDays'] ?? [1, 2, 3, 4, 5, 6, 7]);
+        _emergencyActive = data['emergencyActive'] as bool? ?? false;
+        _emergencyReason = data['emergencyReason'] as String? ?? '';
 
-    double zoneBasePrice = 1.0; // default
-    for (final doc in query.docs) {
-      final d = doc.data();
-      final dur = d['duration'] as int;
-      items.add(DropdownMenuItem(value: dur, child: Text('$dur min')));
-      if (d.containsKey('basePrice')) {
-        zoneBasePrice = (d['basePrice'] as num).toDouble();
-      }
-    }
-
-    items.sort((a, b) => a.value!.compareTo(b.value!));
-    if (items.isNotEmpty) {
-      _minDuration = items.first.value!;
-      _maxDuration = items.last.value!;
-      if (items.length > 1) {
-        _increment = items[1].value! - items.first.value!;
-      }
-    }
-    int newSelectedDuration = _selectedDuration;
-    if (!items.any((i) => i.value == newSelectedDuration)) {
-      newSelectedDuration = items.isNotEmpty ? items.first.value! : _minDuration;
-    }
-
-    setState(() {
-      _durationItems = items;
-      _basePrice = zoneBasePrice;
-      _selectedDuration = newSelectedDuration;
-      _updatePrice();
-      _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
-    });
+        _durationItems = [];
+        for (var dur = _minDuration; dur <= _maxDuration; dur += _increment) {
+          _durationItems.add(
+              DropdownMenuItem(value: dur, child: Text('$dur min')));
+        }
+        if (!_durationItems.any((d) => d.value == _selectedDuration)) {
+          _selectedDuration = _minDuration;
+        }
+        _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+        _updatePrice();
+        if (mounted) setState(() {});
+      },
+    );
   }
 
   void _updatePrice() {
-    final blocks = (_selectedDuration / 10).ceil();
-
-    double extraBlockPrice = 0.25; // por defecto
-
-    if (_selectedZoneId == 'centro') {
-      extraBlockPrice = 0.20;
-    } else if (_selectedZoneId == 'ensanche') {
-      extraBlockPrice = 0.25;
-    } else if (_selectedZoneId == 'playa-norte') {
-      extraBlockPrice = 0.30;
+    if (_emergencyActive) {
+      _price = 0.0;
+      return;
     }
 
-    if (blocks <= 1) {
-      _price = _basePrice;
-    } else {
-      _price = _basePrice + extraBlockPrice * (blocks - 1);
-    }
+    final additional = math.max(0, _selectedDuration - _minDuration);
+    final blocks = (additional / _increment).ceil();
+    _price = _basePrice + _extraBlockPrice * blocks;
   }
 
   void _increaseDuration() {
@@ -165,6 +157,29 @@ class _HomePageState extends State<HomePage> {
       _updatePrice();
       _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
     });
+  }
+
+  TimeOfDay? _parseTimeOfDay(String? value) {
+    if (value == null) return null;
+    final parts = value.split(':');
+    if (parts.length != 2) return null;
+    final h = int.tryParse(parts[0]);
+    final m = int.tryParse(parts[1]);
+    if (h == null || m == null) return null;
+    return TimeOfDay(hour: h, minute: m);
+  }
+
+  bool _isWithinSchedule(DateTime now) {
+    if (!_validDays.contains(now.weekday)) return false;
+    if (_startTime == null || _endTime == null) return true;
+    final startMinutes = _startTime!.hour * 60 + _startTime!.minute;
+    final endMinutes = _endTime!.hour * 60 + _endTime!.minute;
+    final nowMinutes = now.hour * 60 + now.minute;
+    if (startMinutes <= endMinutes) {
+      return nowMinutes >= startMinutes && nowMinutes < endMinutes;
+    } else {
+      return nowMinutes >= startMinutes || nowMinutes < endMinutes;
+    }
   }
 
   String get _paidUntilFormatted {
@@ -215,18 +230,27 @@ class _HomePageState extends State<HomePage> {
     );
     if (ok != true) return;
 
-    final paid = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => PaymentMethodPage(
-          zoneId: _selectedZoneId!,
-          plate: matricula,
-          duration: _selectedDuration,
-          price: _price,
-        ),
-      ),
-    );
-
-    if (paid != true) return;
+    if (!_isWithinSchedule(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).t('invalidSchedule'))),
+      );
+      return;
+    }
+    bool paid = true;
+    if (_price > 0) {
+      paid = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(
+              builder: (_) => PaymentMethodPage(
+                zoneId: _selectedZoneId!,
+                plate: matricula,
+                duration: _selectedDuration,
+                price: _price,
+              ),
+            ),
+          ) ??
+          false;
+      if (!paid) return;
+    }
 
     setState(() {
       _saving = true;
@@ -311,7 +335,7 @@ class _HomePageState extends State<HomePage> {
                         _durationItems = [];
                         _updatePrice();
                       });
-                      if (v != null) _loadDurations(v);
+                      if (v != null) _listenTariff(v);
                     },
                   ),
                   const SizedBox(height: 16),
@@ -369,6 +393,14 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ),
+                  if (_emergencyActive && _emergencyReason.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      AppLocalizations.of(context).t('emergencyActive',
+                          params: {'reason': _emergencyReason}),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: allReady ? _confirmAndPay : null,

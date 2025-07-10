@@ -99,7 +99,11 @@ class _HomePageState extends State<HomePage> {
 
   void _listenTariff(String zoneId) {
     _tariffSub?.cancel();
-    _tariffSub = _firestore.collection('tariffs').doc(zoneId).snapshots().listen(
+    _tariffSub = _firestore
+        .collection('tariffs')
+        .doc('tariff-$zoneId')
+        .snapshots()
+        .listen(
       (snap) {
         final data = snap.data();
         if (data == null) return;

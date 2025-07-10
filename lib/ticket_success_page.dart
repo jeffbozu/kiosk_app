@@ -47,6 +47,8 @@ class _TicketSuccessPageState extends State<TicketSuccessPage> {
       final fields = List<String>.from(configDoc.data()?['qrFields'] ?? []);
 
       final lines = <String>[];
+      // Calculamos la longitud máxima para alinear las columnas
+      final maxLabel = fields.fold<int>(0, (p, e) => e.length > p ? e.length : p);
       for (final field in fields) {
         dynamic value;
         if (field == 'ticketId') {
@@ -55,7 +57,11 @@ class _TicketSuccessPageState extends State<TicketSuccessPage> {
           value = ticketData[field];
           if (value is Timestamp) value = value.toDate();
         }
-        if (value != null) lines.add('$field: $value');
+        final label = field[0].toUpperCase() + field.substring(1);
+        final display = (value != null && value.toString().isNotEmpty)
+            ? value.toString()
+            : 'N/A';
+        lines.add('${label.padRight(maxLabel)} : $display');
       }
       setState(() {
         _qrData = lines.join('\n');

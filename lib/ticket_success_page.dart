@@ -33,10 +33,17 @@ class _TicketSuccessPageState extends State<TicketSuccessPage> {
     // Edita el array qrFields en Firestore (settings/qrConfig).
     try {
       final fs = FirebaseFirestore.instance;
-      final ticketDoc = await fs.collection('tickets').doc(widget.ticketId).get();
+      final ticketDoc =
+          await fs.collection('tickets').doc(widget.ticketId).get();
       final ticketData = ticketDoc.data() ?? {};
-      final configDoc =
-          await fs.collection('settings').doc('qrConfig').get();
+
+      final settings = fs.collection('settings');
+      var configDoc = await settings.doc('qrConfig').get();
+      if (!configDoc.exists) {
+        // Intentar alternativa en minúsculas por si el documento está mal nombrado
+        configDoc = await settings.doc('qrconfig').get();
+      }
+
       final fields = List<String>.from(configDoc.data()?['qrFields'] ?? []);
 
       final lines = <String>[];

@@ -23,6 +23,8 @@ Para modificarla accede a Firestore y edita el documento
 
 1. Abre la consola de Firebase y navega a **Firestore**.
 2. Ve a la colección `settings` y abre el documento `qrConfig`.
+   Asegúrate de escribirlo exactamente con esa mayúscula; el nombre es
+   sensible a mayúsculas y minúsculas.
 3. Edita el array `qrFields` para añadir, quitar o reordenar los nombres de
    los campos del ticket que quieras mostrar.
 4. Guarda los cambios. La app leerá este array al generar cada QR y reflejará

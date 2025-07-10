@@ -10,6 +10,7 @@ import 'l10n/app_localizations.dart';
 import 'locale_provider.dart';
 import 'theme_provider.dart';
 import 'theme_mode_button.dart';
+import 'qr_config_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +38,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => QrConfig()),
       ],
       child: Consumer2<LocaleProvider, ThemeProvider>(
         builder: (context, localeProv, themeProv, _) {

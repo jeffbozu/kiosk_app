@@ -61,6 +61,11 @@ class AppLocalizations {
       'paymentError': 'Error al procesar el pago',
       'goHome': 'Volver a la pantalla principal',
       'back': 'Atrás',
+      'ticketDetails': 'Detalles del ticket',
+      'validUntil': 'Válido hasta',
+      'paymentMethod': 'Método de pago',
+      'status': 'Estado',
+      'ticketId': 'Ticket ID',
     },
     'ca': {
       'welcome': 'Benvingut a Meypar Optima App',
@@ -108,6 +113,11 @@ class AppLocalizations {
       'paymentError': 'Error en processar el pagament',
       'goHome': "Tornar a l'inici",
       'back': 'Enrere',
+      'ticketDetails': 'Detalls del tiquet',
+      'validUntil': 'Vàlid fins',
+      'paymentMethod': 'Mètode de pagament',
+      'status': 'Estat',
+      'ticketId': 'Identificador',
     },
     'en': {
       'welcome': 'Welcome to Meypar Optima App',
@@ -155,6 +165,11 @@ class AppLocalizations {
       'paymentError': 'Payment error',
       'goHome': 'Return to main screen',
       'back': 'Back',
+      'ticketDetails': 'Ticket details',
+      'validUntil': 'Valid until',
+      'paymentMethod': 'Payment method',
+      'status': 'Status',
+      'ticketId': 'Ticket ID',
     },
   };
 

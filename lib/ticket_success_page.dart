@@ -7,8 +7,8 @@ import 'language_selector.dart';
 import 'theme_mode_button.dart';
 
 class TicketSuccessPage extends StatefulWidget {
-  final String ticketId;
-  const TicketSuccessPage({super.key, required this.ticketId});
+  final String qrData;
+  const TicketSuccessPage({super.key, required this.qrData});
 
   @override
   State<TicketSuccessPage> createState() => _TicketSuccessPageState();
@@ -97,7 +97,7 @@ class _TicketSuccessPageState extends State<TicketSuccessPage> {
                     return Container(
                       color: isDark ? Colors.white : Colors.transparent,
                       child: QrImageView(
-                        data: widget.ticketId,
+                        data: widget.qrData,
                         version: QrVersions.auto,
                         size: 250,
                       ),

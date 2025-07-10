@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:math' as math;
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
-import 'login_page.dart';
 import 'l10n/app_localizations.dart';
 import 'payment_method_page.dart';
 import 'language_selector.dart';
@@ -22,7 +21,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final _firestore = FirebaseFirestore.instance;
-  final _user = FirebaseAuth.instance.currentUser;
   bool _loading = true, _saving = false;
 
   List<DropdownMenuItem<String>> _zoneItems = [];
@@ -152,18 +150,18 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _increaseDuration() {
-    final next = _selectedDuration + 10;
+    final next = math.min(_selectedDuration + 10, _maxDuration);
     setState(() {
-      _selectedDuration = next > _maxDuration ? _maxDuration : next;
+      _selectedDuration = next;
       _updatePrice();
       _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
     });
   }
 
   void _decreaseDuration() {
-    final prev = _selectedDuration - 10;
+    final prev = math.max(_selectedDuration - 10, _minDuration);
     setState(() {
-      _selectedDuration = prev < _minDuration ? _minDuration : prev;
+      _selectedDuration = prev;
       _updatePrice();
       _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
     });
@@ -228,7 +226,6 @@ class _HomePageState extends State<HomePage> {
     final now = DateTime.now();
     final paidUntil = now.add(Duration(minutes: _selectedDuration));
     final doc = await _firestore.collection('tickets').add({
-      'userId': _user?.email,
       'zoneId': _selectedZoneId,
       'plate': matricula,
       'paidUntil': Timestamp.fromDate(paidUntil),

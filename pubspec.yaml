@@ -19,7 +19,6 @@ dependencies:
   # Dependencias de Firebase para la app Kiosk
   firebase_core: ^3.15.0
   cloud_firestore: ^5.6.10
-  firebase_auth: ^5.0.0
 
   # Añadimos QR y envío de email
   qr_flutter: ^4.0.0         # Para generar código QR

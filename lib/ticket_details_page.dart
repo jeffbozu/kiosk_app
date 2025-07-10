@@ -13,7 +13,11 @@ class TicketDetailsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final qrFields = context.watch<QrConfig>().qrFields;
+
+    // Permite usar una lista configurable de campos QR, o por defecto estos:
+    final qrFields =
+        context.watch<QrConfig?>()?.qrFields ??
+            ['ticketId', 'plate', 'zoneName', 'paidUntil', 'paymentMethod', 'status', 'price'];
 
     final ticketId = data['ticketId'] as String?;
     final stream = ticketId != null

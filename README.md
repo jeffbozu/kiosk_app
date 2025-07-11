@@ -50,7 +50,15 @@ array `qrFields` en Firestore.
 
 ## Ejecutar tests
 
-Para lanzar las pruebas automatizadas ejecuta:
+Con Flutter instalado:
 
-`npm test`
+```bash
+npm test
+```
+
+Sin Flutter (CI provisional):
+
+```bash
+npm run test:stub
+```
 

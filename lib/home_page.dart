@@ -46,7 +46,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadZones();
-    _updatePrice();
+    // Price will remain at 0 until a zone is selected
     _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
 
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -130,6 +130,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _updatePrice() {
+    if (_selectedZoneId == null) {
+      _price = 0.0;
+      return;
+    }
     final blocks = (_selectedDuration / 10).ceil();
 
     double extraBlockPrice = 0.25; // por defecto
@@ -309,7 +313,6 @@ class _HomePageState extends State<HomePage> {
                         _selectedZoneId = v;
                         _selectedDuration = _minDuration;
                         _durationItems = [];
-                        _updatePrice();
                       });
                       if (v != null) _loadDurations(v);
                     },

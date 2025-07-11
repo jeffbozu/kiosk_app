@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 import 'l10n/app_localizations.dart';
 import 'language_selector.dart';
@@ -95,6 +97,33 @@ class _TicketSuccessPageState extends State<TicketSuccessPage> {
     Navigator.of(context).popUntil((r) => r.isFirst);
   }
 
+  Future<void> _sendEmail(String email) async {
+    if (_qrData == null) return;
+    try {
+      final callable =
+          FirebaseFunctions.instance.httpsCallable('sendTicketEmail');
+      await callable.call({
+        'to': email,
+        'from': 'jbolanos@meypar.com',
+        'ticketId': widget.ticketId,
+        'body': _qrData,
+      });
+    } catch (e) {
+      // Como alternativa abrir mailto si la función falla
+      final uri = Uri(
+        scheme: 'mailto',
+        path: email,
+        queryParameters: {
+          'subject': 'Ticket ${widget.ticketId}',
+          'body': _qrData!,
+        },
+      );
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      }
+    }
+  }
+
   Future<void> _showEmailDialog() async {
     _timer?.cancel();
     final email = await showDialog<String>(
@@ -104,6 +133,7 @@ class _TicketSuccessPageState extends State<TicketSuccessPage> {
     );
     if (!mounted) return;
     if (email != null) {
+      await _sendEmail(email);
       await showDialog(
         context: context,
         barrierDismissible: false,

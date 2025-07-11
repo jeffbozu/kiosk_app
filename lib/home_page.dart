@@ -26,8 +26,8 @@ class _HomePageState extends State<HomePage> {
   List<DropdownMenuItem<String>> _zoneItems = [];
   List<DropdownMenuItem<int>> _durationItems = [];
   String? _selectedZoneId;
-  int _selectedDuration = 10; // empieza en 10 minutos
-  int _minDuration = 10;
+  int _selectedDuration = 5; // empieza en 5 minutos
+  int _minDuration = 5;
   int _maxDuration = 120; // máximo configurable según zona
   int _increment = 10;
   double _extraBlockPrice = 0.25;
@@ -124,7 +124,7 @@ class _HomePageState extends State<HomePage> {
 
   void _applyTariffData(Map<String, dynamic> data) {
     _basePrice = (data['basePrice'] as num?)?.toDouble() ?? 0.0;
-    _minDuration = (data['minDuration'] as num?)?.toInt() ?? 10;
+    _minDuration = (data['minDuration'] as num?)?.toInt() ?? 5;
     _maxDuration = (data['maxDuration'] as num?)?.toInt() ?? 120;
     _increment = (data['increment'] as num?)?.toInt() ?? 10;
     _extraBlockPrice = (data['extraBlockPrice'] as num?)?.toDouble() ?? 0.25;

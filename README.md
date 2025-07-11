@@ -2,6 +2,22 @@
 
 A new Flutter project.
 
+## Instalación de dependencias
+
+Antes de ejecutar la aplicación por primera vez ejecuta:
+
+```bash
+flutter pub get
+```
+
+Este comando descarga todos los paquetes requeridos, como `cloud_functions_web`. Si falta esta dependencia se producirá un error parecido a:
+
+```
+Error: Couldn't resolve the package 'cloud_functions_web'
+```
+
+Ejecutar `flutter pub get` soluciona el problema.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

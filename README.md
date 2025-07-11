@@ -42,3 +42,10 @@ Ejemplo de valores para `qrFields`:
 
 **No modifiques el código para cambiar estos campos;** solamente actualiza el
 array `qrFields` en Firestore.
+
+## Ejecutar tests
+
+Para lanzar las pruebas automatizadas ejecuta:
+
+`npm test`
+

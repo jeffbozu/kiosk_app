@@ -9,7 +9,12 @@ import 'theme_mode_button.dart';
 
 class TicketSuccessPage extends StatefulWidget {
   final String ticketId;
-  const TicketSuccessPage({super.key, required this.ticketId});
+  final FirebaseFirestore firestore;
+  const TicketSuccessPage({
+    super.key,
+    required this.ticketId,
+    FirebaseFirestore? firestore,
+  }) : firestore = firestore ?? FirebaseFirestore.instance;
 
   @override
   State<TicketSuccessPage> createState() => _TicketSuccessPageState();
@@ -32,7 +37,7 @@ class _TicketSuccessPageState extends State<TicketSuccessPage> {
     // No modificar el código para cambiar los campos del QR.
     // Edita el array qrFields en Firestore (settings/qrConfig).
     try {
-      final fs = FirebaseFirestore.instance;
+      final fs = widget.firestore;
       final ticketDoc =
           await fs.collection('tickets').doc(widget.ticketId).get();
       final ticketData = ticketDoc.data() ?? {};

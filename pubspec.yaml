@@ -22,7 +22,7 @@ dependencies:
   cloud_firestore: ^5.6.10
   
   # Añadimos cloud_functions para Firebase Functions
-  cloud_functions: ^4.6.0
+  cloud_functions: ^5.6.1
 
   # Añadimos QR y envío de email
   qr_flutter: ^4.0.0         # Para generar código QR

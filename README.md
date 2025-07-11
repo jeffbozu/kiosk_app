@@ -30,6 +30,11 @@ Para modificarla accede a Firestore y edita el documento
 4. Guarda los cambios. La app leerá este array al generar cada QR y reflejará
    la modificación sin desplegar una nueva versión.
 
+Si al escanear el QR únicamente aparece el número de ticket, revisa que el
+documento `qrConfig` exista dentro de la colección `settings` y que contenga el
+array `qrFields`. Si el documento está vacío o mal nombrado, la aplicación no
+podrá mostrar el resto de datos.
+
 Ejemplo de valores para `qrFields`:
 
 ```json

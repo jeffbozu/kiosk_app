@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'l10n/app_localizations.dart';
 import 'language_selector.dart';
@@ -26,20 +27,30 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
   String? _message;
 
   Future<void> _startPayment() async {
+    final l = AppLocalizations.of(context);
     if (_selectedMethod == null) {
-      setState(() => _message = AppLocalizations.of(context).t('selectMethodError'));
+      setState(() => _message = l.t('selectMethodError'));
       return;
     }
     setState(() {
       _processing = true;
-      _message = AppLocalizations.of(context).t('processingPayment');
+      _message = l.t('processingPayment');
     });
     await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
     setState(() {
       _processing = false;
-      _message = AppLocalizations.of(context).t('paymentSuccess');
+      _message = null;
     });
-    await Future.delayed(const Duration(seconds: 2));
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => PaymentSuccessDialog(onClose: () {
+        Navigator.of(ctx).pop();
+      }),
+    );
+
     if (mounted) Navigator.pop(context, true);
   }
 
@@ -101,6 +112,59 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class PaymentSuccessDialog extends StatefulWidget {
+  final VoidCallback onClose;
+  const PaymentSuccessDialog({super.key, required this.onClose});
+
+  @override
+  State<PaymentSuccessDialog> createState() => _PaymentSuccessDialogState();
+}
+
+class _PaymentSuccessDialogState extends State<PaymentSuccessDialog> {
+  int _seconds = 10;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (_seconds > 1) {
+        setState(() => _seconds--);
+      } else {
+        t.cancel();
+        widget.onClose();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return AlertDialog(
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(l.t('paymentSuccess')),
+          const SizedBox(height: 8),
+          Text(l.t('returningIn', params: {'seconds': '$_seconds'})),
+        ],
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: widget.onClose,
+          child: Text(l.t('close')),
+        ),
+      ],
     );
   }
 }

@@ -43,7 +43,9 @@ class _HomePageState extends State<HomePage> {
   DateTime? _paidUntil;
 
   double _price = 0.0;
-  double _basePrice = 1.0; // valor base variable según zona
+  // Precio base de la tarifa seleccionado. Arranca en 0 para evitar mostrar
+  // un importe incorrecto antes de cargar los datos de Firestore.
+  double _basePrice = 0.0;
 
   DateTime _currentTime = DateTime.now();
   Timer? _clockTimer;
@@ -108,7 +110,7 @@ class _HomePageState extends State<HomePage> {
         final data = snap.data();
         if (data == null) return;
 
-        _basePrice = (data['basePrice'] as num?)?.toDouble() ?? 1.0;
+        _basePrice = (data['basePrice'] as num?)?.toDouble() ?? 0.0;
         _minDuration = (data['minDuration'] as num?)?.toInt() ?? 10;
         _maxDuration = (data['maxDuration'] as num?)?.toInt() ?? 120;
         _increment = (data['increment'] as num?)?.toInt() ?? 10;
@@ -135,7 +137,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _updatePrice() {
-    if (_emergencyActive) {
+    // Si no hay zona seleccionada o la tarifa es gratuita por emergencia,
+    // el precio debe ser 0.
+    if (_selectedZoneId == null || _emergencyActive) {
       _price = 0.0;
       return;
     }
@@ -352,6 +356,7 @@ class _HomePageState extends State<HomePage> {
                         _selectedZoneId = v;
                         _selectedDuration = _minDuration;
                         _durationItems = [];
+                        _basePrice = 0.0;
                         _updatePrice();
                       });
                       if (v != null) _listenTariff(v);

@@ -99,41 +99,48 @@ class _HomePageState extends State<HomePage> {
     setState(() => _loading = false);
   }
 
-  void _listenTariff(String zoneId) {
+  Future<void> _listenTariff(String zoneId) async {
     _tariffSub?.cancel();
-    _tariffSub = _firestore
-        .collection('tariffs')
-        .doc('tariff-$zoneId')
-        .snapshots()
-        .listen(
-      (snap) {
-        final data = snap.data();
-        if (data == null) return;
+    final docRef = _firestore.collection('tariffs').doc('tariff-$zoneId');
 
-        _basePrice = (data['basePrice'] as num?)?.toDouble() ?? 0.0;
-        _minDuration = (data['minDuration'] as num?)?.toInt() ?? 10;
-        _maxDuration = (data['maxDuration'] as num?)?.toInt() ?? 120;
-        _increment = (data['increment'] as num?)?.toInt() ?? 10;
-        _extraBlockPrice = (data['extraBlockPrice'] as num?)?.toDouble() ?? 0.25;
-        _startTime = _parseTimeOfDay(data['startTime'] as String?);
-        _endTime = _parseTimeOfDay(data['endTime'] as String?);
-        _validDays = List<int>.from(data['validDays'] ?? [1, 2, 3, 4, 5, 6, 7]);
-        _emergencyActive = data['emergencyActive'] as bool? ?? false;
-        _emergencyReason = data['emergencyReason'] as String? ?? '';
+    final firstSnap = await docRef.get();
+    final firstData = firstSnap.data();
+    if (firstData != null) {
+      _applyTariffData(firstData);
+      _paidUntil = _calculatePaidUntil(DateTime.now(), _selectedDuration);
+      _updatePrice();
+      if (mounted) setState(() {});
+    }
 
-        _durationItems = [];
-        for (var dur = _minDuration; dur <= _maxDuration; dur += _increment) {
-          _durationItems.add(
-              DropdownMenuItem(value: dur, child: Text('$dur min')));
-        }
-        if (!_durationItems.any((d) => d.value == _selectedDuration)) {
-          _selectedDuration = _minDuration;
-        }
-        _paidUntil = _calculatePaidUntil(DateTime.now(), _selectedDuration);
-        _updatePrice();
-        if (mounted) setState(() {});
-      },
-    );
+    _tariffSub = docRef.snapshots().listen((snap) {
+      final data = snap.data();
+      if (data == null) return;
+      _applyTariffData(data);
+      _paidUntil = _calculatePaidUntil(DateTime.now(), _selectedDuration);
+      _updatePrice();
+      if (mounted) setState(() {});
+    });
+  }
+
+  void _applyTariffData(Map<String, dynamic> data) {
+    _basePrice = (data['basePrice'] as num?)?.toDouble() ?? 0.0;
+    _minDuration = (data['minDuration'] as num?)?.toInt() ?? 10;
+    _maxDuration = (data['maxDuration'] as num?)?.toInt() ?? 120;
+    _increment = (data['increment'] as num?)?.toInt() ?? 10;
+    _extraBlockPrice = (data['extraBlockPrice'] as num?)?.toDouble() ?? 0.25;
+    _startTime = _parseTimeOfDay(data['startTime'] as String?);
+    _endTime = _parseTimeOfDay(data['endTime'] as String?);
+    _validDays = List<int>.from(data['validDays'] ?? [1, 2, 3, 4, 5, 6, 7]);
+    _emergencyActive = data['emergencyActive'] as bool? ?? false;
+    _emergencyReason = data['emergencyReason'] as String? ?? '';
+
+    _durationItems = [];
+    for (var dur = _minDuration; dur <= _maxDuration; dur += _increment) {
+      _durationItems.add(DropdownMenuItem(value: dur, child: Text('$dur min')));
+    }
+    if (!_durationItems.any((d) => d.value == _selectedDuration)) {
+      _selectedDuration = _minDuration;
+    }
   }
 
   void _updatePrice() {
@@ -351,15 +358,16 @@ class _HomePageState extends State<HomePage> {
                     items: _zoneItems,
                     value: _selectedZoneId,
                     hint: Text(AppLocalizations.of(context).t('chooseZone')),
-                    onChanged: (v) {
+                    onChanged: (v) async {
+                      if (v == null) return;
+                      _selectedZoneId = v;
+                      await _listenTariff(v);
                       setState(() {
-                        _selectedZoneId = v;
                         _selectedDuration = _minDuration;
-                        _durationItems = [];
-                        _basePrice = 0.0;
+                        _paidUntil =
+                            _calculatePaidUntil(DateTime.now(), _selectedDuration);
                         _updatePrice();
                       });
-                      if (v != null) _listenTariff(v);
                     },
                   ),
                   const SizedBox(height: 16),

@@ -35,7 +35,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final qrWidget = tester.widget<QrImageView>(find.byType(QrImageView));
-    final qrData = qrWidget.data as String;
+    final qrData = qrWidget.data;
     expect(qrData.split('\n').length, 6);
     expect(qrData.contains('N/A'), isFalse);
     expect(qrData.contains('1234ABC'), isTrue);

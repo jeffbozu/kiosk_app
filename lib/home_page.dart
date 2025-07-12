@@ -236,7 +236,13 @@ class _HomePageState extends State<HomePage> {
         daysToAdd++;
       }
       final nextValidDay = now.add(Duration(days: daysToAdd));
-      baseTime = DateTime(nextValidDay.year, nextValidDay.month, nextValidDay.day, _startTime.hour, _startTime.minute);
+      baseTime = DateTime(
+        nextValidDay.year,
+        nextValidDay.month,
+        nextValidDay.day,
+        _startTime.hour,
+        _startTime.minute,
+      );
       return baseTime.add(Duration(minutes: _selectedDuration));
     }
 
@@ -251,13 +257,33 @@ class _HomePageState extends State<HomePage> {
         daysToAdd++;
       }
       final nextValidDay = now.add(Duration(days: daysToAdd));
-      baseTime = DateTime(nextValidDay.year, nextValidDay.month, nextValidDay.day, _startTime.hour, _startTime.minute);
+      baseTime = DateTime(
+        nextValidDay.year,
+        nextValidDay.month,
+        nextValidDay.day,
+        _startTime.hour,
+        _startTime.minute,
+      );
       return baseTime.add(Duration(minutes: _selectedDuration));
     }
 
     final paidUntil = now.add(Duration(minutes: _selectedDuration));
     if (paidUntil.isAfter(_endTime)) {
-      return _endTime;
+      // Si sobrepasa el endTime, pasa al siguiente día válido y hora startTime
+      int daysToAdd = 1;
+      DateTime nextDay = now.add(Duration(days: daysToAdd));
+      while (!_validDays.contains(nextDay.weekday)) {
+        daysToAdd++;
+        nextDay = now.add(Duration(days: daysToAdd));
+      }
+      baseTime = DateTime(
+        nextDay.year,
+        nextDay.month,
+        nextDay.day,
+        _startTime.hour,
+        _startTime.minute,
+      );
+      return baseTime;
     }
 
     return paidUntil;

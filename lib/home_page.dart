@@ -128,7 +128,6 @@ class _HomePageState extends State<HomePage> {
 
         _validDays = List<int>.from(data['validDays'] ?? []);
 
-        // Reset duration y precio base al cambiar tarifa
         _selectedDuration = _minDuration > 0 ? _minDuration : 0;
         _updatePrice();
 
@@ -143,9 +142,7 @@ class _HomePageState extends State<HomePage> {
     int hour = int.tryParse(parts[0]) ?? 0;
     int minute = int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
 
-    // Si es endTime y hora < startTime, es horario del día siguiente
     if (endTime && hour < (_startTime.hour)) {
-      // mañana
       return DateTime(now.year, now.month, now.day + 1, hour, minute);
     }
     return DateTime(now.year, now.month, now.day, hour, minute);
@@ -155,24 +152,34 @@ class _HomePageState extends State<HomePage> {
     final now = DateTime.now();
 
     if (_emergencyActive) {
-      // Emergencia activa, no permitir pagar
       return now;
     }
 
-    // Validar si hoy está en validDays (lunes=1 .. domingo=7)
-    // Firestore usa 1=lunes, 7=domingo. Dart usa weekday: 1=lunes ... 7=domingo
+    DateTime baseTime = now;
+
     if (!_validDays.contains(now.weekday)) {
-      // Día no permitido, no permitir pagar
-      return now;
+      int daysToAdd = 1;
+      while (!_validDays.contains(now.add(Duration(days: daysToAdd)).weekday)) {
+        daysToAdd++;
+      }
+      final nextValidDay = now.add(Duration(days: daysToAdd));
+      baseTime = DateTime(nextValidDay.year, nextValidDay.month, nextValidDay.day, _startTime.hour, _startTime.minute);
+      return baseTime.add(Duration(minutes: _selectedDuration));
     }
 
     if (now.isBefore(_startTime)) {
-      return _startTime.add(Duration(minutes: _selectedDuration));
+      baseTime = DateTime(now.year, now.month, now.day, _startTime.hour, _startTime.minute);
+      return baseTime.add(Duration(minutes: _selectedDuration));
     }
 
     if (now.isAfter(_endTime)) {
-      final nextDayStart = _startTime.add(const Duration(days: 1));
-      return nextDayStart.add(Duration(minutes: _selectedDuration));
+      int daysToAdd = 1;
+      while (!_validDays.contains(now.add(Duration(days: daysToAdd)).weekday)) {
+        daysToAdd++;
+      }
+      final nextValidDay = now.add(Duration(days: daysToAdd));
+      baseTime = DateTime(nextValidDay.year, nextValidDay.month, nextValidDay.day, _startTime.hour, _startTime.minute);
+      return baseTime.add(Duration(minutes: _selectedDuration));
     }
 
     final paidUntil = now.add(Duration(minutes: _selectedDuration));
@@ -203,7 +210,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _increaseDuration() {
-    if (_emergencyActive) return; // no permitir cambios si emergencia activa
+    if (_emergencyActive) return;
 
     int nextDuration = _selectedDuration + _increment;
     if (nextDuration > _maxDuration) nextDuration = _maxDuration;
@@ -216,7 +223,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _decreaseDuration() {
-    if (_emergencyActive) return; // no permitir cambios si emergencia activa
+    if (_emergencyActive) return;
 
     int prevDuration = _selectedDuration - _increment;
     if (prevDuration < _minDuration) prevDuration = _minDuration;
@@ -244,12 +251,11 @@ class _HomePageState extends State<HomePage> {
     return '${_paidUntil!.hour.toString().padLeft(2, '0')}:${_paidUntil!.minute.toString().padLeft(2, '0')}';
   }
 
-  // NUEVA PROPIEDAD PARA FECHA + HORA
   String get _paidUntilFormattedWithDate {
     if (_paidUntil == null) return '--:--';
-    final datePart = DateFormat('dd/MM/yyyy').format(_paidUntil!);
-    final timePart = '${_paidUntil!.hour.toString().padLeft(2, '0')}:${_paidUntil!.minute.toString().padLeft(2, '0')}';
-    return '$datePart $timePart';
+    final dateStr = DateFormat('dd/MM/yyyy').format(_paidUntil!);
+    final timeStr = '${_paidUntil!.hour.toString().padLeft(2, '0')}:${_paidUntil!.minute.toString().padLeft(2, '0')}';
+    return '$dateStr $timeStr';
   }
 
   Future<void> _onZoneChanged(String? zoneId) async {
@@ -470,7 +476,7 @@ class _HomePageState extends State<HomePage> {
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       Text(
-                        '${AppLocalizations.of(context).t('until')}: $_paidUntilFormattedWithDate',
+                        '${AppLocalizations.of(context).t('until')}: ${_paidUntilFormattedWithDate}',
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),

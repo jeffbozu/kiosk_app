@@ -49,7 +49,7 @@ class _HomePageState extends State<HomePage> {
   late DateTime _endTime;
 
   bool _emergencyActive = false;
-  String _emergencyReason = '';
+  String _emergencyReasonKey = ''; // Ahora guardamos la clave para localización
 
   List<int> _validDays = [];
 
@@ -129,7 +129,7 @@ class _HomePageState extends State<HomePage> {
         _endTime = _parseTime(data['endTime'] ?? '23:59', endTime: true);
 
         _emergencyActive = (data['emergencyActive'] ?? false) as bool;
-        _emergencyReason = (data['emergencyReason'] ?? '') as String;
+        _emergencyReasonKey = (data['emergencyReasonKey'] ?? '') as String;
 
         _validDays = List<int>.from(data['validDays'] ?? []);
 
@@ -174,10 +174,8 @@ class _HomePageState extends State<HomePage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    AppLocalizations.of(context).t(
-                      'emergencyActiveLabel',
-                      params: {'reason': _emergencyReason},
-                    ),
+                    AppLocalizations.of(context).t(_emergencyReasonKey),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -370,7 +368,7 @@ class _HomePageState extends State<HomePage> {
       _paidUntil = null;
       _plateCtrl.clear();
       _emergencyActive = false;
-      _emergencyReason = '';
+      _emergencyReasonKey = '';
       _validDays = [];
     });
 
@@ -525,8 +523,7 @@ class _HomePageState extends State<HomePage> {
                       color: Colors.red.shade300,
                       child: Text(
                         AppLocalizations.of(context).t(
-                          'emergencyActiveLabel',
-                          params: {'reason': _emergencyReason},
+                          _emergencyReasonKey,
                         ),
                         style: const TextStyle(
                             color: Colors.white, fontWeight: FontWeight.bold),

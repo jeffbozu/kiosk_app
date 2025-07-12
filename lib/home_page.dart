@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:math' as math;
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
@@ -26,7 +25,7 @@ class _HomePageState extends State<HomePage> {
   List<DropdownMenuItem<String>> _zoneItems = [];
   String? _selectedZoneId;
 
-  int _selectedDuration = 0; // inicial 0 min hasta seleccionar zona
+  int _selectedDuration = 0;
   int _minDuration = 0;
   int _maxDuration = 0;
   int _increment = 0;
@@ -44,19 +43,21 @@ class _HomePageState extends State<HomePage> {
   Timer? _clockTimer;
   bool _intlReady = false;
 
-  // Para escuchar cambios de tarifa en tiempo real
   StreamSubscription<DocumentSnapshot>? _tariffSubscription;
 
-  // Campos para horario
   late DateTime _startTime;
   late DateTime _endTime;
+
+  bool _emergencyActive = false;
+  String _emergencyReason = '';
+
+  List<int> _validDays = [];
 
   @override
   void initState() {
     super.initState();
     _loadZones();
 
-    // Timer para actualizar reloj UI cada segundo
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() => _currentTime = DateTime.now());
     });
@@ -101,7 +102,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  // Escucha tarifa en tiempo real para la zona seleccionada
   void _subscribeTariff(String zoneDocId) {
     _tariffSubscription?.cancel();
 
@@ -120,46 +120,62 @@ class _HomePageState extends State<HomePage> {
         _maxDuration = (data['maxDuration'] ?? 0) as int;
         _increment = (data['increment'] ?? 1) as int;
 
-        // Parsear startTime y endTime strings a DateTime relativos a hoy
         _startTime = _parseTime(data['startTime'] ?? '00:00');
-        _endTime = _parseTime(data['endTime'] ?? '23:59');
+        _endTime = _parseTime(data['endTime'] ?? '23:59', endTime: true);
 
-        // Resetea duración y precio a valores base
+        _emergencyActive = (data['emergencyActive'] ?? false) as bool;
+        _emergencyReason = (data['emergencyReason'] ?? '') as String;
+
+        _validDays = List<int>.from(data['validDays'] ?? []);
+
+        // Reset duration y precio base al cambiar tarifa
         _selectedDuration = _minDuration > 0 ? _minDuration : 0;
         _updatePrice();
 
-        // Actualiza hora pagada
         _paidUntil = _calculatePaidUntil();
       });
     });
   }
 
-  DateTime _parseTime(String time) {
+  DateTime _parseTime(String time, {bool endTime = false}) {
     final now = DateTime.now();
     final parts = time.split(':');
-    final hour = int.tryParse(parts[0]) ?? 0;
-    final minute = int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
+    int hour = int.tryParse(parts[0]) ?? 0;
+    int minute = int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
+
+    // Si es endTime y hora < startTime, es horario del día siguiente
+    if (endTime && hour < (_startTime.hour)) {
+      // mañana
+      return DateTime(now.year, now.month, now.day + 1, hour, minute);
+    }
     return DateTime(now.year, now.month, now.day, hour, minute);
   }
 
   DateTime _calculatePaidUntil() {
     final now = DateTime.now();
 
-    // Si ahora es antes del horario de inicio, la hora pagada comienza en startTime
+    if (_emergencyActive) {
+      // Emergencia activa, no permitir pagar
+      return now;
+    }
+
+    // Validar si hoy está en validDays (lunes=1 .. domingo=7)
+    // Firestore usa 1=lunes, 7=domingo. Dart usa weekday: 1=lunes ... 7=domingo
+    if (!_validDays.contains(now.weekday)) {
+      // Día no permitido, no permitir pagar
+      return now;
+    }
+
     if (now.isBefore(_startTime)) {
       return _startTime.add(Duration(minutes: _selectedDuration));
     }
 
-    // Si ahora es después de endTime, la hora pagada comienza startTime del día siguiente
     if (now.isAfter(_endTime)) {
       final nextDayStart = _startTime.add(const Duration(days: 1));
       return nextDayStart.add(Duration(minutes: _selectedDuration));
     }
 
-    // Si estamos dentro del horario permitido, sumamos duración a la hora actual
     final paidUntil = now.add(Duration(minutes: _selectedDuration));
-
-    // Si la suma pasa de endTime, limitar a endTime
     if (paidUntil.isAfter(_endTime)) {
       return _endTime;
     }
@@ -168,6 +184,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _updatePrice() {
+    if (_emergencyActive) {
+      _price = 0.0;
+      return;
+    }
     if (_selectedDuration < _minDuration || _selectedDuration == 0) {
       _price = 0.0;
       return;
@@ -183,9 +203,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _increaseDuration() {
-    int nextDuration = _selectedDuration + _increment;
+    if (_emergencyActive) return; // no permitir cambios si emergencia activa
 
-    // Limitar a maxDuration
+    int nextDuration = _selectedDuration + _increment;
     if (nextDuration > _maxDuration) nextDuration = _maxDuration;
 
     setState(() {
@@ -196,9 +216,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _decreaseDuration() {
-    int prevDuration = _selectedDuration - _increment;
+    if (_emergencyActive) return; // no permitir cambios si emergencia activa
 
-    // Limitar a minDuration
+    int prevDuration = _selectedDuration - _increment;
     if (prevDuration < _minDuration) prevDuration = _minDuration;
 
     setState(() {
@@ -206,6 +226,17 @@ class _HomePageState extends State<HomePage> {
       _updatePrice();
       _paidUntil = _calculatePaidUntil();
     });
+  }
+
+  bool get _isPaymentAllowed {
+    if (_emergencyActive) return false;
+
+    final now = DateTime.now();
+    if (!_validDays.contains(now.weekday)) return false;
+
+    if (_selectedDuration < _minDuration) return false;
+
+    return true;
   }
 
   String get _paidUntilFormatted {
@@ -225,12 +256,22 @@ class _HomePageState extends State<HomePage> {
       _increment = 0;
       _paidUntil = null;
       _plateCtrl.clear();
+      _emergencyActive = false;
+      _emergencyReason = '';
+      _validDays = [];
     });
 
     _subscribeTariff(zoneId);
   }
 
   Future<void> _confirmAndPay() async {
+    if (!_isPaymentAllowed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).t('paymentNotAllowed'))),
+      );
+      return;
+    }
+
     if (_selectedZoneId == null) return;
 
     final matricula = _plateCtrl.text.trim().toUpperCase();
@@ -316,8 +357,7 @@ class _HomePageState extends State<HomePage> {
     final allReady = !_saving &&
         _selectedZoneId != null &&
         _plateCtrl.text.trim().isNotEmpty &&
-        _selectedDuration >= _minDuration &&
-        _selectedDuration <= _maxDuration;
+        _isPaymentAllowed;
 
     return Scaffold(
       appBar: AppBar(
@@ -365,13 +405,26 @@ class _HomePageState extends State<HomePage> {
                     onChanged: (_) => setState(() {}),
                   ),
                   const SizedBox(height: 16),
+                  if (_emergencyActive) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      color: Colors.red.shade300,
+                      child: Text(
+                        _emergencyReason,
+                        style: const TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ElevatedButton(
-                        onPressed: _decreaseDuration,
+                        onPressed: _emergencyActive ? null : _decreaseDuration,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE62144),
+                          backgroundColor:
+                              _emergencyActive ? Colors.grey : const Color(0xFFE62144),
                           minimumSize: const Size(40, 40),
                         ),
                         child: const Icon(Icons.remove, color: Colors.white),
@@ -387,9 +440,10 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       ElevatedButton(
-                        onPressed: _increaseDuration,
+                        onPressed: _emergencyActive ? null : _increaseDuration,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE62144),
+                          backgroundColor:
+                              _emergencyActive ? Colors.grey : const Color(0xFFE62144),
                           minimumSize: const Size(40, 40),
                         ),
                         child: const Icon(Icons.add, color: Colors.white),

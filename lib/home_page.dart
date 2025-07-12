@@ -19,35 +19,34 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  /* ────────────────────────────  ESTADO BÁSICO  ──────────────────────────── */
   final _firestore = FirebaseFirestore.instance;
-
-  /// ---------- UI / estado básico ----------
   bool _loading = true, _saving = false;
   List<DropdownMenuItem<String>> _zoneItems = [];
   String? _selectedZoneId;
   final _plateCtrl = TextEditingController();
 
-  /// ---------- datos de tarifa ----------
+  /* ─────────────────────────────  DATOS TARIFA  ───────────────────────────── */
   int _selectedDuration = 0, _minDuration = 0, _maxDuration = 0, _increment = 0;
   double _price = 0.0, _basePrice = 0.0, _extraBlockPrice = 0.0;
-  late DateTime _startTime, _endTime;
+  DateTime? _startTime;
+  DateTime? _endTime;
   List<int> _validDays = [];
   bool _emergencyActive = false;
   String _emergencyReason = '';
 
-  /// ---------- otros ----------
+  /* ─────────────────────────────   OTROS   ───────────────────────────── */
   DateTime? _paidUntil;
   DateTime _now = DateTime.now();
   Timer? _clockTimer;
   bool _intlReady = false;
   StreamSubscription<DocumentSnapshot>? _tariffSub;
 
+  /* ═══════════════════════   INIT / DISPOSE   ═══════════════════════ */
   @override
   void initState() {
     super.initState();
     _loadZones();
-
-    // reloj en la UI
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() => _now = DateTime.now());
     });
@@ -78,15 +77,13 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  /* ═══════════════════════ Firestore ═══════════════════════ */
+  /* ═══════════════════════   FIRESTORE   ═══════════════════════ */
 
   Future<void> _loadZones() async {
     final snap = await _firestore.collection('tariffs').get();
     _zoneItems = snap.docs
-        .map((d) => DropdownMenuItem(
-              value: d.id,
-              child: Text(d.data()['zoneId'] ?? d.id),
-            ))
+        .map((d) =>
+            DropdownMenuItem(value: d.id, child: Text(d.data()['zoneId'] ?? d.id)))
         .toList();
     setState(() => _loading = false);
   }
@@ -97,7 +94,7 @@ class _HomePageState extends State<HomePage> {
       (doc) {
         if (!doc.exists) return;
         final d = doc.data()!;
-        /* ----- asignar datos ----- */
+
         _basePrice = (d['basePrice'] ?? 0).toDouble();
         _extraBlockPrice = (d['extraBlockPrice'] ?? 0).toDouble();
         _minDuration = d['minDuration'] ?? 0;
@@ -108,7 +105,7 @@ class _HomePageState extends State<HomePage> {
         _emergencyReason = d['emergencyReason'] ?? '';
 
         _startTime = _parseTime(d['startTime'] ?? '00:00');
-        _endTime = _parseEndTime(d['endTime'] ?? '23:59', _startTime);
+        _endTime = _parseEndTime(d['endTime'] ?? '23:59', _startTime!);
 
         _selectedDuration = _minDuration > 0 ? _minDuration : 0;
         _updatePrice();
@@ -116,7 +113,6 @@ class _HomePageState extends State<HomePage> {
 
         setState(() {});
 
-        // Modal de emergencia
         if (_emergencyActive) {
           WidgetsBinding.instance.addPostFrameCallback((_) => _showEmergency());
         }
@@ -124,7 +120,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  /* ═══════════════════════ helpers horario ═══════════════════════ */
+  /* ═══════════════════════   HORARIO HELPERS   ═══════════════════════ */
 
   DateTime _parseTime(String hhmm) {
     final p = hhmm.split(':');
@@ -134,29 +130,30 @@ class _HomePageState extends State<HomePage> {
     return DateTime(n.year, n.month, n.day, h, m);
   }
 
-  /// Si end < start se asume día siguiente.
   DateTime _parseEndTime(String hhmm, DateTime start) {
-    final endSameDay = _parseTime(hhmm);
-    return endSameDay.isAfter(start) ? endSameDay : endSameDay.add(const Duration(days: 1));
+    final endSame = _parseTime(hhmm);
+    return endSame.isAfter(start) ? endSame : endSame.add(const Duration(days: 1));
   }
 
   bool get _isWithinHours {
+    if (_startTime == null || _endTime == null) return false;
     if (_emergencyActive) return false;
     if (_validDays.isEmpty || !_validDays.contains(_now.weekday)) return false;
 
-    if (_endTime.isAfter(_startTime)) {
-      return _now.isAfter(_startTime) && _now.isBefore(_endTime);
+    final s = _startTime!;
+    final e = _endTime!;
+    if (e.isAfter(s)) {
+      return _now.isAfter(s) && _now.isBefore(e);
     } else {
-      // ventana cruza medianoche
-      return _now.isAfter(_startTime) || _now.isBefore(_endTime);
+      return _now.isAfter(s) || _now.isBefore(e);
     }
   }
 
-  /* ═══════════════════════ precio / paidUntil ═══════════════════════ */
+  /* ═══════════════════════   PRECIO & UNTIL   ═══════════════════════ */
 
   void _updatePrice() {
     if (_emergencyActive || _selectedDuration < _minDuration) {
-      _price = 0.0;
+      _price = 0;
       return;
     }
     final extraBlocks =
@@ -166,35 +163,25 @@ class _HomePageState extends State<HomePage> {
   }
 
   DateTime _calcPaidUntil() {
+    if (_startTime == null || _endTime == null) return _now;
     var base = _now;
-    // si aún no ha empezado la franja, comenzamos en startTime
-    if (!_isWithinHours) {
-      base = _startTime.isAfter(_now) ? _startTime : _startTime.add(const Duration(days: 1));
-    }
+    final s = _startTime!;
+    final e = _endTime!;
+    if (!_isWithinHours) base = s.isAfter(_now) ? s : s.add(const Duration(days: 1));
     var until = base.add(Duration(minutes: _selectedDuration));
-    // no pasar endTime real
-    if (until.isAfter(_endTime)) until = _endTime;
+    if (until.isAfter(e)) until = e;
     return until;
   }
 
-  /* ═══════════════════════ UI helpers ═══════════════════════ */
+  /* ═══════════════════════   FORMATEOS TEXTO   ═══════════════════════ */
 
   String _validDaysStr() {
     if (_validDays.isEmpty) return '';
-    const names = [
-      '', // dummy index 0
-      'lunes',
-      'martes',
-      'miércoles',
-      'jueves',
-      'viernes',
-      'sábado',
-      'domingo'
-    ];
+    const names = ['', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
     return _validDays.map((d) => names[d]).join(', ');
   }
 
-  /* ═══════════════════════ Emergencia modal ═══════════════════════ */
+  /* ═══════════════════════   MODAL EMERGENCIA   ═══════════════════════ */
 
   void _showEmergency() {
     int count = 5;
@@ -232,7 +219,7 @@ class _HomePageState extends State<HomePage> {
     ).then((_) => t?.cancel());
   }
 
-  /* ═══════════════════════ acciones UI ═══════════════════════ */
+  /* ═══════════════════════   ACCIONES USER   ═══════════════════════ */
 
   void _changeZone(String? id) {
     if (id == null) return;
@@ -263,8 +250,6 @@ class _HomePageState extends State<HomePage> {
     setState(() {});
   }
 
-  /* ═══════════════════════ pago ═══════════════════════ */
-
   Future<void> _pay() async {
     if (!_isWithinHours ||
         _emergencyActive ||
@@ -287,16 +272,40 @@ class _HomePageState extends State<HomePage> {
 
     if (ok != true) return;
 
-    // flujo de pago — omitido (igual que antes)
-    // ...
+    // Simulación pago
+    setState(() => _saving = true);
+    await Future.delayed(const Duration(seconds: 1));
+    setState(() => _saving = false);
+
+    // Guardar ticket
+    final doc = await _firestore.collection('tickets').add({
+      'zoneId': _selectedZoneId,
+      'plate': plate,
+      'paidUntil': Timestamp.fromDate(_paidUntil!),
+      'price': _price,
+      'duration': _selectedDuration,
+    });
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => TicketSuccessPage(ticketId: doc.id)),
+    );
+
+    // reset UI
+    setState(() {
+      _plateCtrl.clear();
+      _selectedDuration = _minDuration;
+      _paidUntil = _calcPaidUntil();
+      _updatePrice();
+    });
   }
 
-  /* ═══════════════════════ build ═══════════════════════ */
+  /* ═══════════════════════   BUILD   ═══════════════════════ */
 
   @override
   Widget build(BuildContext context) {
     final priceTxt = _intlReady
-        ? NumberFormat.currency(locale: Intl.defaultLocale, symbol: '€', decimalDigits: 2)
+        ? NumberFormat.currency(symbol: '€', locale: Intl.defaultLocale, decimalDigits: 2)
             .format(_price)
         : '${_price.toStringAsFixed(2)} €';
 
@@ -305,12 +314,14 @@ class _HomePageState extends State<HomePage> {
         : '--:--';
 
     final tariffInactive = !_isWithinHours && !_emergencyActive;
-
     final canPay = !_saving &&
         !tariffInactive &&
         !_emergencyActive &&
         _selectedZoneId != null &&
         _plateCtrl.text.trim().isNotEmpty;
+
+    final startStr = _startTime != null ? DateFormat.Hm().format(_startTime!) : '--:--';
+    final endStr = _endTime != null ? DateFormat.Hm().format(_endTime!) : '--:--';
 
     return Scaffold(
       appBar: AppBar(
@@ -353,7 +364,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 16),
 
-                  /* ----- Banner emergencia ----- */
+                  /* ─── Banner emergencia ─── */
                   if (_emergencyActive)
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -366,7 +377,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
 
-                  /* ----- Banner modelo 3 (fuera de horario / día) ----- */
+                  /* ─── Banner modelo 3 si fuera de horario / día ─── */
                   if (tariffInactive)
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -377,15 +388,13 @@ class _HomePageState extends State<HomePage> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        'Tarifa activa solo los días: ${_validDaysStr()}, de '
-                        '${DateFormat.Hm().format(_startTime)} a '
-                        '${DateFormat.Hm().format(_endTime)}.',
+                        'Tarifa activa solo los días: ${_validDaysStr()}, de $startStr a $endStr.',
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, color: Colors.black87),
                       ),
                     ),
 
-                  /* ----- Controles duración ----- */
+                  /* ─── Botones duración ─── */
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -416,42 +425,4 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-
-                  /* ----- Precio / Hasta ----- */
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('${AppLocalizations.of(context).t('price')}: $priceTxt',
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
-                      Text('${AppLocalizations.of(context).t('until')}: $untilTxt',
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  /* ----- Botón Pagar ----- */
-                  ElevatedButton(
-                    onPressed: canPay ? _pay : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: canPay ? const Color(0xFFE62144) : Colors.grey,
-                    ),
-                    child: _saving
-                        ? const SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(AppLocalizations.of(context).t('pay')),
-                  ),
-                ],
-              ),
-            ),
-    );
-  }
-}
+                  const Sized

@@ -269,21 +269,18 @@ class _HomePageState extends State<HomePage> {
 
     final paidUntil = now.add(Duration(minutes: _selectedDuration));
     if (paidUntil.isAfter(_endTime)) {
-      // Si sobrepasa el endTime, pasa al siguiente día válido y hora startTime
-      int daysToAdd = 1;
-      DateTime nextDay = now.add(Duration(days: daysToAdd));
+      // Si sobrepasa el endTime, avanza hasta el siguiente día válido
+      DateTime nextDay = paidUntil.add(const Duration(days: 1));
       while (!_validDays.contains(nextDay.weekday)) {
-        daysToAdd++;
-        nextDay = now.add(Duration(days: daysToAdd));
+        nextDay = nextDay.add(const Duration(days: 1));
       }
-      baseTime = DateTime(
+      return DateTime(
         nextDay.year,
         nextDay.month,
         nextDay.day,
         _startTime.hour,
         _startTime.minute,
       );
-      return baseTime;
     }
 
     return paidUntil;

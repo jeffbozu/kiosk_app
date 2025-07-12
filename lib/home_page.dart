@@ -53,6 +53,10 @@ class _HomePageState extends State<HomePage> {
 
   List<int> _validDays = [];
 
+  bool _emergencyDialogVisible = false;
+  int _countdownSeconds = 5;
+  Timer? _countdownTimer;
+
   @override
   void initState() {
     super.initState();
@@ -84,6 +88,7 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     _clockTimer?.cancel();
     _tariffSubscription?.cancel();
+    _countdownTimer?.cancel();
     _plateCtrl.dispose();
     super.dispose();
   }
@@ -132,7 +137,62 @@ class _HomePageState extends State<HomePage> {
         _updatePrice();
 
         _paidUntil = _calculatePaidUntil();
+
+        // Mostrar diálogo emergencia si aplica y no está visible
+        if (_emergencyActive && !_emergencyDialogVisible) {
+          _showEmergencyDialog();
+        }
       });
+    });
+  }
+
+  void _showEmergencyDialog() {
+    _countdownSeconds = 5;
+    _emergencyDialogVisible = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        _countdownTimer?.cancel();
+        _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+          setState(() {
+            _countdownSeconds--;
+          });
+          if (_countdownSeconds <= 0) {
+            timer.cancel();
+          }
+        });
+
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: const Text('Emergencia'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(_emergencyReason),
+                  const SizedBox(height: 16),
+                  Text('Cierre automático en $_countdownSeconds segundos'),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    _countdownTimer?.cancel();
+                    _emergencyDialogVisible = false;
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Cerrar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    ).then((_) {
+      _emergencyDialogVisible = false;
+      _countdownTimer?.cancel();
     });
   }
 

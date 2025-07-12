@@ -244,6 +244,27 @@ class _HomePageState extends State<HomePage> {
     return true;
   }
 
+  bool _isActiveNow() {
+    final now = DateTime.now();
+    if (_emergencyActive) return false;
+    if (!_validDays.contains(now.weekday)) return false;
+
+    // El horario puede cruzar medianoche:
+    // Si endTime es antes que startTime, significa que termina al día siguiente
+    if (_endTime.isBefore(_startTime)) {
+      // Caso cruce medianoche
+      if (now.isBefore(_startTime) && now.isAfter(_endTime)) {
+        return false;
+      }
+    } else {
+      if (now.isBefore(_startTime) || now.isAfter(_endTime)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   String _validDaysString() {
     if (_validDays.isEmpty) return '';
     const daysMap = {
@@ -572,11 +593,4 @@ class _HomePageState extends State<HomePage> {
             ),
     );
   }
-
-  bool _isActiveNow() {
-    final now = DateTime.now();
-    if (_emergencyActive) return false;
-    if (!_validDays.contains(now.weekday)) return false;
-
-    // El horario puede cruzar medianoche:
-    // Si
+}

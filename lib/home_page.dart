@@ -349,7 +349,8 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    decoration: InputDecoration(labelText: AppLocalizations.of(context).t('zone')),
+                    decoration:
+                        InputDecoration(labelText: AppLocalizations.of(context).t('zone')),
                     items: _zoneItems,
                     value: _selectedZoneId,
                     hint: Text(AppLocalizations.of(context).t('chooseZone')),
@@ -372,12 +373,12 @@ class _HomePageState extends State<HomePage> {
                       color: Colors.red.shade300,
                       child: Text(
                         _emergencyReason,
-                        style:
-                            const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                     ),
 
-                  /* ─── Banner modelo 3 si fuera de horario / día ─── */
+                  /* ─── Banner fuera de horario / día (modelo 3) ─── */
                   if (tariffInactive)
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -401,8 +402,9 @@ class _HomePageState extends State<HomePage> {
                       ElevatedButton(
                         onPressed: (tariffInactive || _emergencyActive) ? null : _dec,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              (tariffInactive || _emergencyActive) ? Colors.grey : const Color(0xFFE62144),
+                          backgroundColor: (tariffInactive || _emergencyActive)
+                              ? Colors.grey
+                              : const Color(0xFFE62144),
                           minimumSize: const Size(40, 40),
                         ),
                         child: const Icon(Icons.remove, color: Colors.white),
@@ -411,18 +413,62 @@ class _HomePageState extends State<HomePage> {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           _selectedDuration > 0 ? '$_selectedDuration min' : '-- min',
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
                         ),
                       ),
                       ElevatedButton(
                         onPressed: (tariffInactive || _emergencyActive) ? null : _inc,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              (tariffInactive || _emergencyActive) ? Colors.grey : const Color(0xFFE62144),
+                          backgroundColor: (tariffInactive || _emergencyActive)
+                              ? Colors.grey
+                              : const Color(0xFFE62144),
                           minimumSize: const Size(40, 40),
                         ),
                         child: const Icon(Icons.add, color: Colors.white),
                       ),
                     ],
                   ),
-                  const Sized
+                  const SizedBox(height: 8),
+
+                  /* ─── Precio / Hasta ─── */
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${AppLocalizations.of(context).t('price')}: $priceTxt',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      Text(
+                        '${AppLocalizations.of(context).t('until')}: $untilTxt',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  /* ─── Botón Pagar ─── */
+                  ElevatedButton(
+                    onPressed: canPay ? _pay : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: canPay ? const Color(0xFFE62144) : Colors.grey,
+                    ),
+                    child: _saving
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(AppLocalizations.of(context).t('pay')),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+}

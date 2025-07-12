@@ -53,6 +53,9 @@ class _HomePageState extends State<HomePage> {
 
   List<int> _validDays = [];
 
+  int _emergencyDialogCountdown = 5;
+  Timer? _emergencyTimer;
+
   @override
   void initState() {
     super.initState();
@@ -84,6 +87,7 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     _clockTimer?.cancel();
     _tariffSubscription?.cancel();
+    _emergencyTimer?.cancel();
     _plateCtrl.dispose();
     super.dispose();
   }
@@ -104,6 +108,8 @@ class _HomePageState extends State<HomePage> {
 
   void _subscribeTariff(String zoneDocId) {
     _tariffSubscription?.cancel();
+    _emergencyTimer?.cancel();
+    _emergencyDialogCountdown = 5;
 
     _tariffSubscription = _firestore
         .collection('tariffs')
@@ -128,12 +134,17 @@ class _HomePageState extends State<HomePage> {
 
         _validDays = List<int>.from(data['validDays'] ?? []);
 
-        // Reset duration y precio base al cambiar tarifa
         _selectedDuration = _minDuration > 0 ? _minDuration : 0;
         _updatePrice();
 
         _paidUntil = _calculatePaidUntil();
       });
+
+      if (_emergencyActive) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showEmergencyDialog();
+        });
+      }
     });
   }
 
@@ -143,9 +154,7 @@ class _HomePageState extends State<HomePage> {
     int hour = int.tryParse(parts[0]) ?? 0;
     int minute = int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
 
-    // Si es endTime y hora < startTime, es horario del día siguiente
     if (endTime && hour < (_startTime.hour)) {
-      // mañana
       return DateTime(now.year, now.month, now.day + 1, hour, minute);
     }
     return DateTime(now.year, now.month, now.day, hour, minute);
@@ -155,14 +164,10 @@ class _HomePageState extends State<HomePage> {
     final now = DateTime.now();
 
     if (_emergencyActive) {
-      // Emergencia activa, no permitir pagar
       return now;
     }
 
-    // Validar si hoy está en validDays (lunes=1 .. domingo=7)
-    // Firestore usa 1=lunes, 7=domingo. Dart usa weekday: 1=lunes ... 7=domingo
     if (!_validDays.contains(now.weekday)) {
-      // Día no permitido, no permitir pagar
       return now;
     }
 
@@ -203,7 +208,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _increaseDuration() {
-    if (_emergencyActive) return; // no permitir cambios si emergencia activa
+    if (_emergencyActive) return;
 
     int nextDuration = _selectedDuration + _increment;
     if (nextDuration > _maxDuration) nextDuration = _maxDuration;
@@ -216,7 +221,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _decreaseDuration() {
-    if (_emergencyActive) return; // no permitir cambios si emergencia activa
+    if (_emergencyActive) return;
 
     int prevDuration = _selectedDuration - _increment;
     if (prevDuration < _minDuration) prevDuration = _minDuration;
@@ -237,6 +242,21 @@ class _HomePageState extends State<HomePage> {
     if (_selectedDuration < _minDuration) return false;
 
     return true;
+  }
+
+  String _validDaysString() {
+    if (_validDays.isEmpty) return '';
+    const daysMap = {
+      1: 'lunes',
+      2: 'martes',
+      3: 'miércoles',
+      4: 'jueves',
+      5: 'viernes',
+      6: 'sábado',
+      7: 'domingo',
+    };
+    List<String> days = _validDays.map((d) => daysMap[d] ?? '').toList();
+    return days.join(', ');
   }
 
   String get _paidUntilFormatted {
@@ -352,6 +372,49 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _showEmergencyDialog() {
+    _emergencyDialogCountdown = 5;
+
+    Timer? timer;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        timer = Timer.periodic(const Duration(seconds: 1), (t) {
+          if (_emergencyDialogCountdown == 0) {
+            t.cancel();
+            if (Navigator.canPop(ctx)) Navigator.of(ctx).pop();
+          } else {
+            setState(() {
+              _emergencyDialogCountdown--;
+            });
+          }
+        });
+
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: const Text('Emergencia'),
+              content: Text('$_emergencyReason\n\nCerrando en $_emergencyDialogCountdown segundos...'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    timer?.cancel();
+                    Navigator.of(ctx).pop();
+                  },
+                  child: const Text('Cerrar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    ).then((_) {
+      timer?.cancel();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final allReady = !_saving &&
@@ -405,6 +468,22 @@ class _HomePageState extends State<HomePage> {
                     onChanged: (_) => setState(() {}),
                   ),
                   const SizedBox(height: 16),
+                  if (!_isActiveNow()) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.yellow.shade200,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange.shade700),
+                      ),
+                      child: Text(
+                        'Tarifa activa solo los días: ${_validDaysString()}, de ${DateFormat.Hm().format(_startTime)} a ${DateFormat.Hm().format(_endTime)}.',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, color: Colors.black87),
+                      ),
+                    )
+                  ],
                   if (_emergencyActive) ...[
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -493,4 +572,11 @@ class _HomePageState extends State<HomePage> {
             ),
     );
   }
-}
+
+  bool _isActiveNow() {
+    final now = DateTime.now();
+    if (_emergencyActive) return false;
+    if (!_validDays.contains(now.weekday)) return false;
+
+    // El horario puede cruzar medianoche:
+    // Si

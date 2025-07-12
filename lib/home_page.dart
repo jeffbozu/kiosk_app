@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math' as math;
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
@@ -21,34 +20,43 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final _firestore = FirebaseFirestore.instance;
+
   bool _loading = true, _saving = false;
 
   List<DropdownMenuItem<String>> _zoneItems = [];
-  List<DropdownMenuItem<int>> _durationItems = [];
   String? _selectedZoneId;
-  int _selectedDuration = 10; // empieza en 10 minutos
-  int _minDuration = 10;
-  int _maxDuration = 120; // máximo configurable según zona
-  int _increment = 10;
+
+  int _selectedDuration = 0; // inicial 0 min hasta seleccionar zona
+  int _minDuration = 0;
+  int _maxDuration = 0;
+  int _increment = 0;
+
+  double _price = 0.0;
+  double _basePrice = 0.0;
+  double _extraBlockPrice = 0.0;
+
   final _plateCtrl = TextEditingController();
 
   String? _ticketId;
   DateTime? _paidUntil;
 
-  double _price = 0.0;
-  double _basePrice = 1.0; // valor base variable según zona
-
   DateTime _currentTime = DateTime.now();
   Timer? _clockTimer;
-  bool _intlReady = false; // para saber si Intl ya cargó
+  bool _intlReady = false;
+
+  // Para escuchar cambios de tarifa en tiempo real
+  StreamSubscription<DocumentSnapshot>? _tariffSubscription;
+
+  // Campos para horario
+  late DateTime _startTime;
+  late DateTime _endTime;
 
   @override
   void initState() {
     super.initState();
     _loadZones();
-    // Price will remain at 0 until a zone is selected
-    _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
 
+    // Timer para actualizar reloj UI cada segundo
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() => _currentTime = DateTime.now());
     });
@@ -74,106 +82,152 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _clockTimer?.cancel();
+    _tariffSubscription?.cancel();
+    _plateCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _loadZones() async {
-    final snap = await _firestore.collection('zones').get();
+    final snap = await _firestore.collection('tariffs').get();
     _zoneItems = snap.docs.map((doc) {
       final data = doc.data();
       return DropdownMenuItem(
         value: doc.id,
-        child: Text(data['name'] as String),
+        child: Text(data['zoneId'] ?? doc.id),
       );
     }).toList();
-    setState(() => _loading = false);
-  }
-
-  Future<void> _loadDurations(String zoneId) async {
-    final query = await _firestore
-        .collection('tariffs')
-        .where('zoneId', isEqualTo: zoneId)
-        .get();
-
-    final items = <DropdownMenuItem<int>>[];
-
-    double zoneBasePrice = 1.0; // default
-    for (final doc in query.docs) {
-      final d = doc.data();
-      final dur = d['duration'] as int;
-      items.add(DropdownMenuItem(value: dur, child: Text('$dur min')));
-      if (d.containsKey('basePrice')) {
-        zoneBasePrice = (d['basePrice'] as num).toDouble();
-      }
-    }
-
-    items.sort((a, b) => a.value!.compareTo(b.value!));
-    if (items.isNotEmpty) {
-      _minDuration = items.first.value!;
-      _maxDuration = items.last.value!;
-      if (items.length > 1) {
-        _increment = items[1].value! - items.first.value!;
-      }
-    }
-    int newSelectedDuration = _selectedDuration;
-    if (!items.any((i) => i.value == newSelectedDuration)) {
-      newSelectedDuration = items.isNotEmpty ? items.first.value! : _minDuration;
-    }
-
     setState(() {
-      _durationItems = items;
-      _basePrice = zoneBasePrice;
-      _selectedDuration = newSelectedDuration;
-      _updatePrice();
-      _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+      _loading = false;
     });
   }
 
+  // Escucha tarifa en tiempo real para la zona seleccionada
+  void _subscribeTariff(String zoneDocId) {
+    _tariffSubscription?.cancel();
+
+    _tariffSubscription = _firestore
+        .collection('tariffs')
+        .doc(zoneDocId)
+        .snapshots()
+        .listen((doc) {
+      if (!doc.exists) return;
+
+      final data = doc.data()!;
+      setState(() {
+        _basePrice = (data['basePrice'] ?? 0).toDouble();
+        _extraBlockPrice = (data['extraBlockPrice'] ?? 0).toDouble();
+        _minDuration = (data['minDuration'] ?? 0) as int;
+        _maxDuration = (data['maxDuration'] ?? 0) as int;
+        _increment = (data['increment'] ?? 1) as int;
+
+        // Parsear startTime y endTime strings a DateTime relativos a hoy
+        _startTime = _parseTime(data['startTime'] ?? '00:00');
+        _endTime = _parseTime(data['endTime'] ?? '23:59');
+
+        // Resetea duración y precio a valores base
+        _selectedDuration = _minDuration > 0 ? _minDuration : 0;
+        _updatePrice();
+
+        // Actualiza hora pagada
+        _paidUntil = _calculatePaidUntil();
+      });
+    });
+  }
+
+  DateTime _parseTime(String time) {
+    final now = DateTime.now();
+    final parts = time.split(':');
+    final hour = int.tryParse(parts[0]) ?? 0;
+    final minute = int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
+    return DateTime(now.year, now.month, now.day, hour, minute);
+  }
+
+  DateTime _calculatePaidUntil() {
+    final now = DateTime.now();
+
+    // Si ahora es antes del horario de inicio, la hora pagada comienza en startTime
+    if (now.isBefore(_startTime)) {
+      return _startTime.add(Duration(minutes: _selectedDuration));
+    }
+
+    // Si ahora es después de endTime, la hora pagada comienza startTime del día siguiente
+    if (now.isAfter(_endTime)) {
+      final nextDayStart = _startTime.add(const Duration(days: 1));
+      return nextDayStart.add(Duration(minutes: _selectedDuration));
+    }
+
+    // Si estamos dentro del horario permitido, sumamos duración a la hora actual
+    final paidUntil = now.add(Duration(minutes: _selectedDuration));
+
+    // Si la suma pasa de endTime, limitar a endTime
+    if (paidUntil.isAfter(_endTime)) {
+      return _endTime;
+    }
+
+    return paidUntil;
+  }
+
   void _updatePrice() {
-    if (_selectedZoneId == null) {
+    if (_selectedDuration < _minDuration || _selectedDuration == 0) {
       _price = 0.0;
       return;
     }
-    final blocks = (_selectedDuration / 10).ceil();
 
-    double extraBlockPrice = 0.25; // por defecto
+    final blocks = ((_selectedDuration - _minDuration) / _increment).ceil();
 
-    if (_selectedZoneId == 'centro') {
-      extraBlockPrice = 0.20;
-    } else if (_selectedZoneId == 'ensanche') {
-      extraBlockPrice = 0.25;
-    } else if (_selectedZoneId == 'playa-norte') {
-      extraBlockPrice = 0.30;
-    }
-
-    if (blocks <= 1) {
+    if (blocks <= 0) {
       _price = _basePrice;
     } else {
-      _price = _basePrice + extraBlockPrice * (blocks - 1);
+      _price = _basePrice + (_extraBlockPrice * blocks);
     }
   }
 
   void _increaseDuration() {
-    final next = math.min(_selectedDuration + _increment, _maxDuration);
+    int nextDuration = _selectedDuration + _increment;
+
+    // Limitar a maxDuration
+    if (nextDuration > _maxDuration) nextDuration = _maxDuration;
+
     setState(() {
-      _selectedDuration = next;
+      _selectedDuration = nextDuration;
       _updatePrice();
-      _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+      _paidUntil = _calculatePaidUntil();
     });
   }
 
   void _decreaseDuration() {
-    final prev = math.max(_selectedDuration - _increment, _minDuration);
+    int prevDuration = _selectedDuration - _increment;
+
+    // Limitar a minDuration
+    if (prevDuration < _minDuration) prevDuration = _minDuration;
+
     setState(() {
-      _selectedDuration = prev;
+      _selectedDuration = prevDuration;
       _updatePrice();
-      _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+      _paidUntil = _calculatePaidUntil();
     });
   }
 
   String get _paidUntilFormatted {
     if (_paidUntil == null) return '--:--';
     return '${_paidUntil!.hour.toString().padLeft(2, '0')}:${_paidUntil!.minute.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _onZoneChanged(String? zoneId) async {
+    if (zoneId == null) return;
+
+    setState(() {
+      _selectedZoneId = zoneId;
+      _price = 0.0;
+      _selectedDuration = 0;
+      _minDuration = 0;
+      _maxDuration = 0;
+      _increment = 0;
+      _paidUntil = null;
+      _plateCtrl.clear();
+    });
+
+    _subscribeTariff(zoneId);
   }
 
   Future<void> _confirmAndPay() async {
@@ -187,16 +241,6 @@ class _HomePageState extends State<HomePage> {
       );
       return;
     }
-
-    // Opcional: quitar la validación estricta si no quieres formato
-    /*
-    if (!RegExp(r'^[0-9]{4}[A-Z]{3}$').hasMatch(matricula)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).t('invalidPlate'))),
-      );
-      return;
-    }
-    */
 
     final ok = await showDialog<bool>(
       context: context,
@@ -238,7 +282,7 @@ class _HomePageState extends State<HomePage> {
     });
 
     final now = DateTime.now();
-    final paidUntil = now.add(Duration(minutes: _selectedDuration));
+    final paidUntil = _paidUntil ?? now.add(Duration(minutes: _selectedDuration));
     final doc = await _firestore.collection('tickets').add({
       'zoneId': _selectedZoneId,
       'plate': matricula,
@@ -262,7 +306,8 @@ class _HomePageState extends State<HomePage> {
       _ticketId = null;
       _plateCtrl.clear();
       _selectedDuration = _minDuration;
-      _paidUntil = DateTime.now().add(Duration(minutes: _selectedDuration));
+      _paidUntil = _calculatePaidUntil();
+      _updatePrice();
     });
   }
 
@@ -270,7 +315,9 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final allReady = !_saving &&
         _selectedZoneId != null &&
-        _plateCtrl.text.trim().isNotEmpty;
+        _plateCtrl.text.trim().isNotEmpty &&
+        _selectedDuration >= _minDuration &&
+        _selectedDuration <= _maxDuration;
 
     return Scaffold(
       appBar: AppBar(
@@ -308,14 +355,7 @@ class _HomePageState extends State<HomePage> {
                     items: _zoneItems,
                     value: _selectedZoneId,
                     hint: Text(AppLocalizations.of(context).t('chooseZone')),
-                    onChanged: (v) {
-                      setState(() {
-                        _selectedZoneId = v;
-                        _selectedDuration = _minDuration;
-                        _durationItems = [];
-                      });
-                      if (v != null) _loadDurations(v);
-                    },
+                    onChanged: _onZoneChanged,
                   ),
                   const SizedBox(height: 16),
                   TextField(
@@ -339,7 +379,9 @@ class _HomePageState extends State<HomePage> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
-                          '$_selectedDuration min',
+                          _selectedDuration > 0
+                              ? '$_selectedDuration min'
+                              : '-- min',
                           style: const TextStyle(
                               fontSize: 20, fontWeight: FontWeight.bold),
                         ),

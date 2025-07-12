@@ -45,8 +45,10 @@ class _HomePageState extends State<HomePage> {
 
   StreamSubscription<DocumentSnapshot>? _tariffSubscription;
 
-  late DateTime _startTime;
-  late DateTime _endTime;
+  late TimeOfDay _startTimeOfDay;
+  late TimeOfDay _endTimeOfDay;
+
+  bool _emergencyDialogVisible = false;
 
   bool _emergencyActive = false;
   String _emergencyReason = '';
@@ -120,8 +122,8 @@ class _HomePageState extends State<HomePage> {
         _maxDuration = (data['maxDuration'] ?? 0) as int;
         _increment = (data['increment'] ?? 1) as int;
 
-        _startTime = _parseTime(data['startTime'] ?? '00:00');
-        _endTime = _parseTime(data['endTime'] ?? '23:59', endTime: true);
+        _startTimeOfDay = _parseTimeOfDay(data['startTime'] ?? '00:00');
+        _endTimeOfDay = _parseTimeOfDay(data['endTime'] ?? '23:59');
 
         _emergencyActive = (data['emergencyActive'] ?? false) as bool;
         _emergencyReason = (data['emergencyReason'] ?? '') as String;
@@ -134,21 +136,38 @@ class _HomePageState extends State<HomePage> {
 
         _paidUntil = _calculatePaidUntil();
       });
+      if (_emergencyActive) {
+        _showEmergencyDialog();
+      }
     });
   }
 
-  DateTime _parseTime(String time, {bool endTime = false}) {
-    final now = DateTime.now();
+  TimeOfDay _parseTimeOfDay(String time) {
     final parts = time.split(':');
-    int hour = int.tryParse(parts[0]) ?? 0;
-    int minute = int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
+    final hour = int.tryParse(parts[0]) ?? 0;
+    final minute = int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
+    return TimeOfDay(hour: hour, minute: minute);
+  }
 
-    // Si es endTime y hora < startTime, es horario del día siguiente
-    if (endTime && hour < (_startTime.hour)) {
-      // mañana
-      return DateTime(now.year, now.month, now.day + 1, hour, minute);
+  DateTime _todayAt(TimeOfDay tod, DateTime reference) {
+    return DateTime(reference.year, reference.month, reference.day, tod.hour, tod.minute);
+  }
+
+  DateTimeRange _currentRange(DateTime now) {
+    var start = _todayAt(_startTimeOfDay, now);
+    var end = _todayAt(_endTimeOfDay, now);
+    if (end.isBefore(start)) {
+      if (now.isBefore(end)) {
+        start = start.subtract(const Duration(days: 1));
+      } else {
+        end = end.add(const Duration(days: 1));
+      }
+    } else if (now.isBefore(start)) {
+      start = start.subtract(const Duration(days: 1));
+      end = _todayAt(_endTimeOfDay, start);
+      if (end.isBefore(start)) end = end.add(const Duration(days: 1));
     }
-    return DateTime(now.year, now.month, now.day, hour, minute);
+    return DateTimeRange(start: start, end: end);
   }
 
   DateTime _calculatePaidUntil() {
@@ -161,23 +180,24 @@ class _HomePageState extends State<HomePage> {
 
     // Validar si hoy está en validDays (lunes=1 .. domingo=7)
     // Firestore usa 1=lunes, 7=domingo. Dart usa weekday: 1=lunes ... 7=domingo
-    if (!_validDays.contains(now.weekday)) {
-      // Día no permitido, no permitir pagar
+    final range = _currentRange(now);
+
+    if (!_validDays.contains(range.start.weekday)) {
       return now;
     }
 
-    if (now.isBefore(_startTime)) {
-      return _startTime.add(Duration(minutes: _selectedDuration));
+    if (now.isBefore(range.start)) {
+      return range.start.add(Duration(minutes: _selectedDuration));
     }
 
-    if (now.isAfter(_endTime)) {
-      final nextDayStart = _startTime.add(const Duration(days: 1));
-      return nextDayStart.add(Duration(minutes: _selectedDuration));
+    if (now.isAfter(range.end)) {
+      final nextStart = range.start.add(const Duration(days: 1));
+      return nextStart.add(Duration(minutes: _selectedDuration));
     }
 
     final paidUntil = now.add(Duration(minutes: _selectedDuration));
-    if (paidUntil.isAfter(_endTime)) {
-      return _endTime;
+    if (paidUntil.isAfter(range.end)) {
+      return range.end;
     }
 
     return paidUntil;
@@ -202,8 +222,16 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  bool get _isTariffActive {
+    final now = DateTime.now();
+    final range = _currentRange(now);
+    return _validDays.contains(range.start.weekday) &&
+        now.isAfter(range.start) &&
+        now.isBefore(range.end);
+  }
+
   void _increaseDuration() {
-    if (_emergencyActive) return; // no permitir cambios si emergencia activa
+    if (_emergencyActive || !_isTariffActive) return;
 
     int nextDuration = _selectedDuration + _increment;
     if (nextDuration > _maxDuration) nextDuration = _maxDuration;
@@ -216,7 +244,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _decreaseDuration() {
-    if (_emergencyActive) return; // no permitir cambios si emergencia activa
+    if (_emergencyActive || !_isTariffActive) return;
 
     int prevDuration = _selectedDuration - _increment;
     if (prevDuration < _minDuration) prevDuration = _minDuration;
@@ -228,20 +256,70 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _showEmergencyDialog() {
+    if (_emergencyDialogVisible) return;
+    _emergencyDialogVisible = true;
+    int remaining = 5;
+    Timer? timer;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setState) {
+            timer ??= Timer.periodic(const Duration(seconds: 1), (_) {
+              if (remaining <= 1) {
+                Navigator.of(ctx).pop();
+              } else {
+                setState(() => remaining--);
+              }
+            });
+            return AlertDialog(
+              title: const Text('Emergencia'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _emergencyReason,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  Text('Cerrando en \$remaining...'),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Cerrar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    ).then((_) {
+      timer?.cancel();
+      _emergencyDialogVisible = false;
+    });
+  }
+
   bool get _isPaymentAllowed {
     if (_emergencyActive) return false;
-
-    final now = DateTime.now();
-    if (!_validDays.contains(now.weekday)) return false;
-
+    if (!_isTariffActive) return false;
     if (_selectedDuration < _minDuration) return false;
-
     return true;
   }
 
   String get _paidUntilFormatted {
     if (_paidUntil == null) return '--:--';
     return '${_paidUntil!.hour.toString().padLeft(2, '0')}:${_paidUntil!.minute.toString().padLeft(2, '0')}';
+  }
+
+  String get _inactiveMessage {
+    const names = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+    final days = _validDays.map((d) => names[d - 1]).join(', ');
+    String fmt(TimeOfDay t) => '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+    return 'Esta tarifa solo está activa los días: $days, de ${fmt(_startTimeOfDay)} a ${fmt(_endTimeOfDay)}.';
   }
 
   Future<void> _onZoneChanged(String? zoneId) async {
@@ -259,6 +337,8 @@ class _HomePageState extends State<HomePage> {
       _emergencyActive = false;
       _emergencyReason = '';
       _validDays = [];
+      _startTimeOfDay = const TimeOfDay(hour: 0, minute: 0);
+      _endTimeOfDay = const TimeOfDay(hour: 23, minute: 59);
     });
 
     _subscribeTariff(zoneId);
@@ -416,15 +496,30 @@ class _HomePageState extends State<HomePage> {
                             color: Colors.white, fontWeight: FontWeight.bold),
                       ),
                     ),
+                  ] else if (!_isTariffActive && _selectedZoneId != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF4CC),
+                        border: Border.all(color: Colors.orange),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _inactiveMessage,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ],
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ElevatedButton(
-                        onPressed: _emergencyActive ? null : _decreaseDuration,
+                        onPressed: _emergencyActive || !_isTariffActive ? null : _decreaseDuration,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              _emergencyActive ? Colors.grey : const Color(0xFFE62144),
+                          backgroundColor: _emergencyActive || !_isTariffActive
+                              ? Colors.grey
+                              : const Color(0xFFE62144),
                           minimumSize: const Size(40, 40),
                         ),
                         child: const Icon(Icons.remove, color: Colors.white),
@@ -440,10 +535,11 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       ElevatedButton(
-                        onPressed: _emergencyActive ? null : _increaseDuration,
+                        onPressed: _emergencyActive || !_isTariffActive ? null : _increaseDuration,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              _emergencyActive ? Colors.grey : const Color(0xFFE62144),
+                          backgroundColor: _emergencyActive || !_isTariffActive
+                              ? Colors.grey
+                              : const Color(0xFFE62144),
                           minimumSize: const Size(40, 40),
                         ),
                         child: const Icon(Icons.add, color: Colors.white),

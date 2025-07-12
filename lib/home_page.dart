@@ -244,6 +244,14 @@ class _HomePageState extends State<HomePage> {
     return '${_paidUntil!.hour.toString().padLeft(2, '0')}:${_paidUntil!.minute.toString().padLeft(2, '0')}';
   }
 
+  // NUEVA PROPIEDAD PARA FECHA + HORA
+  String get _paidUntilFormattedWithDate {
+    if (_paidUntil == null) return '--:--';
+    final datePart = DateFormat('dd/MM/yyyy').format(_paidUntil!);
+    final timePart = '${_paidUntil!.hour.toString().padLeft(2, '0')}:${_paidUntil!.minute.toString().padLeft(2, '0')}';
+    return '$datePart $timePart';
+  }
+
   Future<void> _onZoneChanged(String? zoneId) async {
     if (zoneId == null) return;
 
@@ -462,7 +470,7 @@ class _HomePageState extends State<HomePage> {
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       Text(
-                        '${AppLocalizations.of(context).t('until')}: $_paidUntilFormatted',
+                        '${AppLocalizations.of(context).t('until')}: $_paidUntilFormattedWithDate',
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),

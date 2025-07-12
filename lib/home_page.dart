@@ -45,8 +45,8 @@ class _HomePageState extends State<HomePage> {
 
   StreamSubscription<DocumentSnapshot>? _tariffSubscription;
 
-  late DateTime _startTime;
-  late DateTime _endTime;
+  DateTime? _startTime;
+  DateTime? _endTime;
 
   bool _emergencyActive = false;
   String _emergencyReason = '';
@@ -154,7 +154,7 @@ class _HomePageState extends State<HomePage> {
     int hour = int.tryParse(parts[0]) ?? 0;
     int minute = int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
 
-    if (endTime && hour < (_startTime.hour)) {
+    if (endTime && _startTime != null && hour < _startTime!.hour) {
       return DateTime(now.year, now.month, now.day + 1, hour, minute);
     }
     return DateTime(now.year, now.month, now.day, hour, minute);
@@ -171,18 +171,22 @@ class _HomePageState extends State<HomePage> {
       return now;
     }
 
-    if (now.isBefore(_startTime)) {
-      return _startTime.add(Duration(minutes: _selectedDuration));
+    if (_startTime == null || _endTime == null) {
+      return now.add(Duration(minutes: _selectedDuration));
     }
 
-    if (now.isAfter(_endTime)) {
-      final nextDayStart = _startTime.add(const Duration(days: 1));
+    if (now.isBefore(_startTime!)) {
+      return _startTime!.add(Duration(minutes: _selectedDuration));
+    }
+
+    if (now.isAfter(_endTime!)) {
+      final nextDayStart = _startTime!.add(const Duration(days: 1));
       return nextDayStart.add(Duration(minutes: _selectedDuration));
     }
 
     final paidUntil = now.add(Duration(minutes: _selectedDuration));
-    if (paidUntil.isAfter(_endTime)) {
-      return _endTime;
+    if (paidUntil.isAfter(_endTime!)) {
+      return _endTime!;
     }
 
     return paidUntil;
@@ -249,15 +253,14 @@ class _HomePageState extends State<HomePage> {
     if (_emergencyActive) return false;
     if (!_validDays.contains(now.weekday)) return false;
 
-    // El horario puede cruzar medianoche:
-    // Si endTime es antes que startTime, significa que termina al día siguiente
-    if (_endTime.isBefore(_startTime)) {
-      // Caso cruce medianoche
-      if (now.isBefore(_startTime) && now.isAfter(_endTime)) {
+    if (_startTime == null || _endTime == null) return false;
+
+    if (_endTime!.isBefore(_startTime!)) {
+      if (now.isBefore(_startTime!) && now.isAfter(_endTime!)) {
         return false;
       }
     } else {
-      if (now.isBefore(_startTime) || now.isAfter(_endTime)) {
+      if (now.isBefore(_startTime!) || now.isAfter(_endTime!)) {
         return false;
       }
     }
@@ -499,7 +502,7 @@ class _HomePageState extends State<HomePage> {
                         border: Border.all(color: Colors.orange.shade700),
                       ),
                       child: Text(
-                        'Tarifa activa solo los días: ${_validDaysString()}, de ${DateFormat.Hm().format(_startTime)} a ${DateFormat.Hm().format(_endTime)}.',
+                        'Tarifa activa solo los días: ${_validDaysString()}, de ${DateFormat.Hm().format(_startTime ?? DateTime.now())} a ${DateFormat.Hm().format(_endTime ?? DateTime.now())}.',
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, color: Colors.black87),
                       ),

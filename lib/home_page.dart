@@ -49,9 +49,13 @@ class _HomePageState extends State<HomePage> {
   late DateTime _endTime;
 
   bool _emergencyActive = false;
-  String _emergencyReason = '';
+  String _emergencyReasonKey = ''; // Ahora guardamos la clave para localización
 
   List<int> _validDays = [];
+
+  bool _emergencyDialogVisible = false;
+  int _countdownSeconds = 5;
+  Timer? _countdownTimer;
 
   @override
   void initState() {
@@ -84,6 +88,7 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     _clockTimer?.cancel();
     _tariffSubscription?.cancel();
+    _countdownTimer?.cancel();
     _plateCtrl.dispose();
     super.dispose();
   }
@@ -124,16 +129,81 @@ class _HomePageState extends State<HomePage> {
         _endTime = _parseTime(data['endTime'] ?? '23:59', endTime: true);
 
         _emergencyActive = (data['emergencyActive'] ?? false) as bool;
-        _emergencyReason = (data['emergencyReason'] ?? '') as String;
+        _emergencyReasonKey = (data['emergencyReasonKey'] ?? '') as String;
 
         _validDays = List<int>.from(data['validDays'] ?? []);
 
-        // Reset duration y precio base al cambiar tarifa
         _selectedDuration = _minDuration > 0 ? _minDuration : 0;
         _updatePrice();
 
         _paidUntil = _calculatePaidUntil();
+
+        // Mostrar diálogo emergencia si aplica y no está visible
+        if (_emergencyActive && !_emergencyDialogVisible) {
+          _showEmergencyDialog();
+        }
       });
+    });
+  }
+
+  void _showEmergencyDialog() {
+    _countdownSeconds = 5;
+    _emergencyDialogVisible = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            _countdownTimer ??= Timer.periodic(const Duration(seconds: 1), (timer) {
+              if (_countdownSeconds > 0) {
+                setState(() => _countdownSeconds--);
+                setStateDialog(() {});
+              }
+              if (_countdownSeconds <= 0) {
+                timer.cancel();
+                _emergencyDialogVisible = false;
+                Navigator.of(context).pop();
+              }
+            });
+
+            return AlertDialog(
+              title: Text(AppLocalizations.of(context).t('emergencyTitle')),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    AppLocalizations.of(context).t(_emergencyReasonKey),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    AppLocalizations.of(context).t(
+                      'autoCloseIn',
+                      params: {'seconds': '$_countdownSeconds'},
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    _countdownTimer?.cancel();
+                    _emergencyDialogVisible = false;
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(AppLocalizations.of(context).t('close')),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    ).then((_) {
+      _emergencyDialogVisible = false;
+      _countdownTimer?.cancel();
+      _countdownTimer = null;
     });
   }
 
@@ -143,9 +213,7 @@ class _HomePageState extends State<HomePage> {
     int hour = int.tryParse(parts[0]) ?? 0;
     int minute = int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
 
-    // Si es endTime y hora < startTime, es horario del día siguiente
     if (endTime && hour < (_startTime.hour)) {
-      // mañana
       return DateTime(now.year, now.month, now.day + 1, hour, minute);
     }
     return DateTime(now.year, now.month, now.day, hour, minute);
@@ -155,29 +223,65 @@ class _HomePageState extends State<HomePage> {
     final now = DateTime.now();
 
     if (_emergencyActive) {
-      // Emergencia activa, no permitir pagar
       return now;
     }
 
-    // Validar si hoy está en validDays (lunes=1 .. domingo=7)
-    // Firestore usa 1=lunes, 7=domingo. Dart usa weekday: 1=lunes ... 7=domingo
+    DateTime baseTime = now;
+
     if (!_validDays.contains(now.weekday)) {
-      // Día no permitido, no permitir pagar
-      return now;
+      int daysToAdd = 1;
+      while (!_validDays.contains(now.add(Duration(days: daysToAdd)).weekday)) {
+        daysToAdd++;
+      }
+      final nextValidDay = now.add(Duration(days: daysToAdd));
+      baseTime = DateTime(
+        nextValidDay.year,
+        nextValidDay.month,
+        nextValidDay.day,
+        _startTime.hour,
+        _startTime.minute,
+      );
+      return baseTime.add(Duration(minutes: _selectedDuration));
     }
 
     if (now.isBefore(_startTime)) {
-      return _startTime.add(Duration(minutes: _selectedDuration));
+      baseTime = DateTime(now.year, now.month, now.day, _startTime.hour, _startTime.minute);
+      return baseTime.add(Duration(minutes: _selectedDuration));
     }
 
     if (now.isAfter(_endTime)) {
-      final nextDayStart = _startTime.add(const Duration(days: 1));
-      return nextDayStart.add(Duration(minutes: _selectedDuration));
+      int daysToAdd = 1;
+      while (!_validDays.contains(now.add(Duration(days: daysToAdd)).weekday)) {
+        daysToAdd++;
+      }
+      final nextValidDay = now.add(Duration(days: daysToAdd));
+      baseTime = DateTime(
+        nextValidDay.year,
+        nextValidDay.month,
+        nextValidDay.day,
+        _startTime.hour,
+        _startTime.minute,
+      );
+      return baseTime.add(Duration(minutes: _selectedDuration));
     }
 
     final paidUntil = now.add(Duration(minutes: _selectedDuration));
     if (paidUntil.isAfter(_endTime)) {
-      return _endTime;
+      // Si sobrepasa el endTime, pasa al siguiente día válido y hora startTime
+      int daysToAdd = 1;
+      DateTime nextDay = now.add(Duration(days: daysToAdd));
+      while (!_validDays.contains(nextDay.weekday)) {
+        daysToAdd++;
+        nextDay = now.add(Duration(days: daysToAdd));
+      }
+      baseTime = DateTime(
+        nextDay.year,
+        nextDay.month,
+        nextDay.day,
+        _startTime.hour,
+        _startTime.minute,
+      );
+      return baseTime;
     }
 
     return paidUntil;
@@ -203,7 +307,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _increaseDuration() {
-    if (_emergencyActive) return; // no permitir cambios si emergencia activa
+    if (_emergencyActive) return;
 
     int nextDuration = _selectedDuration + _increment;
     if (nextDuration > _maxDuration) nextDuration = _maxDuration;
@@ -216,7 +320,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _decreaseDuration() {
-    if (_emergencyActive) return; // no permitir cambios si emergencia activa
+    if (_emergencyActive) return;
 
     int prevDuration = _selectedDuration - _increment;
     if (prevDuration < _minDuration) prevDuration = _minDuration;
@@ -244,6 +348,13 @@ class _HomePageState extends State<HomePage> {
     return '${_paidUntil!.hour.toString().padLeft(2, '0')}:${_paidUntil!.minute.toString().padLeft(2, '0')}';
   }
 
+  String get _paidUntilFormattedWithDate {
+    if (_paidUntil == null) return '--:--';
+    final dateStr = DateFormat('dd/MM/yyyy').format(_paidUntil!);
+    final timeStr = '${_paidUntil!.hour.toString().padLeft(2, '0')}:${_paidUntil!.minute.toString().padLeft(2, '0')}';
+    return '$dateStr $timeStr';
+  }
+
   Future<void> _onZoneChanged(String? zoneId) async {
     if (zoneId == null) return;
 
@@ -257,7 +368,7 @@ class _HomePageState extends State<HomePage> {
       _paidUntil = null;
       _plateCtrl.clear();
       _emergencyActive = false;
-      _emergencyReason = '';
+      _emergencyReasonKey = '';
       _validDays = [];
     });
 
@@ -411,7 +522,9 @@ class _HomePageState extends State<HomePage> {
                       margin: const EdgeInsets.only(bottom: 12),
                       color: Colors.red.shade300,
                       child: Text(
-                        _emergencyReason,
+                        AppLocalizations.of(context).t(
+                          _emergencyReasonKey,
+                        ),
                         style: const TextStyle(
                             color: Colors.white, fontWeight: FontWeight.bold),
                       ),
@@ -462,7 +575,7 @@ class _HomePageState extends State<HomePage> {
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       Text(
-                        '${AppLocalizations.of(context).t('until')}: $_paidUntilFormatted',
+                        '${AppLocalizations.of(context).t('until')}: ${_paidUntilFormattedWithDate}',
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),

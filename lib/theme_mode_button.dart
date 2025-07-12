@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'theme_provider.dart';
 
@@ -12,7 +13,7 @@ class ThemeModeButton extends StatelessWidget {
     return IconButton(
       iconSize: 32,
       color: Theme.of(context).colorScheme.primary,
-      icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+      icon: Icon(isDark ? CupertinoIcons.sun_max_fill : CupertinoIcons.moon_fill),
       onPressed: prov.toggle,
     );
   }

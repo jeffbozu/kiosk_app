@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -540,7 +541,7 @@ class _HomePageState extends State<HomePage> {
                               _emergencyActive ? Colors.grey : const Color(0xFFE62144),
                           minimumSize: const Size(40, 40),
                         ),
-                        child: const Icon(Icons.remove, color: Colors.white),
+                        child: const Icon(CupertinoIcons.minus, color: Colors.white),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -559,7 +560,7 @@ class _HomePageState extends State<HomePage> {
                               _emergencyActive ? Colors.grey : const Color(0xFFE62144),
                           minimumSize: const Size(40, 40),
                         ),
-                        child: const Icon(Icons.add, color: Colors.white),
+                        child: const Icon(CupertinoIcons.add, color: Colors.white),
                       ),
                     ],
                   ),

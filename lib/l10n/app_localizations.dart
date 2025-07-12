@@ -61,6 +61,9 @@ class AppLocalizations {
       'paymentError': 'Error al procesar el pago',
       'goHome': 'Volver a la pantalla principal',
       'back': 'Atrás',
+      'emergencyTitle': 'Emergencia',
+      'autoCloseIn': 'Cierre automático en {seconds} s',
+      'emergencyActiveLabel': 'Emergencia: {reason}',
     },
     'ca': {
       'welcome': 'Benvingut a Meypar Optima App',
@@ -108,6 +111,9 @@ class AppLocalizations {
       'paymentError': 'Error en processar el pagament',
       'goHome': "Tornar a l'inici",
       'back': 'Enrere',
+      'emergencyTitle': 'Emergència',
+      'autoCloseIn': 'Tancament automàtic en {seconds} s',
+      'emergencyActiveLabel': 'Emergència: {reason}',
     },
     'en': {
       'welcome': 'Welcome to Meypar Optima App',
@@ -155,6 +161,9 @@ class AppLocalizations {
       'paymentError': 'Payment error',
       'goHome': 'Return to main screen',
       'back': 'Back',
+      'emergencyTitle': 'Emergency',
+      'autoCloseIn': 'Auto close in {seconds}s',
+      'emergencyActiveLabel': 'Emergency: {reason}',
     },
   };
 

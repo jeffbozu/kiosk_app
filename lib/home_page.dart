@@ -154,26 +154,38 @@ class _HomePageState extends State<HomePage> {
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        _countdownTimer?.cancel();
-        _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-          setState(() {
-            _countdownSeconds--;
-          });
-          if (_countdownSeconds <= 0) {
-            timer.cancel();
-          }
-        });
-
         return StatefulBuilder(
           builder: (context, setStateDialog) {
+            _countdownTimer ??= Timer.periodic(const Duration(seconds: 1), (timer) {
+              if (_countdownSeconds > 0) {
+                setState(() => _countdownSeconds--);
+                setStateDialog(() {});
+              }
+              if (_countdownSeconds <= 0) {
+                timer.cancel();
+                _emergencyDialogVisible = false;
+                Navigator.of(context).pop();
+              }
+            });
+
             return AlertDialog(
-              title: const Text('Emergencia'),
+              title: Text(AppLocalizations.of(context).t('emergencyTitle')),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(_emergencyReason),
+                  Text(
+                    AppLocalizations.of(context).t(
+                      'emergencyActiveLabel',
+                      params: {'reason': _emergencyReason},
+                    ),
+                  ),
                   const SizedBox(height: 16),
-                  Text('Cierre automático en $_countdownSeconds segundos'),
+                  Text(
+                    AppLocalizations.of(context).t(
+                      'autoCloseIn',
+                      params: {'seconds': '$_countdownSeconds'},
+                    ),
+                  ),
                 ],
               ),
               actions: [
@@ -183,7 +195,7 @@ class _HomePageState extends State<HomePage> {
                     _emergencyDialogVisible = false;
                     Navigator.of(context).pop();
                   },
-                  child: const Text('Cerrar'),
+                  child: Text(AppLocalizations.of(context).t('close')),
                 ),
               ],
             );
@@ -193,6 +205,7 @@ class _HomePageState extends State<HomePage> {
     ).then((_) {
       _emergencyDialogVisible = false;
       _countdownTimer?.cancel();
+      _countdownTimer = null;
     });
   }
 
@@ -485,7 +498,10 @@ class _HomePageState extends State<HomePage> {
                       margin: const EdgeInsets.only(bottom: 12),
                       color: Colors.red.shade300,
                       child: Text(
-                        _emergencyReason,
+                        AppLocalizations.of(context).t(
+                          'emergencyActiveLabel',
+                          params: {'reason': _emergencyReason},
+                        ),
                         style: const TextStyle(
                             color: Colors.white, fontWeight: FontWeight.bold),
                       ),

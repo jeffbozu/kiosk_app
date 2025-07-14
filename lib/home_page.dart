@@ -10,6 +10,7 @@ import 'language_selector.dart';
 import 'locale_provider.dart';
 import 'theme_mode_button.dart';
 import 'ticket_success_page.dart';
+import 'design1_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -519,6 +520,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Kiosk App'),
         actions: const [
+          _Design1Button(),
           LanguageSelector(),
           SizedBox(width: 8),
           ThemeModeButton(),
@@ -648,6 +650,23 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
+    );
+  }
+}
+
+class _Design1Button extends StatelessWidget {
+  const _Design1Button();
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const Design1Page()),
+        );
+      },
+      child: Text(AppLocalizations.of(context).t('design1')),
     );
   }
 }

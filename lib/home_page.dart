@@ -49,13 +49,17 @@ class _HomePageState extends State<HomePage> {
   late DateTime _endTime;
 
   bool _emergencyActive = false;
-  String _emergencyReasonKey = ''; // Clave para localización
+  String _emergencyReasonKey = ''; // Clave para localización del motivo
 
   List<int> _validDays = [];
 
   bool _emergencyDialogVisible = false;
   int _countdownSeconds = 5;
   Timer? _countdownTimer;
+
+  // Variables para control de botones +
+  bool _canIncrease = true;
+  bool _canDecrease = false;
 
   @override
   void initState() {
@@ -134,11 +138,12 @@ class _HomePageState extends State<HomePage> {
         _validDays = List<int>.from(data['validDays'] ?? []);
 
         _selectedDuration = _minDuration > 0 ? _minDuration : 0;
-        _updatePrice();
 
+        _updatePrice();
         _paidUntil = _calculatePaidUntil();
 
-        // Mostrar diálogo emergencia si aplica y no está visible
+        _updateButtonStates();
+
         if (_emergencyActive && !_emergencyDialogVisible) {
           _showEmergencyDialog();
         }
@@ -146,160 +151,37 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _showEmergencyDialog() {
-    _countdownSeconds = 5;
-    _emergencyDialogVisible = true;
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            _countdownTimer ??= Timer.periodic(const Duration(seconds: 1), (timer) {
-              if (_countdownSeconds > 0) {
-                setState(() => _countdownSeconds--);
-                setStateDialog(() {});
-              }
-              if (_countdownSeconds <= 0) {
-                timer.cancel();
-                _emergencyDialogVisible = false;
-                Navigator.of(context).pop();
-              }
-            });
-
-            return AlertDialog(
-              title: Text(AppLocalizations.of(context).t('emergencyTitle')),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    AppLocalizations.of(context).t(_emergencyReasonKey),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    AppLocalizations.of(context).t(
-                      'autoCloseIn',
-                      params: {'seconds': '$_countdownSeconds'},
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    _countdownTimer?.cancel();
-                    _emergencyDialogVisible = false;
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(AppLocalizations.of(context).t('close')),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    ).then((_) {
-      _emergencyDialogVisible = false;
-      _countdownTimer?.cancel();
-      _countdownTimer = null;
+  void _updateButtonStates() {
+    final canInc = _canIncreaseDuration;
+    final canDec = _canDecreaseDuration;
+    setState(() {
+      _canIncrease = canInc;
+      _canDecrease = canDec;
     });
   }
 
-  DateTime _parseTime(String time, {bool endTime = false}) {
-    final now = DateTime.now();
-    final parts = time.split(':');
-    int hour = int.tryParse(parts[0]) ?? 0;
-    int minute = int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
-
-    // Si endTime es antes que startTime, se asume que es al día siguiente
-    if (endTime && hour < (_startTime.hour)) {
-      return DateTime(now.year, now.month, now.day + 1, hour, minute);
-    }
-    return DateTime(now.year, now.month, now.day, hour, minute);
-  }
-
-  DateTime _calculatePaidUntil() {
-    final now = DateTime.now();
-
-    if (_emergencyActive) {
-      return now;
-    }
-
-    DateTime baseTime = now;
-
-    // Si hoy no es día válido, se avanza al siguiente día válido con startTime
-    if (!_validDays.contains(now.weekday)) {
-      int daysToAdd = 1;
-      while (!_validDays.contains(now.add(Duration(days: daysToAdd)).weekday)) {
-        daysToAdd++;
-      }
-      final nextValidDay = now.add(Duration(days: daysToAdd));
-      baseTime = DateTime(
-        nextValidDay.year,
-        nextValidDay.month,
-        nextValidDay.day,
-        _startTime.hour,
-        _startTime.minute,
-      );
-      return baseTime.add(Duration(minutes: _selectedDuration));
-    }
-
-    // Si la hora actual es antes del startTime, se comienza desde startTime
-    if (now.isBefore(_startTime)) {
-      baseTime = DateTime(now.year, now.month, now.day, _startTime.hour, _startTime.minute);
-      return baseTime.add(Duration(minutes: _selectedDuration));
-    }
-
-    // Si la hora actual es después del endTime, se pasa al siguiente día válido
-    if (now.isAfter(_endTime)) {
-      int daysToAdd = 1;
-      while (!_validDays.contains(now.add(Duration(days: daysToAdd)).weekday)) {
-        daysToAdd++;
-      }
-      final nextValidDay = now.add(Duration(days: daysToAdd));
-      baseTime = DateTime(
-        nextValidDay.year,
-        nextValidDay.month,
-        nextValidDay.day,
-        _startTime.hour,
-        _startTime.minute,
-      );
-      return baseTime.add(Duration(minutes: _selectedDuration));
-    }
-
-    // Calculamos el paidUntil sumando la duración
-    final paidUntil = now.add(Duration(minutes: _selectedDuration));
-
-    // Si paidUntil sobrepasa endTime, devolvemos el endTime
-    if (paidUntil.isAfter(_endTime)) {
-      return _endTime;
-    }
-
-    return paidUntil;
-  }
-
-  // Función para saber si se puede aumentar duración sin superar endTime ni maxDuration
   bool get _canIncreaseDuration {
     if (_emergencyActive) return false;
-
     if (_selectedDuration >= _maxDuration) return false;
 
-    final now = DateTime.now();
     final potentialPaidUntil = _calculatePotentialPaidUntil(_selectedDuration + _increment);
 
-    // Si el nuevo paidUntil supera el endTime, no se puede aumentar duración
     if (potentialPaidUntil.isAfter(_endTime)) return false;
 
     return true;
   }
 
-  // Calcula el paidUntil si se selecciona una duración dada (no modifica estado)
+  bool get _canDecreaseDuration {
+    if (_selectedDuration <= _minDuration) return false;
+    return true;
+  }
+
   DateTime _calculatePotentialPaidUntil(int duration) {
     final now = DateTime.now();
 
-    if (_emergencyActive) return now;
+    if (_emergencyActive) {
+      return now;
+    }
 
     DateTime baseTime = now;
 
@@ -342,7 +224,95 @@ class _HomePageState extends State<HomePage> {
 
     final paidUntil = now.add(Duration(minutes: duration));
     if (paidUntil.isAfter(_endTime)) {
-      return _endTime;
+      // Si sobrepasa el endTime, avanza hasta el siguiente día válido
+      DateTime nextDay = paidUntil.add(const Duration(days: 1));
+      while (!_validDays.contains(nextDay.weekday)) {
+        nextDay = nextDay.add(const Duration(days: 1));
+      }
+      return DateTime(
+        nextDay.year,
+        nextDay.month,
+        nextDay.day,
+        _startTime.hour,
+        _startTime.minute,
+      );
+    }
+
+    return paidUntil;
+  }
+
+  DateTime _parseTime(String time, {bool endTime = false}) {
+    final now = DateTime.now();
+    final parts = time.split(':');
+    int hour = int.tryParse(parts[0]) ?? 0;
+    int minute = int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
+
+    if (endTime && hour < (_startTime.hour)) {
+      return DateTime(now.year, now.month, now.day + 1, hour, minute);
+    }
+    return DateTime(now.year, now.month, now.day, hour, minute);
+  }
+
+  DateTime _calculatePaidUntil() {
+    final now = DateTime.now();
+
+    if (_emergencyActive) {
+      return now;
+    }
+
+    DateTime baseTime = now;
+
+    if (!_validDays.contains(now.weekday)) {
+      int daysToAdd = 1;
+      while (!_validDays.contains(now.add(Duration(days: daysToAdd)).weekday)) {
+        daysToAdd++;
+      }
+      final nextValidDay = now.add(Duration(days: daysToAdd));
+      baseTime = DateTime(
+        nextValidDay.year,
+        nextValidDay.month,
+        nextValidDay.day,
+        _startTime.hour,
+        _startTime.minute,
+      );
+      return baseTime.add(Duration(minutes: _selectedDuration));
+    }
+
+    if (now.isBefore(_startTime)) {
+      baseTime = DateTime(now.year, now.month, now.day, _startTime.hour, _startTime.minute);
+      return baseTime.add(Duration(minutes: _selectedDuration));
+    }
+
+    if (now.isAfter(_endTime)) {
+      int daysToAdd = 1;
+      while (!_validDays.contains(now.add(Duration(days: daysToAdd)).weekday)) {
+        daysToAdd++;
+      }
+      final nextValidDay = now.add(Duration(days: daysToAdd));
+      baseTime = DateTime(
+        nextValidDay.year,
+        nextValidDay.month,
+        nextValidDay.day,
+        _startTime.hour,
+        _startTime.minute,
+      );
+      return baseTime.add(Duration(minutes: _selectedDuration));
+    }
+
+    final paidUntil = now.add(Duration(minutes: _selectedDuration));
+    if (paidUntil.isAfter(_endTime)) {
+      // Si sobrepasa el endTime, avanza hasta el siguiente día válido
+      DateTime nextDay = paidUntil.add(const Duration(days: 1));
+      while (!_validDays.contains(nextDay.weekday)) {
+        nextDay = nextDay.add(const Duration(days: 1));
+      }
+      return DateTime(
+        nextDay.year,
+        nextDay.month,
+        nextDay.day,
+        _startTime.hour,
+        _startTime.minute,
+      );
     }
 
     return paidUntil;
@@ -368,7 +338,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _increaseDuration() {
-    if (!_canIncreaseDuration) return; // Se controla habilitación aquí
+    if (!_canIncreaseDuration) return;
 
     int nextDuration = _selectedDuration + _increment;
     if (nextDuration > _maxDuration) nextDuration = _maxDuration;
@@ -377,11 +347,13 @@ class _HomePageState extends State<HomePage> {
       _selectedDuration = nextDuration;
       _updatePrice();
       _paidUntil = _calculatePaidUntil();
+
+      _updateButtonStates();
     });
   }
 
   void _decreaseDuration() {
-    if (_emergencyActive) return;
+    if (!_canDecreaseDuration) return;
 
     int prevDuration = _selectedDuration - _increment;
     if (prevDuration < _minDuration) prevDuration = _minDuration;
@@ -390,6 +362,8 @@ class _HomePageState extends State<HomePage> {
       _selectedDuration = prevDuration;
       _updatePrice();
       _paidUntil = _calculatePaidUntil();
+
+      _updateButtonStates();
     });
   }
 
@@ -431,6 +405,10 @@ class _HomePageState extends State<HomePage> {
       _emergencyActive = false;
       _emergencyReasonKey = '';
       _validDays = [];
+
+      // Reset botones
+      _canIncrease = false;
+      _canDecrease = false;
     });
 
     _subscribeTariff(zoneId);
@@ -521,6 +499,7 @@ class _HomePageState extends State<HomePage> {
       _selectedDuration = _minDuration;
       _paidUntil = _calculatePaidUntil();
       _updatePrice();
+      _updateButtonStates();
     });
   }
 
@@ -595,13 +574,10 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ElevatedButton(
-                        onPressed: _emergencyActive || !_canDecreaseDuration
-                            ? null
-                            : _decreaseDuration,
+                        onPressed: _emergencyActive || !_canDecrease ? null : _decreaseDuration,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _emergencyActive || !_canDecreaseDuration
-                              ? Colors.grey
-                              : const Color(0xFFE62144),
+                          backgroundColor:
+                              _emergencyActive || !_canDecrease ? Colors.grey : const Color(0xFFE62144),
                           minimumSize: const Size(40, 40),
                         ),
                         child: const Icon(Icons.remove, color: Colors.white),
@@ -617,13 +593,10 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       ElevatedButton(
-                        onPressed: _emergencyActive || !_canIncreaseDuration
-                            ? null
-                            : _increaseDuration,
+                        onPressed: _emergencyActive || !_canIncrease ? null : _increaseDuration,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _emergencyActive || !_canIncreaseDuration
-                              ? Colors.grey
-                              : const Color(0xFFE62144),
+                          backgroundColor:
+                              _emergencyActive || !_canIncrease ? Colors.grey : const Color(0xFFE62144),
                           minimumSize: const Size(40, 40),
                         ),
                         child: const Icon(Icons.add, color: Colors.white),
@@ -672,11 +645,5 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
     );
-  }
-
-  // Nueva propiedad para habilitar o no el botón de disminuir duración
-  bool get _canDecreaseDuration {
-    // El botón "-" está habilitado si la duración actual es mayor que el mínimo
-    return _selectedDuration > _minDuration;
   }
 }

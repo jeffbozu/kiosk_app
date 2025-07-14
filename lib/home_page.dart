@@ -50,7 +50,10 @@ class _HomePageState extends State<HomePage> {
   late bool _endTimeNextDay;
 
   bool _emergencyActive = false;
-  String _emergencyReasonKey = ''; // Ahora guardamos la clave para localización
+
+  // Se guarda la clave o texto para emergencia
+  String _emergencyReasonKey = '';
+  String _emergencyReasonFallback = '';
 
   List<int> _validDays = [];
 
@@ -130,9 +133,19 @@ class _HomePageState extends State<HomePage> {
         _endTime = _parseTime(data['endTime'] ?? '23:59', endTime: true);
         _endTimeNextDay = _endTime.day != _startTime.day;
 
+        // Se intenta tomar emergencyReasonKey, si no existe fallback emergencyReason
+        final reasonField =
+            data['emergencyReasonKey'] ?? data['emergencyReason'] ?? '';
+        if (reasonField is String) {
+          // Si es texto simple
+          _emergencyReasonKey = reasonField;
+          _emergencyReasonFallback = reasonField;
+        } else {
+          _emergencyReasonKey = '';
+          _emergencyReasonFallback = '';
+        }
+
         _emergencyActive = (data['emergencyActive'] ?? false) as bool;
-        _emergencyReasonKey =
-            (data['emergencyReasonKey'] ?? '').toString();
 
         _validDays = List<int>.from(data['validDays'] ?? []);
 
@@ -141,12 +154,19 @@ class _HomePageState extends State<HomePage> {
 
         _paidUntil = _calculatePaidUntil();
 
-        // Mostrar diálogo emergencia si aplica y no está visible
         if (_emergencyActive && !_emergencyDialogVisible) {
           _showEmergencyDialog();
         }
       });
     });
+  }
+
+  String _getEmergencyReason(BuildContext context) {
+    final loc = AppLocalizations.of(context).t(_emergencyReasonKey);
+    if (loc.isNotEmpty && loc != _emergencyReasonKey) {
+      return loc;
+    }
+    return _emergencyReasonFallback;
   }
 
   void _showEmergencyDialog() {
@@ -173,7 +193,7 @@ class _HomePageState extends State<HomePage> {
 
             return AlertDialog(
               title: Text(
-                AppLocalizations.of(context).t('emergencyTitle'),
+                'ADVERTENCIA',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
@@ -181,8 +201,9 @@ class _HomePageState extends State<HomePage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    AppLocalizations.of(context).t(_emergencyReasonKey),
+                    _getEmergencyReason(context),
                     style: const TextStyle(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -190,6 +211,7 @@ class _HomePageState extends State<HomePage> {
                       'autoCloseIn',
                       params: {'seconds': '$_countdownSeconds'},
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -226,7 +248,6 @@ class _HomePageState extends State<HomePage> {
     return DateTime(now.year, now.month, now.day, hour, minute);
   }
 
-  /// Obtiene la hora de inicio real para calcular la duración.
   DateTime _getBaseTime() {
     final now = DateTime.now();
     DateTime baseTime = now;
@@ -245,32 +266,19 @@ class _HomePageState extends State<HomePage> {
         _startTime.minute,
       );
     } else if (now.isBefore(_startTime)) {
-      baseTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        _startTime.hour,
-        _startTime.minute,
-      );
+      baseTime = DateTime(now.year, now.month, now.day, _startTime.hour, _startTime.minute);
     } else if (now.isAfter(_endTime)) {
       int daysToAdd = 1;
       while (!_validDays.contains(now.add(Duration(days: daysToAdd)).weekday)) {
         daysToAdd++;
       }
       final nextValidDay = now.add(Duration(days: daysToAdd));
-      baseTime = DateTime(
-        nextValidDay.year,
-        nextValidDay.month,
-        nextValidDay.day,
-        _startTime.hour,
-        _startTime.minute,
-      );
+      baseTime = DateTime(nextValidDay.year, nextValidDay.month, nextValidDay.day, _startTime.hour, _startTime.minute);
     }
 
     return baseTime;
   }
 
-  /// Devuelve el endTime correspondiente al mismo día de [date].
   DateTime _endTimeForDate(DateTime date) {
     final base = DateTime(date.year, date.month, date.day, _endTime.hour, _endTime.minute);
     return _endTimeNextDay ? base.add(const Duration(days: 1)) : base;
@@ -559,11 +567,10 @@ class _HomePageState extends State<HomePage> {
                       margin: const EdgeInsets.only(bottom: 12),
                       color: Colors.red.shade300,
                       child: Text(
-                        AppLocalizations.of(context).t(
-                          _emergencyReasonKey,
-                        ),
+                        _getEmergencyReason(context),
                         style: const TextStyle(
                             color: Colors.white, fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ],

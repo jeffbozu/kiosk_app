@@ -171,7 +171,11 @@ class _HomePageState extends State<HomePage> {
             });
 
             return AlertDialog(
-              title: Text(AppLocalizations.of(context).t('emergencyTitle')),
+              title: Text(
+                AppLocalizations.of(context).t('emergencyTitle'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

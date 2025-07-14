@@ -50,7 +50,7 @@ class _HomePageState extends State<HomePage> {
   late bool _endTimeNextDay;
 
   bool _emergencyActive = false;
-  String _emergencyReasonKey = ''; // Ahora guardamos la clave para localización
+  String _emergencyReasonKey = ''; // Clave para la localización
 
   List<int> _validDays = [];
 
@@ -141,7 +141,6 @@ class _HomePageState extends State<HomePage> {
 
         _paidUntil = _calculatePaidUntil();
 
-        // Mostrar diálogo emergencia si aplica y no está visible
         if (_emergencyActive && !_emergencyDialogVisible) {
           _showEmergencyDialog();
         }
@@ -173,7 +172,7 @@ class _HomePageState extends State<HomePage> {
 
             return AlertDialog(
               title: Text(
-                AppLocalizations.of(context).t('emergencyTitle'),
+                'ADVERTENCIA',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
@@ -183,6 +182,7 @@ class _HomePageState extends State<HomePage> {
                   Text(
                     AppLocalizations.of(context).t(_emergencyReasonKey),
                     style: const TextStyle(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -190,6 +190,7 @@ class _HomePageState extends State<HomePage> {
                       'autoCloseIn',
                       params: {'seconds': '$_countdownSeconds'},
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -226,7 +227,6 @@ class _HomePageState extends State<HomePage> {
     return DateTime(now.year, now.month, now.day, hour, minute);
   }
 
-  /// Obtiene la hora de inicio real para calcular la duración.
   DateTime _getBaseTime() {
     final now = DateTime.now();
     DateTime baseTime = now;
@@ -270,7 +270,6 @@ class _HomePageState extends State<HomePage> {
     return baseTime;
   }
 
-  /// Devuelve el endTime correspondiente al mismo día de [date].
   DateTime _endTimeForDate(DateTime date) {
     final base = DateTime(date.year, date.month, date.day, _endTime.hour, _endTime.minute);
     return _endTimeNextDay ? base.add(const Duration(days: 1)) : base;
@@ -289,7 +288,6 @@ class _HomePageState extends State<HomePage> {
 
     final paidUntil = baseTime.add(Duration(minutes: minutes));
     if (paidUntil.isAfter(endLimit)) {
-      // Si sobrepasa el endTime, avanza hasta el siguiente día válido
       DateTime nextDay = paidUntil.add(const Duration(days: 1));
       while (!_validDays.contains(nextDay.weekday)) {
         nextDay = nextDay.add(const Duration(days: 1));

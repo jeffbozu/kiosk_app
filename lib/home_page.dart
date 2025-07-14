@@ -47,6 +47,7 @@ class _HomePageState extends State<HomePage> {
 
   late DateTime _startTime;
   late DateTime _endTime;
+  late bool _endTimeNextDay;
 
   bool _emergencyActive = false;
   String _emergencyReasonKey = ''; // Ahora guardamos la clave para localización
@@ -127,6 +128,7 @@ class _HomePageState extends State<HomePage> {
 
         _startTime = _parseTime(data['startTime'] ?? '00:00');
         _endTime = _parseTime(data['endTime'] ?? '23:59', endTime: true);
+        _endTimeNextDay = _endTime.day != _startTime.day;
 
         _emergencyActive = (data['emergencyActive'] ?? false) as bool;
         _emergencyReasonKey = (data['emergencyReasonKey'] ?? '') as String;
@@ -219,13 +221,9 @@ class _HomePageState extends State<HomePage> {
     return DateTime(now.year, now.month, now.day, hour, minute);
   }
 
-  DateTime _calculatePaidUntil() {
+  /// Obtiene la hora de inicio real para calcular la duración.
+  DateTime _getBaseTime() {
     final now = DateTime.now();
-
-    if (_emergencyActive) {
-      return now;
-    }
-
     DateTime baseTime = now;
 
     if (!_validDays.contains(now.weekday)) {
@@ -241,15 +239,15 @@ class _HomePageState extends State<HomePage> {
         _startTime.hour,
         _startTime.minute,
       );
-      return baseTime.add(Duration(minutes: _selectedDuration));
-    }
-
-    if (now.isBefore(_startTime)) {
-      baseTime = DateTime(now.year, now.month, now.day, _startTime.hour, _startTime.minute);
-      return baseTime.add(Duration(minutes: _selectedDuration));
-    }
-
-    if (now.isAfter(_endTime)) {
+    } else if (now.isBefore(_startTime)) {
+      baseTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        _startTime.hour,
+        _startTime.minute,
+      );
+    } else if (now.isAfter(_endTime)) {
       int daysToAdd = 1;
       while (!_validDays.contains(now.add(Duration(days: daysToAdd)).weekday)) {
         daysToAdd++;
@@ -262,11 +260,30 @@ class _HomePageState extends State<HomePage> {
         _startTime.hour,
         _startTime.minute,
       );
-      return baseTime.add(Duration(minutes: _selectedDuration));
     }
 
-    final paidUntil = now.add(Duration(minutes: _selectedDuration));
-    if (paidUntil.isAfter(_endTime)) {
+    return baseTime;
+  }
+
+  /// Devuelve el endTime correspondiente al mismo día de [date].
+  DateTime _endTimeForDate(DateTime date) {
+    final base = DateTime(date.year, date.month, date.day, _endTime.hour, _endTime.minute);
+    return _endTimeNextDay ? base.add(const Duration(days: 1)) : base;
+  }
+
+  DateTime _calculatePaidUntil([int? duration]) {
+    final now = DateTime.now();
+
+    if (_emergencyActive) {
+      return now;
+    }
+
+    final minutes = duration ?? _selectedDuration;
+    final baseTime = _getBaseTime();
+    final endLimit = _endTimeForDate(baseTime);
+
+    final paidUntil = baseTime.add(Duration(minutes: minutes));
+    if (paidUntil.isAfter(endLimit)) {
       // Si sobrepasa el endTime, avanza hasta el siguiente día válido
       DateTime nextDay = paidUntil.add(const Duration(days: 1));
       while (!_validDays.contains(nextDay.weekday)) {
@@ -304,7 +321,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _increaseDuration() {
-    if (_emergencyActive) return;
+    if (!_canIncreaseDuration) return;
 
     int nextDuration = _selectedDuration + _increment;
     if (nextDuration > _maxDuration) nextDuration = _maxDuration;
@@ -317,7 +334,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _decreaseDuration() {
-    if (_emergencyActive) return;
+    if (!_canDecreaseDuration) return;
 
     int prevDuration = _selectedDuration - _increment;
     if (prevDuration < _minDuration) prevDuration = _minDuration;
@@ -338,6 +355,24 @@ class _HomePageState extends State<HomePage> {
     if (_selectedDuration < _minDuration) return false;
 
     return true;
+  }
+
+  bool get _canIncreaseDuration {
+    if (_emergencyActive) return false;
+    if (_selectedDuration >= _maxDuration) return false;
+
+    int nextDuration = _selectedDuration + _increment;
+    if (nextDuration > _maxDuration) nextDuration = _maxDuration;
+
+    final baseTime = _getBaseTime();
+    final endLimit = _endTimeForDate(baseTime);
+    final potential = baseTime.add(Duration(minutes: nextDuration));
+    return !potential.isAfter(endLimit);
+  }
+
+  bool get _canDecreaseDuration {
+    if (_emergencyActive) return false;
+    return _selectedDuration > _minDuration;
   }
 
   String get _paidUntilFormatted {
@@ -531,10 +566,10 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ElevatedButton(
-                        onPressed: _emergencyActive ? null : _decreaseDuration,
+                        onPressed: _canDecreaseDuration ? _decreaseDuration : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor:
-                              _emergencyActive ? Colors.grey : const Color(0xFFE62144),
+                              _canDecreaseDuration ? const Color(0xFFE62144) : Colors.grey,
                           minimumSize: const Size(40, 40),
                         ),
                         child: const Icon(Icons.remove, color: Colors.white),
@@ -550,10 +585,10 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       ElevatedButton(
-                        onPressed: _emergencyActive ? null : _increaseDuration,
+                        onPressed: _canIncreaseDuration ? _increaseDuration : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor:
-                              _emergencyActive ? Colors.grey : const Color(0xFFE62144),
+                              _canIncreaseDuration ? const Color(0xFFE62144) : Colors.grey,
                           minimumSize: const Size(40, 40),
                         ),
                         child: const Icon(Icons.add, color: Colors.white),

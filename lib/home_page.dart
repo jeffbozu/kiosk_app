@@ -162,9 +162,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   String _getEmergencyReason(BuildContext context) {
-    final loc = AppLocalizations.of(context).t(_emergencyReasonKey);
-    if (loc.isNotEmpty && loc != _emergencyReasonKey) {
-      return loc;
+    final localizations = AppLocalizations.of(context);
+    final translated = localizations.t(_emergencyReasonKey);
+    if (translated.isNotEmpty && translated != _emergencyReasonKey) {
+      return translated;
+    }
+    final fallbackTranslated = localizations.t(_emergencyReasonFallback);
+    if (fallbackTranslated.isNotEmpty &&
+        fallbackTranslated != _emergencyReasonFallback) {
+      return fallbackTranslated;
     }
     return _emergencyReasonFallback;
   }
@@ -193,7 +199,7 @@ class _HomePageState extends State<HomePage> {
 
             return AlertDialog(
               title: Text(
-                'ADVERTENCIA',
+                AppLocalizations.of(context).t('emergencyTitle'),
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),

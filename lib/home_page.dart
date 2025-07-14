@@ -131,7 +131,9 @@ class _HomePageState extends State<HomePage> {
         _endTimeNextDay = _endTime.day != _startTime.day;
 
         _emergencyActive = (data['emergencyActive'] ?? false) as bool;
-        _emergencyReasonKey = (data['emergencyReasonKey'] ?? '') as String;
+        final reasonField =
+            data['emergencyReasonKey'] ?? data['emergencyReason'];
+        _emergencyReasonKey = reasonField != null ? reasonField.toString() : '';
 
         _validDays = List<int>.from(data['validDays'] ?? []);
 

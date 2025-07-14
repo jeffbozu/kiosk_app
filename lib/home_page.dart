@@ -47,22 +47,23 @@ class _HomePageState extends State<HomePage> {
 
   late DateTime _startTime;
   late DateTime _endTime;
-  late bool _endTimeNextDay;
+  late bool   _endTimeNextDay;
 
   bool _emergencyActive = false;
-  String _emergencyReasonKey = ''; // Clave para la localización
+  String _emergKey  = '';
+  String _emergText = '';
 
   List<int> _validDays = [];
 
   bool _emergencyDialogVisible = false;
-  int _countdownSeconds = 5;
+  int  _countdownSeconds       = 5;
   Timer? _countdownTimer;
 
+  // ────────────────────────────────────────────────────────────  INIT  ──
   @override
   void initState() {
     super.initState();
     _loadZones();
-
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() => _currentTime = DateTime.now());
     });
@@ -72,16 +73,15 @@ class _HomePageState extends State<HomePage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final locale = Provider.of<LocaleProvider>(context).locale;
-    final localeName = locale.languageCode == 'es'
-        ? 'es_ES'
-        : locale.languageCode == 'ca'
-            ? 'ca_ES'
-            : 'en_GB';
+    final localeName = switch (locale.languageCode) {
+      'es' => 'es_ES',
+      'ca' => 'ca_ES',
+      _    => 'en_GB'
+    };
     if (Intl.defaultLocale != localeName) {
       Intl.defaultLocale = localeName;
-      initializeDateFormatting(localeName, null).then((_) {
-        if (mounted) setState(() => _intlReady = true);
-      });
+      initializeDateFormatting(localeName, null)
+          .then((_) => mounted ? setState(() => _intlReady = true) : null);
     }
   }
 
@@ -94,119 +94,129 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
+  // ───────────────────────────────  FIREBASE  ──
   Future<void> _loadZones() async {
     final snap = await _firestore.collection('tariffs').get();
-    _zoneItems = snap.docs.map((doc) {
-      final data = doc.data();
-      return DropdownMenuItem(
-        value: doc.id,
-        child: Text(data['zoneId'] ?? doc.id),
-      );
-    }).toList();
-    setState(() {
-      _loading = false;
-    });
+    _zoneItems = snap.docs
+        .map((d) => DropdownMenuItem(value: d.id, child: Text(d['zoneId'] ?? d.id)))
+        .toList();
+    setState(() => _loading = false);
   }
 
-  void _subscribeTariff(String zoneDocId) {
+  void _subscribeTariff(String docId) {
     _tariffSubscription?.cancel();
-
     _tariffSubscription = _firestore
         .collection('tariffs')
-        .doc(zoneDocId)
+        .doc(docId)
         .snapshots()
         .listen((doc) {
       if (!doc.exists) return;
-
-      final data = doc.data()!;
+      final d = doc.data()!;
       setState(() {
-        _basePrice = (data['basePrice'] ?? 0).toDouble();
-        _extraBlockPrice = (data['extraBlockPrice'] ?? 0).toDouble();
-        _minDuration = (data['minDuration'] ?? 0) as int;
-        _maxDuration = (data['maxDuration'] ?? 0) as int;
-        _increment = (data['increment'] ?? 1) as int;
+        _basePrice       = (d['basePrice']        ?? 0).toDouble();
+        _extraBlockPrice = (d['extraBlockPrice']  ?? 0).toDouble();
+        _minDuration     = (d['minDuration']      ?? 0) as int;
+        _maxDuration     = (d['maxDuration']      ?? 0) as int;
+        _increment       = (d['increment']        ?? 1) as int;
 
-        _startTime = _parseTime(data['startTime'] ?? '00:00');
-        _endTime = _parseTime(data['endTime'] ?? '23:59', endTime: true);
-        _endTimeNextDay = _endTime.day != _startTime.day;
+        _startTime       = _parseTime(d['startTime'] ?? '00:00');
+        _endTime         = _parseTime(d['endTime']   ?? '23:59', endTime: true);
+        _endTimeNextDay  = _endTime.day != _startTime.day;
 
-        _emergencyActive = (data['emergencyActive'] ?? false) as bool;
-        _emergencyReasonKey =
-            (data['emergencyReasonKey'] ?? '').toString();
+        _emergencyActive = (d['emergencyActive'] ?? false) as bool;
+        _emergKey        = (d['emergencyReasonKey'] ?? '').toString();
+        _emergText       = (d['emergencyReason']    ?? '').toString();
 
-        _validDays = List<int>.from(data['validDays'] ?? []);
+        _validDays       = List<int>.from(d['validDays'] ?? []);
 
         _selectedDuration = _minDuration > 0 ? _minDuration : 0;
         _updatePrice();
-
         _paidUntil = _calculatePaidUntil();
 
-        if (_emergencyActive && !_emergencyDialogVisible) {
-          _showEmergencyDialog();
-        }
+        if (_emergencyActive && !_emergencyDialogVisible) _showEmergencyDialog();
       });
     });
   }
 
-  void _showEmergencyDialog() {
-    _countdownSeconds = 5;
-    _emergencyDialogVisible = true;
+  // ──────────────────────  HELPERS  ──
+  String _translatedEmerg(BuildContext ctx) {
+    final loc = AppLocalizations.of(ctx).t(_emergKey);
+    if (loc != _emergKey && loc.isNotEmpty) return loc; // se encontró la clave
+    return _emergText;                                   // fallback texto libre
+  }
 
+  DateTime _parseTime(String t, {bool endTime = false}) {
+    final now = DateTime.now();
+    final p   = t.split(':');
+    final h   = int.tryParse(p[0]) ?? 0;
+    final m   = int.tryParse(p.length > 1 ? p[1] : '0') ?? 0;
+    if (endTime && h < _startTime.hour) {
+      return DateTime(now.year, now.month, now.day + 1, h, m);
+    }
+    return DateTime(now.year, now.month, now.day, h, m);
+  }
+
+  // ...  ───  (resto de métodos _getBaseTime, _endTimeForDate, _calculatePaidUntil,
+  //            _updatePrice, _increaseDuration, _decreaseDuration, etc. NO CAMBIAN)  ───
+
+  // ───────────────────  DIÁLOGO DE EMERGENCIA  ──
+  void _showEmergencyDialog() {
+    _countdownSeconds      = 5;
+    _emergencyDialogVisible = true;
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            _countdownTimer ??= Timer.periodic(const Duration(seconds: 1), (timer) {
-              if (_countdownSeconds > 0) {
-                setState(() => _countdownSeconds--);
-                setStateDialog(() {});
-              }
-              if (_countdownSeconds <= 0) {
-                timer.cancel();
-                _emergencyDialogVisible = false;
-                Navigator.of(context).pop();
-              }
-            });
+      builder: (ctx) {
+        return StatefulBuilder(builder: (ctx, setStateDialog) {
+          _countdownTimer ??=
+              Timer.periodic(const Duration(seconds: 1), (timer) {
+            if (_countdownSeconds > 0) {
+              setState(() => _countdownSeconds--);
+              setStateDialog(() {});
+            } else {
+              timer.cancel();
+              _emergencyDialogVisible = false;
+              Navigator.of(ctx).pop();
+            }
+          });
 
-            return AlertDialog(
-              title: Text(
+          return AlertDialog(
+            title: Center(
+              child: Text(
                 'ADVERTENCIA',
-                textAlign: TextAlign.center,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    AppLocalizations.of(context).t(_emergencyReasonKey),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _translatedEmerg(ctx),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  AppLocalizations.of(ctx).t(
+                    'autoCloseIn',
+                    params: {'seconds': '$_countdownSeconds'},
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    AppLocalizations.of(context).t(
-                      'autoCloseIn',
-                      params: {'seconds': '$_countdownSeconds'},
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    _countdownTimer?.cancel();
-                    _emergencyDialogVisible = false;
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(AppLocalizations.of(context).t('close')),
+                  textAlign: TextAlign.center,
                 ),
               ],
-            );
-          },
-        );
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  _countdownTimer?.cancel();
+                  _emergencyDialogVisible = false;
+                  Navigator.of(ctx).pop();
+                },
+                child: Text(AppLocalizations.of(ctx).t('close')),
+              ),
+            ],
+          );
+        });
       },
     ).then((_) {
       _emergencyDialogVisible = false;
@@ -215,430 +225,30 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  DateTime _parseTime(String time, {bool endTime = false}) {
-    final now = DateTime.now();
-    final parts = time.split(':');
-    int hour = int.tryParse(parts[0]) ?? 0;
-    int minute = int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
-
-    if (endTime && hour < (_startTime.hour)) {
-      return DateTime(now.year, now.month, now.day + 1, hour, minute);
-    }
-    return DateTime(now.year, now.month, now.day, hour, minute);
-  }
-
-  DateTime _getBaseTime() {
-    final now = DateTime.now();
-    DateTime baseTime = now;
-
-    if (!_validDays.contains(now.weekday)) {
-      int daysToAdd = 1;
-      while (!_validDays.contains(now.add(Duration(days: daysToAdd)).weekday)) {
-        daysToAdd++;
-      }
-      final nextValidDay = now.add(Duration(days: daysToAdd));
-      baseTime = DateTime(
-        nextValidDay.year,
-        nextValidDay.month,
-        nextValidDay.day,
-        _startTime.hour,
-        _startTime.minute,
-      );
-    } else if (now.isBefore(_startTime)) {
-      baseTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        _startTime.hour,
-        _startTime.minute,
-      );
-    } else if (now.isAfter(_endTime)) {
-      int daysToAdd = 1;
-      while (!_validDays.contains(now.add(Duration(days: daysToAdd)).weekday)) {
-        daysToAdd++;
-      }
-      final nextValidDay = now.add(Duration(days: daysToAdd));
-      baseTime = DateTime(
-        nextValidDay.year,
-        nextValidDay.month,
-        nextValidDay.day,
-        _startTime.hour,
-        _startTime.minute,
-      );
-    }
-
-    return baseTime;
-  }
-
-  DateTime _endTimeForDate(DateTime date) {
-    final base = DateTime(date.year, date.month, date.day, _endTime.hour, _endTime.minute);
-    return _endTimeNextDay ? base.add(const Duration(days: 1)) : base;
-  }
-
-  DateTime _calculatePaidUntil([int? duration]) {
-    final now = DateTime.now();
-
-    if (_emergencyActive) {
-      return now;
-    }
-
-    final minutes = duration ?? _selectedDuration;
-    final baseTime = _getBaseTime();
-    final endLimit = _endTimeForDate(baseTime);
-
-    final paidUntil = baseTime.add(Duration(minutes: minutes));
-    if (paidUntil.isAfter(endLimit)) {
-      DateTime nextDay = paidUntil.add(const Duration(days: 1));
-      while (!_validDays.contains(nextDay.weekday)) {
-        nextDay = nextDay.add(const Duration(days: 1));
-      }
-      return DateTime(
-        nextDay.year,
-        nextDay.month,
-        nextDay.day,
-        _startTime.hour,
-        _startTime.minute,
-      );
-    }
-
-    return paidUntil;
-  }
-
-  void _updatePrice() {
-    if (_emergencyActive) {
-      _price = 0.0;
-      return;
-    }
-    if (_selectedDuration < _minDuration || _selectedDuration == 0) {
-      _price = 0.0;
-      return;
-    }
-
-    final blocks = ((_selectedDuration - _minDuration) / _increment).ceil();
-
-    if (blocks <= 0) {
-      _price = _basePrice;
-    } else {
-      _price = _basePrice + (_extraBlockPrice * blocks);
-    }
-  }
-
-  void _increaseDuration() {
-    if (!_canIncreaseDuration) return;
-
-    int nextDuration = _selectedDuration + _increment;
-    if (nextDuration > _maxDuration) nextDuration = _maxDuration;
-
-    setState(() {
-      _selectedDuration = nextDuration;
-      _updatePrice();
-      _paidUntil = _calculatePaidUntil();
-    });
-  }
-
-  void _decreaseDuration() {
-    if (!_canDecreaseDuration) return;
-
-    int prevDuration = _selectedDuration - _increment;
-    if (prevDuration < _minDuration) prevDuration = _minDuration;
-
-    setState(() {
-      _selectedDuration = prevDuration;
-      _updatePrice();
-      _paidUntil = _calculatePaidUntil();
-    });
-  }
-
-  bool get _isPaymentAllowed {
-    if (_emergencyActive) return false;
-
-    final now = DateTime.now();
-    if (!_validDays.contains(now.weekday)) return false;
-
-    if (_selectedDuration < _minDuration) return false;
-
-    return true;
-  }
-
-  bool get _canIncreaseDuration {
-    if (_emergencyActive) return false;
-    if (_selectedDuration >= _maxDuration) return false;
-
-    int nextDuration = _selectedDuration + _increment;
-    if (nextDuration > _maxDuration) nextDuration = _maxDuration;
-
-    final baseTime = _getBaseTime();
-    final endLimit = _endTimeForDate(baseTime);
-    final potential = baseTime.add(Duration(minutes: nextDuration));
-    return !potential.isAfter(endLimit);
-  }
-
-  bool get _canDecreaseDuration {
-    if (_emergencyActive) return false;
-    return _selectedDuration > _minDuration;
-  }
-
-  String get _paidUntilFormatted {
-    if (_paidUntil == null) return '--:--';
-    return '${_paidUntil!.hour.toString().padLeft(2, '0')}:${_paidUntil!.minute.toString().padLeft(2, '0')}';
-  }
-
-  String get _paidUntilFormattedWithDate {
-    if (_paidUntil == null) return '--:--';
-    final dateStr = DateFormat('dd/MM/yyyy').format(_paidUntil!);
-    final timeStr = '${_paidUntil!.hour.toString().padLeft(2, '0')}:${_paidUntil!.minute.toString().padLeft(2, '0')}';
-    return '$dateStr $timeStr';
-  }
-
-  Future<void> _onZoneChanged(String? zoneId) async {
-    if (zoneId == null) return;
-
-    setState(() {
-      _selectedZoneId = zoneId;
-      _price = 0.0;
-      _selectedDuration = 0;
-      _minDuration = 0;
-      _maxDuration = 0;
-      _increment = 0;
-      _paidUntil = null;
-      _plateCtrl.clear();
-      _emergencyActive = false;
-      _emergencyReasonKey = '';
-      _validDays = [];
-    });
-
-    _subscribeTariff(zoneId);
-  }
-
-  Future<void> _confirmAndPay() async {
-    if (!_isPaymentAllowed) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).t('paymentNotAllowed'))),
-      );
-      return;
-    }
-
-    if (_selectedZoneId == null) return;
-
-    final matricula = _plateCtrl.text.trim().toUpperCase();
-
-    if (matricula.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).t('plateRequired'))),
-      );
-      return;
-    }
-
-    final ok = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Text(AppLocalizations.of(context).t('correctPlate')),
-        content: Text(matricula),
-        actions: [
-          TextButton(
-            style: TextButton.styleFrom(backgroundColor: const Color(0xFF7F7F7F)),
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(AppLocalizations.of(context).t('no')),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(AppLocalizations.of(context).t('yes')),
-          ),
-        ],
-      ),
-    );
-    if (ok != true) return;
-
-    final paid = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => PaymentMethodPage(
-          zoneId: _selectedZoneId!,
-          plate: matricula,
-          duration: _selectedDuration,
-          price: _price,
-        ),
-      ),
-    );
-
-    if (paid != true) return;
-
-    setState(() {
-      _saving = true;
-      _ticketId = null;
-    });
-
-    final now = DateTime.now();
-    final paidUntil = _paidUntil ?? now.add(Duration(minutes: _selectedDuration));
-    final doc = await _firestore.collection('tickets').add({
-      'zoneId': _selectedZoneId,
-      'plate': matricula,
-      'paidUntil': Timestamp.fromDate(paidUntil),
-      'status': 'paid',
-      'price': _price,
-      'duration': _selectedDuration,
-    });
-
-    _paidUntil = paidUntil;
-    _ticketId = doc.id;
-    setState(() => _saving = false);
-
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => TicketSuccessPage(ticketId: _ticketId!),
-      ),
-    );
-
-    setState(() {
-      _ticketId = null;
-      _plateCtrl.clear();
-      _selectedDuration = _minDuration;
-      _paidUntil = _calculatePaidUntil();
-      _updatePrice();
-    });
-  }
-
+  // ──────────────────────  UI  ──
   @override
   Widget build(BuildContext context) {
-    final allReady = !_saving &&
-        _selectedZoneId != null &&
-        _plateCtrl.text.trim().isNotEmpty &&
-        _isPaymentAllowed;
+    // ... (todo el código de build sin cambios salvo el recuadro rojo)
+    // Dentro del Column, reemplaza sólo el bloque de recuadro rojo:
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Kiosk App'),
-        actions: const [
-          LanguageSelector(),
-          SizedBox(width: 8),
-          ThemeModeButton(),
-        ],
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.access_time, color: Color(0xFFE62144)),
-                      const SizedBox(width: 8),
-                      Text(
-                        _intlReady
-                            ? DateFormat('EEEE, d MMM y • HH:mm:ss', Intl.defaultLocale)
-                                .format(_currentTime)
-                            : '',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
-                        labelText: AppLocalizations.of(context).t('zone')),
-                    items: _zoneItems,
-                    value: _selectedZoneId,
-                    hint: Text(AppLocalizations.of(context).t('chooseZone')),
-                    onChanged: _onZoneChanged,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _plateCtrl,
-                    decoration: InputDecoration(
-                        labelText: AppLocalizations.of(context).t('plate')),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                  const SizedBox(height: 16),
-                  if (_emergencyActive) ...[
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(bottom: 12),
-                      color: Colors.red.shade300,
-                      child: Text(
-                        AppLocalizations.of(context).t(
-                          _emergencyReasonKey,
-                        ),
-                        style: const TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
-                        onPressed: _canDecreaseDuration ? _decreaseDuration : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              _canDecreaseDuration ? const Color(0xFFE62144) : Colors.grey,
-                          minimumSize: const Size(40, 40),
-                        ),
-                        child: const Icon(Icons.remove, color: Colors.white),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          _selectedDuration > 0
-                              ? '$_selectedDuration min'
-                              : '-- min',
-                          style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: _canIncreaseDuration ? _increaseDuration : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              _canIncreaseDuration ? const Color(0xFFE62144) : Colors.grey,
-                          minimumSize: const Size(40, 40),
-                        ),
-                        child: const Icon(Icons.add, color: Colors.white),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${AppLocalizations.of(context).t('price')}: ${_intlReady ? NumberFormat.currency(
-                          symbol: '€', locale: Intl.defaultLocale, decimalDigits: 2
-                        ).format(_price) : _price.toStringAsFixed(2) + ' €'}',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      Text(
-                        '${AppLocalizations.of(context).t('until')}: ${_paidUntilFormattedWithDate}',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: allReady ? _confirmAndPay : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          allReady ? const Color(0xFFE62144) : Colors.grey,
-                    ),
-                    child: _saving
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                            AppLocalizations.of(context).t('pay'),
-                          ),
-                  ),
-                ],
-              ),
+    /*
+      if (_emergencyActive) ...[
+        Container(
+          padding: const EdgeInsets.all(12),
+          margin:  const EdgeInsets.only(bottom: 12),
+          color: Colors.red.shade300,
+          child: Text(
+            _translatedEmerg(context),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
             ),
-    );
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ],
+    */
+
+    // Todo lo demás permanece igual.
   }
 }

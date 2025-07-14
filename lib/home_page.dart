@@ -49,7 +49,7 @@ class _HomePageState extends State<HomePage> {
   late DateTime _endTime;
 
   bool _emergencyActive = false;
-  String _emergencyReasonKey = ''; // Ahora guardamos la clave para localización
+  String _emergencyReasonKey = ''; // Clave para localización
 
   List<int> _validDays = [];
 
@@ -213,6 +213,7 @@ class _HomePageState extends State<HomePage> {
     int hour = int.tryParse(parts[0]) ?? 0;
     int minute = int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
 
+    // Si endTime es antes que startTime, se asume que es al día siguiente
     if (endTime && hour < (_startTime.hour)) {
       return DateTime(now.year, now.month, now.day + 1, hour, minute);
     }
@@ -228,6 +229,7 @@ class _HomePageState extends State<HomePage> {
 
     DateTime baseTime = now;
 
+    // Si hoy no es día válido, se avanza al siguiente día válido con startTime
     if (!_validDays.contains(now.weekday)) {
       int daysToAdd = 1;
       while (!_validDays.contains(now.add(Duration(days: daysToAdd)).weekday)) {
@@ -244,11 +246,13 @@ class _HomePageState extends State<HomePage> {
       return baseTime.add(Duration(minutes: _selectedDuration));
     }
 
+    // Si la hora actual es antes del startTime, se comienza desde startTime
     if (now.isBefore(_startTime)) {
       baseTime = DateTime(now.year, now.month, now.day, _startTime.hour, _startTime.minute);
       return baseTime.add(Duration(minutes: _selectedDuration));
     }
 
+    // Si la hora actual es después del endTime, se pasa al siguiente día válido
     if (now.isAfter(_endTime)) {
       int daysToAdd = 1;
       while (!_validDays.contains(now.add(Duration(days: daysToAdd)).weekday)) {
@@ -265,20 +269,80 @@ class _HomePageState extends State<HomePage> {
       return baseTime.add(Duration(minutes: _selectedDuration));
     }
 
+    // Calculamos el paidUntil sumando la duración
     final paidUntil = now.add(Duration(minutes: _selectedDuration));
+
+    // Si paidUntil sobrepasa endTime, devolvemos el endTime
     if (paidUntil.isAfter(_endTime)) {
-      // Si sobrepasa el endTime, avanza hasta el siguiente día válido
-      DateTime nextDay = paidUntil.add(const Duration(days: 1));
-      while (!_validDays.contains(nextDay.weekday)) {
-        nextDay = nextDay.add(const Duration(days: 1));
+      return _endTime;
+    }
+
+    return paidUntil;
+  }
+
+  // Función para saber si se puede aumentar duración sin superar endTime ni maxDuration
+  bool get _canIncreaseDuration {
+    if (_emergencyActive) return false;
+
+    if (_selectedDuration >= _maxDuration) return false;
+
+    final now = DateTime.now();
+    final potentialPaidUntil = _calculatePotentialPaidUntil(_selectedDuration + _increment);
+
+    // Si el nuevo paidUntil supera el endTime, no se puede aumentar duración
+    if (potentialPaidUntil.isAfter(_endTime)) return false;
+
+    return true;
+  }
+
+  // Calcula el paidUntil si se selecciona una duración dada (no modifica estado)
+  DateTime _calculatePotentialPaidUntil(int duration) {
+    final now = DateTime.now();
+
+    if (_emergencyActive) return now;
+
+    DateTime baseTime = now;
+
+    if (!_validDays.contains(now.weekday)) {
+      int daysToAdd = 1;
+      while (!_validDays.contains(now.add(Duration(days: daysToAdd)).weekday)) {
+        daysToAdd++;
       }
-      return DateTime(
-        nextDay.year,
-        nextDay.month,
-        nextDay.day,
+      final nextValidDay = now.add(Duration(days: daysToAdd));
+      baseTime = DateTime(
+        nextValidDay.year,
+        nextValidDay.month,
+        nextValidDay.day,
         _startTime.hour,
         _startTime.minute,
       );
+      return baseTime.add(Duration(minutes: duration));
+    }
+
+    if (now.isBefore(_startTime)) {
+      baseTime = DateTime(now.year, now.month, now.day, _startTime.hour, _startTime.minute);
+      return baseTime.add(Duration(minutes: duration));
+    }
+
+    if (now.isAfter(_endTime)) {
+      int daysToAdd = 1;
+      while (!_validDays.contains(now.add(Duration(days: daysToAdd)).weekday)) {
+        daysToAdd++;
+      }
+      final nextValidDay = now.add(Duration(days: daysToAdd));
+      baseTime = DateTime(
+        nextValidDay.year,
+        nextValidDay.month,
+        nextValidDay.day,
+        _startTime.hour,
+        _startTime.minute,
+      );
+      return baseTime.add(Duration(minutes: duration));
+    }
+
+    final paidUntil = now.add(Duration(minutes: duration));
+    if (paidUntil.isAfter(_endTime)) {
+      return _endTime;
     }
 
     return paidUntil;
@@ -304,7 +368,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _increaseDuration() {
-    if (_emergencyActive) return;
+    if (!_canIncreaseDuration) return; // Se controla habilitación aquí
 
     int nextDuration = _selectedDuration + _increment;
     if (nextDuration > _maxDuration) nextDuration = _maxDuration;
@@ -531,10 +595,13 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ElevatedButton(
-                        onPressed: _emergencyActive ? null : _decreaseDuration,
+                        onPressed: _emergencyActive || !_canDecreaseDuration
+                            ? null
+                            : _decreaseDuration,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              _emergencyActive ? Colors.grey : const Color(0xFFE62144),
+                          backgroundColor: _emergencyActive || !_canDecreaseDuration
+                              ? Colors.grey
+                              : const Color(0xFFE62144),
                           minimumSize: const Size(40, 40),
                         ),
                         child: const Icon(Icons.remove, color: Colors.white),
@@ -550,10 +617,13 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       ElevatedButton(
-                        onPressed: _emergencyActive ? null : _increaseDuration,
+                        onPressed: _emergencyActive || !_canIncreaseDuration
+                            ? null
+                            : _increaseDuration,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              _emergencyActive ? Colors.grey : const Color(0xFFE62144),
+                          backgroundColor: _emergencyActive || !_canIncreaseDuration
+                              ? Colors.grey
+                              : const Color(0xFFE62144),
                           minimumSize: const Size(40, 40),
                         ),
                         child: const Icon(Icons.add, color: Colors.white),
@@ -602,5 +672,11 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
     );
+  }
+
+  // Nueva propiedad para habilitar o no el botón de disminuir duración
+  bool get _canDecreaseDuration {
+    // El botón "-" está habilitado si la duración actual es mayor que el mínimo
+    return _selectedDuration > _minDuration;
   }
 }

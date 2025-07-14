@@ -18,17 +18,17 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  // ──────────── ESTADO PRINCIPAL ────────────
   final _firestore = FirebaseFirestore.instance;
 
   bool _loading = true, _saving = false;
-
   List<DropdownMenuItem<String>> _zoneItems = [];
   String? _selectedZoneId;
 
   int _selectedDuration = 0;
   int _minDuration = 0;
   int _maxDuration = 0;
-  int _increment = 0;
+  int _increment   = 0;
 
   double _price = 0.0;
   double _basePrice = 0.0;
@@ -36,22 +36,22 @@ class _HomePageState extends State<HomePage> {
 
   final _plateCtrl = TextEditingController();
 
-  String? _ticketId;
+  String?  _ticketId;
   DateTime? _paidUntil;
 
   DateTime _currentTime = DateTime.now();
-  Timer? _clockTimer;
-  bool _intlReady = false;
+  Timer?   _clockTimer;
+  bool     _intlReady = false;
 
   StreamSubscription<DocumentSnapshot>? _tariffSubscription;
 
   late DateTime _startTime;
   late DateTime _endTime;
-  late bool   _endTimeNextDay;
+  late bool     _endTimeNextDay;
 
-  bool _emergencyActive = false;
-  String _emergKey  = '';
-  String _emergText = '';
+  bool   _emergencyActive = false;
+  String _emergKey  = '';   // clave para traducción
+  String _emergText = '';   // texto libre firebase
 
   List<int> _validDays = [];
 
@@ -59,14 +59,13 @@ class _HomePageState extends State<HomePage> {
   int  _countdownSeconds       = 5;
   Timer? _countdownTimer;
 
-  // ────────────────────────────────────────────────────────────  INIT  ──
+  // ──────────── INIT / DISPOSE ────────────
   @override
   void initState() {
     super.initState();
     _loadZones();
-    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() => _currentTime = DateTime.now());
-    });
+    _clockTimer = Timer.periodic(const Duration(seconds: 1),
+        (_) => setState(() => _currentTime = DateTime.now()));
   }
 
   @override
@@ -80,8 +79,9 @@ class _HomePageState extends State<HomePage> {
     };
     if (Intl.defaultLocale != localeName) {
       Intl.defaultLocale = localeName;
-      initializeDateFormatting(localeName, null)
-          .then((_) => mounted ? setState(() => _intlReady = true) : null);
+      initializeDateFormatting(localeName).then((_) {
+        if (mounted) setState(() => _intlReady = true);
+      });
     }
   }
 
@@ -94,7 +94,7 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  // ───────────────────────────────  FIREBASE  ──
+  // ──────────── CARGA DE ZONAS ────────────
   Future<void> _loadZones() async {
     final snap = await _firestore.collection('tariffs').get();
     _zoneItems = snap.docs
@@ -103,48 +103,50 @@ class _HomePageState extends State<HomePage> {
     setState(() => _loading = false);
   }
 
+  // ──────────── SUBSCRIPCIÓN TARIFA ────────────
   void _subscribeTariff(String docId) {
     _tariffSubscription?.cancel();
-    _tariffSubscription = _firestore
-        .collection('tariffs')
-        .doc(docId)
-        .snapshots()
-        .listen((doc) {
+    _tariffSubscription =
+        _firestore.collection('tariffs').doc(docId).snapshots().listen((doc) {
       if (!doc.exists) return;
       final d = doc.data()!;
-      setState(() {
-        _basePrice       = (d['basePrice']        ?? 0).toDouble();
-        _extraBlockPrice = (d['extraBlockPrice']  ?? 0).toDouble();
-        _minDuration     = (d['minDuration']      ?? 0) as int;
-        _maxDuration     = (d['maxDuration']      ?? 0) as int;
-        _increment       = (d['increment']        ?? 1) as int;
 
-        _startTime       = _parseTime(d['startTime'] ?? '00:00');
-        _endTime         = _parseTime(d['endTime']   ?? '23:59', endTime: true);
-        _endTimeNextDay  = _endTime.day != _startTime.day;
+      setState(() {
+        _basePrice       = (d['basePrice']       ?? 0).toDouble();
+        _extraBlockPrice = (d['extraBlockPrice'] ?? 0).toDouble();
+        _minDuration     = (d['minDuration']     ?? 0) as int;
+        _maxDuration     = (d['maxDuration']     ?? 0) as int;
+        _increment       = (d['increment']       ?? 1) as int;
+
+        _startTime = _parseTime(d['startTime'] ?? '00:00');
+        _endTime   = _parseTime(d['endTime']   ?? '23:59', endTime: true);
+        _endTimeNextDay = _endTime.day != _startTime.day;
 
         _emergencyActive = (d['emergencyActive'] ?? false) as bool;
-        _emergKey        = (d['emergencyReasonKey'] ?? '').toString();
-        _emergText       = (d['emergencyReason']    ?? '').toString();
+        _emergKey  = (d['emergencyReasonKey'] ?? '').toString();
+        _emergText = (d['emergencyReason']    ?? '').toString();
 
-        _validDays       = List<int>.from(d['validDays'] ?? []);
+        _validDays = List<int>.from(d['validDays'] ?? []);
 
         _selectedDuration = _minDuration > 0 ? _minDuration : 0;
         _updatePrice();
         _paidUntil = _calculatePaidUntil();
 
-        if (_emergencyActive && !_emergencyDialogVisible) _showEmergencyDialog();
+        if (_emergencyActive && !_emergencyDialogVisible) {
+          _showEmergencyDialog();
+        }
       });
     });
   }
 
-  // ──────────────────────  HELPERS  ──
+  // ──────────── UTILIDAD DE TRADUCCIÓN ────────────
   String _translatedEmerg(BuildContext ctx) {
     final loc = AppLocalizations.of(ctx).t(_emergKey);
-    if (loc != _emergKey && loc.isNotEmpty) return loc; // se encontró la clave
-    return _emergText;                                   // fallback texto libre
+    if (loc != _emergKey && loc.isNotEmpty) return loc; // clave traducida
+    return _emergText;                                   // fallback
   }
 
+  // ──────────── CÁLCULOS DE TIEMPO ────────────
   DateTime _parseTime(String t, {bool endTime = false}) {
     final now = DateTime.now();
     final p   = t.split(':');
@@ -156,25 +158,112 @@ class _HomePageState extends State<HomePage> {
     return DateTime(now.year, now.month, now.day, h, m);
   }
 
-  // ...  ───  (resto de métodos _getBaseTime, _endTimeForDate, _calculatePaidUntil,
-  //            _updatePrice, _increaseDuration, _decreaseDuration, etc. NO CAMBIAN)  ───
+  DateTime _getBaseTime() {
+    final now = DateTime.now();
+    DateTime base = now;
 
-  // ───────────────────  DIÁLOGO DE EMERGENCIA  ──
+    if (!_validDays.contains(now.weekday)) {
+      int add = 1;
+      while (!_validDays.contains(now.add(Duration(days: add)).weekday)) add++;
+      final nxt = now.add(Duration(days: add));
+      base = DateTime(nxt.year, nxt.month, nxt.day, _startTime.hour, _startTime.minute);
+    } else if (now.isBefore(_startTime)) {
+      base = DateTime(now.year, now.month, now.day, _startTime.hour, _startTime.minute);
+    } else if (now.isAfter(_endTime)) {
+      int add = 1;
+      while (!_validDays.contains(now.add(Duration(days: add)).weekday)) add++;
+      final nxt = now.add(Duration(days: add));
+      base = DateTime(nxt.year, nxt.month, nxt.day, _startTime.hour, _startTime.minute);
+    }
+    return base;
+  }
+
+  DateTime _endTimeForDate(DateTime date) {
+    final base = DateTime(date.year, date.month, date.day, _endTime.hour, _endTime.minute);
+    return _endTimeNextDay ? base.add(const Duration(days: 1)) : base;
+  }
+
+  DateTime _calculatePaidUntil([int? duration]) {
+    if (_emergencyActive) return DateTime.now();
+
+    final mins   = duration ?? _selectedDuration;
+    final base   = _getBaseTime();
+    final limit  = _endTimeForDate(base);
+    final finish = base.add(Duration(minutes: mins));
+
+    if (finish.isAfter(limit)) {
+      DateTime next = finish.add(const Duration(days: 1));
+      while (!_validDays.contains(next.weekday)) next = next.add(const Duration(days: 1));
+      return DateTime(next.year, next.month, next.day, _startTime.hour, _startTime.minute);
+    }
+    return finish;
+  }
+
+  // ──────────── PRECIO Y DURACIÓN ────────────
+  void _updatePrice() {
+    if (_emergencyActive || _selectedDuration < _minDuration) {
+      _price = 0;
+      return;
+    }
+    final blocks = ((_selectedDuration - _minDuration) / _increment).ceil();
+    _price = blocks <= 0
+        ? _basePrice
+        : _basePrice + _extraBlockPrice * blocks;
+  }
+
+  void _increaseDuration() {
+    if (!_canIncreaseDuration) return;
+    int next = _selectedDuration + _increment;
+    if (next > _maxDuration) next = _maxDuration;
+    setState(() {
+      _selectedDuration = next;
+      _updatePrice();
+      _paidUntil = _calculatePaidUntil();
+    });
+  }
+
+  void _decreaseDuration() {
+    if (!_canDecreaseDuration) return;
+    int prev = _selectedDuration - _increment;
+    if (prev < _minDuration) prev = _minDuration;
+    setState(() {
+      _selectedDuration = prev;
+      _updatePrice();
+      _paidUntil = _calculatePaidUntil();
+    });
+  }
+
+  bool get _canIncreaseDuration {
+    if (_emergencyActive || _selectedDuration >= _maxDuration) return false;
+    int next = _selectedDuration + _increment;
+    if (next > _maxDuration) next = _maxDuration;
+    return !_calculatePaidUntil(next).isAfter(_endTimeForDate(_getBaseTime()));
+  }
+
+  bool get _canDecreaseDuration =>
+      !_emergencyActive && _selectedDuration > _minDuration;
+
+  bool get _isPaymentAllowed =>
+      !_emergencyActive &&
+      _validDays.contains(DateTime.now().weekday) &&
+      _selectedDuration >= _minDuration;
+
+  // ──────────── DIÁLOGO EMERGENCIA ────────────
   void _showEmergencyDialog() {
-    _countdownSeconds      = 5;
+    _countdownSeconds       = 5;
     _emergencyDialogVisible = true;
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) {
         return StatefulBuilder(builder: (ctx, setStateDialog) {
-          _countdownTimer ??=
-              Timer.periodic(const Duration(seconds: 1), (timer) {
+          _countdownTimer ??= Timer.periodic(const Duration(seconds: 1), (t) {
             if (_countdownSeconds > 0) {
               setState(() => _countdownSeconds--);
               setStateDialog(() {});
             } else {
-              timer.cancel();
+              t.cancel();
               _emergencyDialogVisible = false;
               Navigator.of(ctx).pop();
             }
@@ -225,30 +314,144 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  // ──────────────────────  UI  ──
+  // ──────────── INTERFAZ ────────────
   @override
   Widget build(BuildContext context) {
-    // ... (todo el código de build sin cambios salvo el recuadro rojo)
-    // Dentro del Column, reemplaza sólo el bloque de recuadro rojo:
+    final allReady = !_saving &&
+        _selectedZoneId != null &&
+        _plateCtrl.text.trim().isNotEmpty &&
+        _isPaymentAllowed;
 
-    /*
-      if (_emergencyActive) ...[
-        Container(
-          padding: const EdgeInsets.all(12),
-          margin:  const EdgeInsets.only(bottom: 12),
-          color: Colors.red.shade300,
-          child: Text(
-            _translatedEmerg(context),
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Kiosk App'),
+        actions: const [LanguageSelector(), SizedBox(width: 8), ThemeModeButton()],
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // FECHA/HORA
+                  Row(
+                    children: [
+                      const Icon(Icons.access_time, color: Color(0xFFE62144)),
+                      const SizedBox(width: 8),
+                      Text(
+                        _intlReady
+                            ? DateFormat('EEEE, d MMM y • HH:mm:ss', Intl.defaultLocale)
+                                .format(_currentTime)
+                            : '',
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ZONA
+                  DropdownButtonFormField<String>(
+                    decoration:
+                        InputDecoration(labelText: AppLocalizations.of(context).t('zone')),
+                    items: _zoneItems,
+                    value: _selectedZoneId,
+                    hint: Text(AppLocalizations.of(context).t('chooseZone')),
+                    onChanged: _onZoneChanged,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // MATRÍCULA
+                  TextField(
+                    controller: _plateCtrl,
+                    decoration:
+                        InputDecoration(labelText: AppLocalizations.of(context).t('plate')),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // FRANJA ROJA EMERGENCIA
+                  if (_emergencyActive)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      margin:  const EdgeInsets.only(bottom: 12),
+                      color: Colors.red.shade300,
+                      child: Text(
+                        _translatedEmerg(context),
+                        style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
+                  // BOTONES DURACIÓN
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: _canDecreaseDuration ? _decreaseDuration : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              _canDecreaseDuration ? const Color(0xFFE62144) : Colors.grey,
+                          minimumSize: const Size(40, 40),
+                        ),
+                        child: const Icon(Icons.remove, color: Colors.white),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          _selectedDuration > 0 ? '$_selectedDuration min' : '-- min',
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: _canIncreaseDuration ? _increaseDuration : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              _canIncreaseDuration ? const Color(0xFFE62144) : Colors.grey,
+                          minimumSize: const Size(40, 40),
+                        ),
+                        child: const Icon(Icons.add, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // PRECIO / HASTA
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${AppLocalizations.of(context).t('price')}: '
+                        '${_intlReady ? NumberFormat.currency(symbol: '€', decimalDigits: 2, locale: Intl.defaultLocale).format(_price) : _price.toStringAsFixed(2) + ' €'}',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      Text(
+                        '${AppLocalizations.of(context).t('until')}: $_paidUntilFormattedWithDate',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // BOTÓN PAGAR
+                  ElevatedButton(
+                    onPressed: allReady ? _confirmAndPay : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: allReady ? const Color(0xFFE62144) : Colors.grey,
+                    ),
+                    child: _saving
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2),
+                          )
+                        : Text(AppLocalizations.of(context).t('pay')),
+                  ),
+                ],
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ],
-    */
-
-    // Todo lo demás permanece igual.
+    );
   }
 }

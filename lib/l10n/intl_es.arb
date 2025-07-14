@@ -1,6 +1,8 @@
 {
   "@@locale": "es",
   "design1": "DISE\u00d1O 1",
+  "designWin": "DISE\u00d1O WIN",
+  "duration": "Duraci\u00f3n",
   "min": "min",
   "selected": "Seleccionado"
 }

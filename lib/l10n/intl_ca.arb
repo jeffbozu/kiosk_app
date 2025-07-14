@@ -1,6 +1,8 @@
 {
   "@@locale": "ca",
   "design1": "DISSENY 1",
+  "designWin": "DISSENY WIN",
+  "duration": "Durada",
   "min": "min",
   "selected": "Seleccionat"
 }

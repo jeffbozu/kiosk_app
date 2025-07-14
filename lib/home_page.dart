@@ -12,6 +12,8 @@ import 'locale_provider.dart';
 import 'theme_mode_button.dart';
 import 'ticket_success_page.dart';
 import 'design1_page.dart';
+import 'design_win_page.dart';
+import 'package:fluent_ui/fluent_ui.dart' as fluent;
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -520,10 +522,21 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kiosk App'),
-        actions: const [
-          LanguageSelector(),
-          SizedBox(width: 8),
-          ThemeModeButton(),
+        actions: [
+          const LanguageSelector(),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(fluent.FluentIcons.design),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const DesignWinPage(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+          const ThemeModeButton(),
         ],
       ),
       body: _loading

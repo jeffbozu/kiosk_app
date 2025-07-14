@@ -49,7 +49,7 @@ class _HomePageState extends State<HomePage> {
   late DateTime _endTime;
 
   bool _emergencyActive = false;
-  String _emergencyReasonKey = ''; // Clave para traducción
+  String _emergencyReasonKey = ''; // Ahora guardamos la clave para localización
 
   List<int> _validDays = [];
 
@@ -284,71 +284,6 @@ class _HomePageState extends State<HomePage> {
     return paidUntil;
   }
 
-  bool get _canIncreaseDuration {
-    if (_emergencyActive) return false;
-
-    final now = DateTime.now();
-    final nextPaidUntil = _calculatePaidUntilWithAdditional(_increment);
-
-    // Si el siguiente paidUntil sobrepasa el endTime, no puede aumentar más
-    return !nextPaidUntil.isAfter(_endTime) && _selectedDuration < _maxDuration;
-  }
-
-  DateTime _calculatePaidUntilWithAdditional(int additionalMinutes) {
-    final now = DateTime.now();
-
-    if (_emergencyActive) {
-      return now;
-    }
-
-    DateTime baseTime = now;
-
-    if (!_validDays.contains(now.weekday)) {
-      int daysToAdd = 1;
-      while (!_validDays.contains(now.add(Duration(days: daysToAdd)).weekday)) {
-        daysToAdd++;
-      }
-      final nextValidDay = now.add(Duration(days: daysToAdd));
-      baseTime = DateTime(
-        nextValidDay.year,
-        nextValidDay.month,
-        nextValidDay.day,
-        _startTime.hour,
-        _startTime.minute,
-      );
-      return baseTime.add(Duration(minutes: _selectedDuration + additionalMinutes));
-    }
-
-    if (now.isBefore(_startTime)) {
-      baseTime = DateTime(now.year, now.month, now.day, _startTime.hour, _startTime.minute);
-      return baseTime.add(Duration(minutes: _selectedDuration + additionalMinutes));
-    }
-
-    if (now.isAfter(_endTime)) {
-      int daysToAdd = 1;
-      while (!_validDays.contains(now.add(Duration(days: daysToAdd)).weekday)) {
-        daysToAdd++;
-      }
-      final nextValidDay = now.add(Duration(days: daysToAdd));
-      baseTime = DateTime(
-        nextValidDay.year,
-        nextValidDay.month,
-        nextValidDay.day,
-        _startTime.hour,
-        _startTime.minute,
-      );
-      return baseTime.add(Duration(minutes: _selectedDuration + additionalMinutes));
-    }
-
-    final paidUntil = now.add(Duration(minutes: _selectedDuration + additionalMinutes));
-    if (paidUntil.isAfter(_endTime)) {
-      // Retornar endTime si se pasa
-      return _endTime;
-    }
-
-    return paidUntil;
-  }
-
   void _updatePrice() {
     if (_emergencyActive) {
       _price = 0.0;
@@ -369,7 +304,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _increaseDuration() {
-    if (_emergencyActive || !_canIncreaseDuration) return;
+    if (_emergencyActive) return;
 
     int nextDuration = _selectedDuration + _increment;
     if (nextDuration > _maxDuration) nextDuration = _maxDuration;

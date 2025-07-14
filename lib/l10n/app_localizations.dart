@@ -64,6 +64,12 @@ class AppLocalizations {
       'emergencyTitle': 'ADVERTENCIA',
       'autoCloseIn': 'Cierre automático en {seconds} s',
       'emergencyActiveLabel': 'Emergencia: {reason}',
+      'design1': 'Dise\u00f1o 1',
+      'design1Title': 'Estacionamiento',
+      'design1SelectZone': 'Seleccionar Zona',
+      'duration': 'Duraci\u00f3n',
+      'currentTime': 'Hora Actual',
+      'finishTime': 'Hora de Finalizaci\u00f3n',
     },
     'ca': {
       'welcome': 'Benvingut a Meypar Optima App',
@@ -114,6 +120,12 @@ class AppLocalizations {
       'emergencyTitle': 'Emergència',
       'autoCloseIn': 'Tancament automàtic en {seconds} s',
       'emergencyActiveLabel': 'Emergència: {reason}',
+      'design1': 'Disseny 1',
+      'design1Title': 'Aparcament',
+      'design1SelectZone': 'Seleccionar Zona',
+      'duration': 'Durada',
+      'currentTime': 'Hora Actual',
+      'finishTime': 'Hora de Finalització',
     },
     'en': {
       'welcome': 'Welcome to Meypar Optima App',
@@ -164,6 +176,12 @@ class AppLocalizations {
       'emergencyTitle': 'Emergency',
       'autoCloseIn': 'Auto close in {seconds}s',
       'emergencyActiveLabel': 'Emergency: {reason}',
+      'design1': 'Design 1',
+      'design1Title': 'Parking',
+      'design1SelectZone': 'Select Zone',
+      'duration': 'Duration',
+      'currentTime': 'Current Time',
+      'finishTime': 'End Time',
     },
   };
 

@@ -10,6 +10,7 @@ import 'language_selector.dart';
 import 'locale_provider.dart';
 import 'theme_mode_button.dart';
 import 'ticket_success_page.dart';
+import 'design1_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -644,6 +645,18 @@ class _HomePageState extends State<HomePage> {
                         : Text(
                             AppLocalizations.of(context).t('pay'),
                           ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const Design1Page(),
+                        ),
+                      );
+                    },
+                    child: Text(AppLocalizations.of(context).t('design1')),
                   ),
                 ],
               ),

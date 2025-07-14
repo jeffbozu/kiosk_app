@@ -64,6 +64,9 @@ class AppLocalizations {
       'emergencyTitle': 'ADVERTENCIA',
       'autoCloseIn': 'Cierre automático en {seconds} s',
       'emergencyActiveLabel': 'Emergencia: {reason}',
+      'design1': 'DISE\u00d1O 1',
+      'min': 'min',
+      'selected': 'Seleccionado',
     },
     'ca': {
       'welcome': 'Benvingut a Meypar Optima App',
@@ -114,6 +117,9 @@ class AppLocalizations {
       'emergencyTitle': 'Emergència',
       'autoCloseIn': 'Tancament automàtic en {seconds} s',
       'emergencyActiveLabel': 'Emergència: {reason}',
+      'design1': 'DISSENY 1',
+      'min': 'min',
+      'selected': 'Seleccionat',
     },
     'en': {
       'welcome': 'Welcome to Meypar Optima App',
@@ -164,6 +170,9 @@ class AppLocalizations {
       'emergencyTitle': 'Emergency',
       'autoCloseIn': 'Auto close in {seconds}s',
       'emergencyActiveLabel': 'Emergency: {reason}',
+      'design1': 'DESIGN 1',
+      'min': 'min',
+      'selected': 'Selected',
     },
   };
 

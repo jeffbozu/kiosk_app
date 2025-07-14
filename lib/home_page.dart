@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -10,6 +11,7 @@ import 'language_selector.dart';
 import 'locale_provider.dart';
 import 'theme_mode_button.dart';
 import 'ticket_success_page.dart';
+import 'design1_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -626,6 +628,17 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   const SizedBox(height: 24),
+                  CupertinoButton.filled(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        CupertinoPageRoute(
+                          builder: (_) => const Design1Page(),
+                        ),
+                      );
+                    },
+                    child: Text(AppLocalizations.of(context).t('design1')),
+                  ),
+                  const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: allReady ? _confirmAndPay : null,
                     style: ElevatedButton.styleFrom(

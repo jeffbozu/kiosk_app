@@ -61,7 +61,7 @@ class AppLocalizations {
       'paymentError': 'Error al procesar el pago',
       'goHome': 'Volver a la pantalla principal',
       'back': 'Atrás',
-      'emergencyTitle': 'Emergencia',
+      'emergencyTitle': 'ADVERTENCIA',
       'autoCloseIn': 'Cierre automático en {seconds} s',
       'emergencyActiveLabel': 'Emergencia: {reason}',
     },

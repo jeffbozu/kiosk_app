@@ -60,6 +60,25 @@ class _TicketSuccessPageState extends State<TicketSuccessPage> {
     }
   }
 
+  Future<void> _showSmsDialog() async {
+    _timer?.cancel();
+    final phone = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const SmsDialog(),
+    );
+    if (!mounted) return;
+    if (phone != null) {
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => SmsSentDialog(onClose: _goHome),
+      );
+    } else {
+      _startCountdown(20);
+    }
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
@@ -126,6 +145,11 @@ class _TicketSuccessPageState extends State<TicketSuccessPage> {
               onPressed: _showEmailDialog,
               child: Text(l.t('sendByEmail')),
             ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: _showSmsDialog,
+              child: Text(l.t('sendBySms')),
+            ),
           ],
         ),
       ),
@@ -173,6 +197,93 @@ class EmailSentDialog extends StatefulWidget {
 
   @override
   State<EmailSentDialog> createState() => _EmailSentDialogState();
+}
+
+class SmsDialog extends StatefulWidget {
+  const SmsDialog({super.key});
+
+  @override
+  State<SmsDialog> createState() => _SmsDialogState();
+}
+
+class _SmsDialogState extends State<SmsDialog> {
+  String _phone = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l.t('enterPhone')),
+      content: TextField(
+        autofocus: true,
+        keyboardType: TextInputType.phone,
+        onChanged: (v) => _phone = v,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l.t('cancel')),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, _phone.trim()),
+          child: Text(l.t('send')),
+        ),
+      ],
+    );
+  }
+}
+
+class SmsSentDialog extends StatefulWidget {
+  final VoidCallback onClose;
+  const SmsSentDialog({super.key, required this.onClose});
+
+  @override
+  State<SmsSentDialog> createState() => _SmsSentDialogState();
+}
+
+class _SmsSentDialogState extends State<SmsSentDialog> {
+  int _seconds = 10;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (_seconds > 1) {
+        setState(() => _seconds--);
+      } else {
+        t.cancel();
+        widget.onClose();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return AlertDialog(
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(l.t('smsSent')),
+          const SizedBox(height: 8),
+          Text(l.t('returningIn', params: {'seconds': '$_seconds'})),
+        ],
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: widget.onClose,
+          child: Text(l.t('close')),
+        ),
+      ],
+    );
+  }
 }
 
 class _EmailSentDialogState extends State<EmailSentDialog> {

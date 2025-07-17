@@ -5,10 +5,16 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'l10n/app_localizations.dart';
 import 'language_selector.dart';
 import 'theme_mode_button.dart';
+import 'email_service.dart';
 
 class TicketSuccessPage extends StatefulWidget {
   final String ticketId;
-  const TicketSuccessPage({super.key, required this.ticketId});
+  final Map<String, dynamic> ticketData;
+  const TicketSuccessPage({
+    super.key,
+    required this.ticketId,
+    required this.ticketData,
+  });
 
   @override
   State<TicketSuccessPage> createState() => _TicketSuccessPageState();
@@ -50,6 +56,7 @@ class _TicketSuccessPageState extends State<TicketSuccessPage> {
     );
     if (!mounted) return;
     if (email != null) {
+      await sendTicketEmail(email, widget.ticketData);
       await showDialog(
         context: context,
         barrierDismissible: false,

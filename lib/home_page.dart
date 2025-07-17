@@ -493,9 +493,22 @@ class _HomePageState extends State<HomePage> {
     _ticketId = doc.id;
     setState(() => _saving = false);
 
+    final dateFormat = DateFormat('dd-MMM-yyyy HH:mm', 'en_US');
+    final ticketData = {
+      'ticketId': _ticketId,
+      'plate': matricula,
+      'duration': _selectedDuration,
+      'paidUntil': dateFormat.format(paidUntil).toLowerCase(),
+      'price': _price,
+      'currentDateTime': dateFormat.format(now).toLowerCase(),
+    };
+
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => TicketSuccessPage(ticketId: _ticketId!),
+        builder: (_) => TicketSuccessPage(
+          ticketId: _ticketId!,
+          ticketData: ticketData,
+        ),
       ),
     );
 

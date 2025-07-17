@@ -508,6 +508,12 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _refreshPage() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const HomePage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final allReady = !_saving &&
@@ -644,6 +650,11 @@ class _HomePageState extends State<HomePage> {
                         : Text(
                             AppLocalizations.of(context).t('pay'),
                           ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: _refreshPage,
+                    child: Text(AppLocalizations.of(context).t('cancel')),
                   ),
                 ],
               ),

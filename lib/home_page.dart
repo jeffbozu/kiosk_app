@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -10,6 +11,8 @@ import 'language_selector.dart';
 import 'locale_provider.dart';
 import 'theme_mode_button.dart';
 import 'ticket_success_page.dart';
+import 'tarifa_selector.dart';
+import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -29,6 +32,8 @@ class _HomePageState extends State<HomePage> {
   int _minDuration = 0;
   int _maxDuration = 0;
   int _increment = 0;
+
+  List<Map<String, dynamic>> _rateSteps = [];
 
   double _price = 0.0;
   double _basePrice = 0.0;
@@ -159,6 +164,23 @@ class _HomePageState extends State<HomePage> {
         }
       });
     });
+  }
+
+  Future<void> _fetchRateSteps(String zoneId) async {
+    try {
+      final uri = Uri.parse('https://example.com/rateSteps?zone=$zoneId');
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is List) {
+          setState(() {
+            _rateSteps = List<Map<String, dynamic>>.from(data);
+          });
+        }
+      }
+    } catch (_) {
+      // Ignorar errores de red por simplicidad
+    }
   }
 
   String _getEmergencyReason(BuildContext context) {
@@ -333,6 +355,22 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _onRateStepSelected(Map<String, dynamic> step) {
+    final durSeconds = step['durationInSeconds'] as int? ?? 0;
+    final priceCents = step['priceInCents'] as int? ?? 0;
+    final endStr = step['endDateTime'] as String? ?? '';
+    DateTime? endDt;
+    try {
+      endDt = DateTime.parse(endStr);
+    } catch (_) {}
+
+    setState(() {
+      _selectedDuration = durSeconds ~/ 60;
+      _price = priceCents / 100.0;
+      _paidUntil = endDt ?? _calculatePaidUntil(durSeconds ~/ 60);
+    });
+  }
+
   void _increaseDuration() {
     if (!_canIncreaseDuration) return;
 
@@ -415,9 +453,11 @@ class _HomePageState extends State<HomePage> {
       _emergencyActive = false;
       _emergencyReasonKey = '';
       _validDays = [];
+      _rateSteps = [];
     });
 
     _subscribeTariff(zoneId);
+    _fetchRateSteps(zoneId);
   }
 
   Future<void> _confirmAndPay() async {
@@ -614,6 +654,13 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   const SizedBox(height: 8),
+                  if (_rateSteps.isNotEmpty) ...[
+                    TarifaSelector(
+                      rateSteps: _rateSteps,
+                      onSelected: _onRateStepSelected,
+                    ),
+                    const SizedBox(height: 8),
+                  ],
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

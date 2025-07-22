@@ -10,6 +10,7 @@ import 'language_selector.dart';
 import 'locale_provider.dart';
 import 'theme_mode_button.dart';
 import 'ticket_success_page.dart';
+import 'mowiz_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -655,6 +656,25 @@ class _HomePageState extends State<HomePage> {
                   TextButton(
                     onPressed: _refreshPage,
                     child: Text(AppLocalizations.of(context).t('cancel')),
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const MowizPage(),
+                        ),
+                      );
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      textStyle: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    child: const Text('MOWIZ'),
                   ),
                 ],
               ),

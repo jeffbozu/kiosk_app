@@ -18,6 +18,18 @@ Error: Couldn't resolve the package 'cloud_functions_web'
 
 Ejecutar `flutter pub get` soluciona el problema.
 
+## Configuración rápida de Flutter
+
+Si el entorno no cuenta con Flutter instalado puedes usar el script
+`setup_flutter.sh` incluido en el repositorio:
+
+```bash
+source ./setup_flutter.sh
+```
+
+Este comando descarga el SDK de Flutter (3.19.2) y lo agrega al `PATH`
+de la sesión actual.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

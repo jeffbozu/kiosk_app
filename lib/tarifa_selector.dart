@@ -33,7 +33,6 @@ class _TarifaSelectorState extends State<TarifaSelector> {
         style: TextStyle(color: Colors.grey),
       );
     }
-
     return Wrap(
       spacing: 8,
       children: [

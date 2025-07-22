@@ -60,7 +60,10 @@ class _MowizPageState extends State<MowizPage> {
   Widget _buildStep() {
     switch (_step) {
       case _Step.main:
-        return _MainScreen(onPay: () => setState(() => _step = _Step.zone));
+        return _MainScreen(
+          onPay: () => setState(() => _step = _Step.zone),
+          onCancel: _reset,
+        );
       case _Step.zone:
         return _ZoneScreen(
           onConfirm: () => setState(() => _step = _Step.time),
@@ -74,7 +77,8 @@ class _MowizPageState extends State<MowizPage> {
 
 class _MainScreen extends StatelessWidget {
   final VoidCallback onPay;
-  const _MainScreen({required this.onPay});
+  final VoidCallback onCancel;
+  const _MainScreen({required this.onPay, required this.onCancel});
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +97,7 @@ class _MainScreen extends StatelessWidget {
         ),
         const SizedBox(height: 32),
         TextButton(
-          onPressed: onPay,
+          onPressed: onCancel,
           child: const Text('Cancelar'),
         ),
       ],
@@ -266,7 +270,7 @@ class _TimeScreen extends StatelessWidget {
         ),
         const Spacer(),
         ElevatedButton(
-          onPressed: _pay,
+          onPressed: () => _pay(context),
           child: const Text('Pagar'),
         ),
         const SizedBox(height: 8),

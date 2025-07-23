@@ -227,7 +227,7 @@ class _TimeScreenState extends State<_TimeScreen> {
           builder: (_) => const TicketSuccessPage(ticketId: 'demo'),
         ),
       );
-      onCancel();
+      widget.onCancel();
     }
   }
 

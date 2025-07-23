@@ -127,7 +127,6 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
             // Explicit package is needed so the asset is bundled correctly
             Lottie.asset(
               'assets/success.json',
-              package: 'kiosk_app',
               height: 150,
               repeat: false,
             ),

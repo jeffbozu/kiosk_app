@@ -76,6 +76,10 @@ class AppLocalizations {
       'zoneGreen': 'Zona verde',
       'enterPlate': 'Inserte matrícula',
       'confirm': 'Confirmar',
+      'validate': 'Validar',
+      'plateNotFound': 'Matrícula no encontrada',
+      'confirmCancellation': '¿Confirmar anulación?',
+      'cancellationSuccess': 'Anulación completada con éxito',
     },
     'ca': {
       'welcome': 'Benvingut a Meypar Optima App',
@@ -138,6 +142,10 @@ class AppLocalizations {
       'zoneGreen': 'Zona verda',
       'enterPlate': 'Introdueix matrícula',
       'confirm': 'Confirmar',
+      'validate': 'Validar',
+      'plateNotFound': 'Matrícula no trobada',
+      'confirmCancellation': 'Confirmar anul·lació?',
+      'cancellationSuccess': 'Anul·lació completada amb èxit',
     },
     'en': {
       'welcome': 'Welcome to Meypar Optima App',
@@ -200,6 +208,10 @@ class AppLocalizations {
       'zoneGreen': 'Green zone',
       'enterPlate': 'Enter plate',
       'confirm': 'Confirm',
+      'validate': 'Validate',
+      'plateNotFound': 'Plate not found',
+      'confirmCancellation': 'Confirm cancellation?',
+      'cancellationSuccess': 'Cancellation completed successfully',
     },
   };
 

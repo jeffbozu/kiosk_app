@@ -124,6 +124,10 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Explicit package is needed so the asset is bundled correctly
+            Lottie.asset(
+              'assets/success.json',
+              package: 'kiosk_app',
             Lottie.asset(
               'assets/success.json',
               height: 150,

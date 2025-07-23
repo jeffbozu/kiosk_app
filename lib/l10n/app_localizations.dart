@@ -71,6 +71,11 @@ class AppLocalizations {
       'mowizTitle': 'Simulador MOWIZ',
       'payTicket': 'Pagar ticket',
       'cancelDenuncia': 'Anular denúncia',
+      'selectZone': 'Selecciona zona',
+      'zoneBlue': 'Zona azul',
+      'zoneGreen': 'Zona verde',
+      'enterPlate': 'Inserte matrícula',
+      'confirm': 'Confirmar',
     },
     'ca': {
       'welcome': 'Benvingut a Meypar Optima App',
@@ -128,6 +133,11 @@ class AppLocalizations {
       'mowizTitle': 'Simulador MOWIZ',
       'payTicket': 'Pagar tiquet',
       'cancelDenuncia': 'Anular denúncia',
+      'selectZone': 'Selecciona zona',
+      'zoneBlue': 'Zona blava',
+      'zoneGreen': 'Zona verda',
+      'enterPlate': 'Introdueix matrícula',
+      'confirm': 'Confirmar',
     },
     'en': {
       'welcome': 'Welcome to Meypar Optima App',
@@ -185,6 +195,11 @@ class AppLocalizations {
       'mowizTitle': 'MOWIZ simulator',
       'payTicket': 'Pay ticket',
       'cancelDenuncia': 'Cancel denuncia',
+      'selectZone': 'Select zone',
+      'zoneBlue': 'Blue zone',
+      'zoneGreen': 'Green zone',
+      'enterPlate': 'Enter plate',
+      'confirm': 'Confirm',
     },
   };
 

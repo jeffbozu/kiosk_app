@@ -75,6 +75,13 @@ class _MowizCancelPageState extends State<MowizCancelPage> {
                     ElevatedButton.styleFrom(padding: const EdgeInsets.all(24)),
                 child: Text(t('validate')),
               ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style:
+                    TextButton.styleFrom(padding: const EdgeInsets.all(24)),
+                child: Text(t('cancel')),
+              ),
             ],
           ),
         ),

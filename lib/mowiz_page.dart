@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -40,9 +41,7 @@ class _MowizPageState extends State<MowizPage> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Simulador MOWIZ'),
-          leading: _step != _Step.main
-              ? BackButton(onPressed: _reset)
-              : null,
+          leading: _step != _Step.main ? BackButton(onPressed: _reset) : null,
           actions: const [
             LanguageSelector(),
             SizedBox(width: 8),
@@ -183,9 +182,32 @@ class _ZoneScreenState extends State<_ZoneScreen> {
   }
 }
 
-class _TimeScreen extends StatelessWidget {
+class _TimeScreen extends StatefulWidget {
   final VoidCallback onCancel;
   const _TimeScreen({required this.onCancel});
+
+  @override
+  State<_TimeScreen> createState() => _TimeScreenState();
+}
+
+class _TimeScreenState extends State<_TimeScreen> {
+  late DateTime _now;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _now = DateTime.now();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() => _now = DateTime.now());
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   Future<void> _pay(BuildContext context) async {
     final model = context.read<MowizModel>();
@@ -212,73 +234,74 @@ class _TimeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = context.watch<MowizModel>();
-    final now = DateTime.now();
     final finish = model.finishTime;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          DateFormat('dd/MM/yyyy').format(now),
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          DateFormat('HH:mm').format(now),
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            ElevatedButton(
-              onPressed: () => model.changeMinutes(1),
-              child: const Text('+1'),
-            ),
-            ElevatedButton(
-              onPressed: () => model.changeMinutes(15),
-              child: const Text('+15'),
-            ),
-            ElevatedButton(
-              onPressed: () => model.changeMinutes(-15),
-              child: const Text('-15'),
-            ),
-            ElevatedButton(
-              onPressed: () => model.changeMinutes(-1),
-              child: const Text('-1'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 32),
-        Text(
-          '${model.minutes ~/ 60}h ${model.minutes % 60}m',
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          '${model.price.toStringAsFixed(2)} €',
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'Fin: ${DateFormat('dd/MM/yyyy HH:mm').format(finish)}',
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const Spacer(),
-        ElevatedButton(
-          onPressed: () => _pay(context),
-          child: const Text('Pagar'),
-        ),
-        const SizedBox(height: 8),
-        TextButton(
-          onPressed: onCancel,
-          child: const Text('Cancelar'),
-        ),
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            DateFormat('dd/MM/yyyy').format(_now),
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            DateFormat('HH:mm').format(_now),
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: () => model.changeMinutes(1),
+                child: const Text('+1'),
+              ),
+              ElevatedButton(
+                onPressed: () => model.changeMinutes(15),
+                child: const Text('+15'),
+              ),
+              ElevatedButton(
+                onPressed: () => model.changeMinutes(-15),
+                child: const Text('-15'),
+              ),
+              ElevatedButton(
+                onPressed: () => model.changeMinutes(-1),
+                child: const Text('-1'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          Text(
+            '${model.minutes ~/ 60}h ${model.minutes % 60}m',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '${model.price.toStringAsFixed(2)} €',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Fin: ${DateFormat('dd/MM/yyyy HH:mm').format(finish)}',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const Spacer(),
+          ElevatedButton(
+            onPressed: () => _pay(context),
+            child: const Text('Pagar'),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: widget.onCancel,
+            child: const Text('Cancelar'),
+          ),
+        ],
+      ),
     );
   }
 }

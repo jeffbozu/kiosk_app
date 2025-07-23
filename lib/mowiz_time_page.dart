@@ -140,10 +140,13 @@ class _MowizTimePageState extends State<MowizTimePage> {
             const Spacer(),
             ElevatedButton(
               onPressed: () {
-                // TODO: navigate to summary & payment page with selected data
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => const MowizSummaryPage(),
+                    builder: (_) => MowizSummaryPage(
+                      start: _now,
+                      minutes: _minutes,
+                      price: price,
+                    ),
                   ),
                 );
               },

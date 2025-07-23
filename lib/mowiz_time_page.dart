@@ -143,6 +143,8 @@ class _MowizTimePageState extends State<MowizTimePage> {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => MowizSummaryPage(
+                      plate: widget.plate,
+                      zone: widget.zone,
                       start: _now,
                       minutes: _minutes,
                       price: price,

@@ -6,11 +6,15 @@ import 'mowiz_page.dart';
 import 'mowiz_success_page.dart';
 
 class MowizSummaryPage extends StatefulWidget {
+  final String plate;
+  final String zone;
   final DateTime start;
   final int minutes;
   final double price;
   const MowizSummaryPage({
     super.key,
+    required this.plate,
+    required this.zone,
     required this.start,
     required this.minutes,
     required this.price,
@@ -55,7 +59,16 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
       // TODO: integrate real payment logic and backend communication
       if (!mounted) return;
       await Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const MowizSuccessPage()),
+        MaterialPageRoute(
+          builder: (_) => MowizSuccessPage(
+            plate: widget.plate,
+            zone: widget.zone,
+            start: widget.start,
+            minutes: widget.minutes,
+            price: widget.price,
+            method: _method!,
+          ),
+        ),
       );
     }
 

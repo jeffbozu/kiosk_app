@@ -90,6 +90,9 @@ class AppLocalizations {
       'card': 'Tarjeta',
       'qrPay': 'QR Pay',
       'mobilePay': 'Apple/Google Pay',
+      'paymentMethod': 'Método de pago',
+      'ticketSummary': 'Resumen del ticket',
+      'printTicket': 'Imprimir ticket',
     },
     'ca': {
       'welcome': 'Benvingut a Meypar Optima App',
@@ -166,6 +169,9 @@ class AppLocalizations {
       'card': 'Targeta',
       'qrPay': 'QR Pay',
       'mobilePay': 'Apple/Google Pay',
+      'paymentMethod': 'Mètode de pagament',
+      'ticketSummary': 'Resum del tiquet',
+      'printTicket': 'Imprimir tiquet',
     },
     'en': {
       'welcome': 'Welcome to Meypar Optima App',
@@ -242,6 +248,9 @@ class AppLocalizations {
       'card': 'Card',
       'qrPay': 'QR Pay',
       'mobilePay': 'Apple/Google Pay',
+      'paymentMethod': 'Payment method',
+      'ticketSummary': 'Ticket summary',
+      'printTicket': 'Print ticket',
     },
   };
 

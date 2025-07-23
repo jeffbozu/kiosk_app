@@ -68,6 +68,9 @@ class AppLocalizations {
       'emergencyTitle': 'ADVERTENCIA',
       'autoCloseIn': 'Cierre automático en {seconds} s',
       'emergencyActiveLabel': 'Emergencia: {reason}',
+      'mowizTitle': 'Simulador MOWIZ',
+      'payTicket': 'Pagar ticket',
+      'cancelDenuncia': 'Anular denúncia',
     },
     'ca': {
       'welcome': 'Benvingut a Meypar Optima App',
@@ -122,6 +125,9 @@ class AppLocalizations {
       'emergencyTitle': 'Emergència',
       'autoCloseIn': 'Tancament automàtic en {seconds} s',
       'emergencyActiveLabel': 'Emergència: {reason}',
+      'mowizTitle': 'Simulador MOWIZ',
+      'payTicket': 'Pagar tiquet',
+      'cancelDenuncia': 'Anular denúncia',
     },
     'en': {
       'welcome': 'Welcome to Meypar Optima App',
@@ -176,6 +182,9 @@ class AppLocalizations {
       'emergencyTitle': 'Emergency',
       'autoCloseIn': 'Auto close in {seconds}s',
       'emergencyActiveLabel': 'Emergency: {reason}',
+      'mowizTitle': 'MOWIZ simulator',
+      'payTicket': 'Pay ticket',
+      'cancelDenuncia': 'Cancel denuncia',
     },
   };
 

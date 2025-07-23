@@ -80,6 +80,9 @@ class AppLocalizations {
       'plateNotFound': 'Matrícula no encontrada',
       'confirmCancellation': '¿Confirmar anulación?',
       'cancellationSuccess': 'Anulación completada con éxito',
+      'selectDuration': 'Selecciona tiempo',
+      'continue': 'Continuar',
+      'summaryPay': 'Resumen y pago',
     },
     'ca': {
       'welcome': 'Benvingut a Meypar Optima App',
@@ -146,6 +149,9 @@ class AppLocalizations {
       'plateNotFound': 'Matrícula no trobada',
       'confirmCancellation': 'Confirmar anul·lació?',
       'cancellationSuccess': 'Anul·lació completada amb èxit',
+      'selectDuration': 'Selecciona temps',
+      'continue': 'Continuar',
+      'summaryPay': 'Resum i pagament',
     },
     'en': {
       'welcome': 'Welcome to Meypar Optima App',
@@ -212,6 +218,9 @@ class AppLocalizations {
       'plateNotFound': 'Plate not found',
       'confirmCancellation': 'Confirm cancellation?',
       'cancellationSuccess': 'Cancellation completed successfully',
+      'selectDuration': 'Select duration',
+      'continue': 'Continue',
+      'summaryPay': 'Summary & Payment',
     },
   };
 

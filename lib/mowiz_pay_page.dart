@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'l10n/app_localizations.dart';
+import 'mowiz_time_page.dart';
 
 class MowizPayPage extends StatefulWidget {
   const MowizPayPage({super.key});
@@ -79,7 +80,18 @@ class _MowizPayPageState extends State<MowizPayPage> {
             ),
             const SizedBox(height: 32),
             ElevatedButton(
-              onPressed: _confirmEnabled ? () {} : null,
+              onPressed: _confirmEnabled
+                  ? () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => MowizTimePage(
+                            zone: _selectedZone!,
+                            plate: _plateCtrl.text.trim(),
+                          ),
+                        ),
+                      );
+                    }
+                  : null,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 24),
               ),

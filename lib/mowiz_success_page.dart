@@ -75,7 +75,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
       await showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) => _EmailSentDialog(onClose: _goHome),
+        builder: (_) => _EmailSentDialog(onClose: _startTimer),
       );
     }
     if (mounted) _startTimer();
@@ -93,7 +93,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
       await showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) => _SmsSentDialog(onClose: _goHome),
+        builder: (_) => _SmsSentDialog(onClose: _startTimer),
       );
     }
     if (mounted) _startTimer();
@@ -124,7 +124,6 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Explicit package is needed so the asset is bundled correctly
             Lottie.asset(
               'assets/success.json',
               height: 150,
@@ -250,6 +249,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
   }
 }
 
+// Email input dialog
 class _EmailDialog extends StatefulWidget {
   const _EmailDialog();
 
@@ -284,6 +284,7 @@ class _EmailDialogState extends State<_EmailDialog> {
   }
 }
 
+// SMS input dialog
 class _SmsDialog extends StatefulWidget {
   const _SmsDialog();
 
@@ -318,6 +319,7 @@ class _SmsDialogState extends State<_SmsDialog> {
   }
 }
 
+// Email sent confirmation dialog
 class _EmailSentDialog extends StatefulWidget {
   final VoidCallback onClose;
   const _EmailSentDialog({required this.onClose});
@@ -371,6 +373,7 @@ class _EmailSentDialogState extends State<_EmailSentDialog> {
   }
 }
 
+// SMS sent confirmation dialog
 class _SmsSentDialog extends StatefulWidget {
   final VoidCallback onClose;
   const _SmsSentDialog({required this.onClose});

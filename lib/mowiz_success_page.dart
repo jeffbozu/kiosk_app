@@ -31,8 +31,8 @@ class MowizSuccessPage extends StatefulWidget {
 }
 
 class _MowizSuccessPageState extends State<MowizSuccessPage> {
-  static const double _buttonHeight = 51;
-  static const TextStyle _buttonTextStyle = TextStyle(fontSize: 20);
+  static const double _buttonHeight = 44;
+  static const TextStyle _buttonTextStyle = TextStyle(fontSize: 16);
   int _seconds = 30;
   Timer? _timer;
 
@@ -123,91 +123,87 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
 
     return Scaffold(
       appBar: AppBar(automaticallyImplyLeading: false),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
+      body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Lottie.asset(
               'assets/success.json',
-              height: 150,
+              height: 120,
               repeat: false,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               t('paymentSuccess'),
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             SizedBox(
-              height: 250,
+              height: 200,
               child: Center(
                 child: QrImageView(
                   data:
                       'ticket|plate:${widget.plate}|zone:${widget.zone}|start:${widget.start.toIso8601String()}|end:${finish.toIso8601String()}|price:${widget.price}',
                   version: QrVersions.auto,
-                  size: 250,
+                  size: 180,
                   foregroundColor: Theme.of(context).brightness == Brightness.dark
                       ? Colors.white
                       : Colors.black,
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      t('ticketSummary'),
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+            const SizedBox(height: 8),
+            Expanded(
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                elevation: 4,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Text(
+                        t('ticketSummary'),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${t('plate')}: ${widget.plate}',
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${t('zone')}: ${widget.zone}',
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${t('startTime')}: ${timeFormat.format(widget.start)}',
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${t('endTime')}: ${timeFormat.format(finish)}',
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${t('totalPrice')}: ${widget.price.toStringAsFixed(2)} €',
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${t('paymentMethod')}: ${widget.method}',
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                  ],
+                      Text(
+                        '${t('plate')}: ${widget.plate}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      Text(
+                        '${t('zone')}: ${widget.zone}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      Text(
+                        '${t('startTime')}: ${timeFormat.format(widget.start)}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      Text(
+                        '${t('endTime')}: ${timeFormat.format(finish)}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      Text(
+                        '${t('totalPrice')}: ${widget.price.toStringAsFixed(2)} €',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      Text(
+                        '${t('paymentMethod')}: ${widget.method}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -222,7 +218,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                         ),
                         child: Text(t('printTicket')),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       ElevatedButton(
                         onPressed: _showEmailDialog,
                         style: ElevatedButton.styleFrom(
@@ -234,7 +230,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Column(
                     children: [
@@ -246,7 +242,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                         ),
                         child: Text(t('sendBySms')),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       ElevatedButton(
                         onPressed: _goHome,
                         style: ElevatedButton.styleFrom(
@@ -260,7 +256,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               t('returningIn', params: {'seconds': '$_seconds'}),
               textAlign: TextAlign.center,

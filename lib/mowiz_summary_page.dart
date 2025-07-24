@@ -56,11 +56,12 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
 
     Future<void> _pay() async {
       if (_method == null) return;
-      // TODO: integrate real payment logic and backend communication
+      // TODO: integrate real payment logic and call mock Express backend
       if (!mounted) return;
       await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => MowizSuccessPage(
+        PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 300),
+          pageBuilder: (_, __, ___) => MowizSuccessPage(
             plate: widget.plate,
             zone: widget.zone,
             start: widget.start,
@@ -68,90 +69,102 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
             price: widget.price,
             method: _method!,
           ),
+          transitionsBuilder: (_, anim, __, child) =>
+              FadeTransition(opacity: anim, child: child),
         ),
       );
     }
 
     return Scaffold(
       appBar: AppBar(title: Text(t('summaryPay'))),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      t('totalTime'),
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontal = constraints.maxWidth >= 600 ? 48.0 : 16.0;
+          return Padding(
+            padding: EdgeInsets.all(horizontal),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  elevation: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          t('totalTime'),
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${widget.minutes ~/ 60}h ${widget.minutes % 60}m',
+                          style: const TextStyle(fontSize: 36),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "${t('startTime')}: ${timeFormat.format(widget.start)}",
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "${t('endTime')}: ${timeFormat.format(finish)}",
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "${t('totalPrice')}: ${widget.price.toStringAsFixed(2)} €",
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${widget.minutes ~/ 60}h ${widget.minutes % 60}m',
-                      style: const TextStyle(fontSize: 36),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      "${t('startTime')}: ${timeFormat.format(widget.start)}",
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "${t('endTime')}: ${timeFormat.format(finish)}",
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      "${t('totalPrice')}: ${widget.price.toStringAsFixed(2)} €",
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                const SizedBox(height: 24),
+                paymentButton('card', Icons.credit_card, t('card')),
+                const SizedBox(height: 16),
+                paymentButton('qr', Icons.qr_code_2, t('qrPay')),
+                const SizedBox(height: 16),
+                paymentButton('mobile', Icons.phone_iphone, t('mobilePay')),
+                const Spacer(),
+                ElevatedButton(
+                  onPressed: _method != null ? _pay : null,
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(80),
+                  ),
+                  child: Text(t('pay')),
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      PageRouteBuilder(
+                        transitionDuration: const Duration(milliseconds: 300),
+                        pageBuilder: (_, __, ___) => const MowizPage(),
+                        transitionsBuilder: (_, anim, __, child) =>
+                            FadeTransition(opacity: anim, child: child),
+                      ),
+                      (route) => false,
+                    );
+                  },
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size.fromHeight(80),
+                  ),
+                  child: Text(t('cancel')),
+                ),
+              ],
             ),
-            const SizedBox(height: 24),
-            paymentButton('card', Icons.credit_card, t('card')),
-            const SizedBox(height: 16),
-            paymentButton('qr', Icons.qr_code_2, t('qrPay')),
-            const SizedBox(height: 16),
-            paymentButton('mobile', Icons.phone_iphone, t('mobilePay')),
-            const Spacer(),
-            ElevatedButton(
-              onPressed: _method != null ? _pay : null,
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(80),
-              ),
-              child: Text(t('pay')),
-            ),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const MowizPage()),
-                  (route) => false,
-                );
-              },
-              style: TextButton.styleFrom(
-                minimumSize: const Size.fromHeight(80),
-              ),
-              child: Text(t('cancel')),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

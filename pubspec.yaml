@@ -28,7 +28,6 @@ dependencies:
   intl: ^0.20.2              # Formateo de fechas y monedas
   provider: ^6.1.2
   lottie: ^2.7.0             # Animaciones Lottie para la página de éxito
-  confetti: ^0.7.0          # Efecto confeti en la pantalla de éxito
 
 dev_dependencies:
   flutter_test:

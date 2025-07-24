@@ -31,6 +31,8 @@ class MowizSuccessPage extends StatefulWidget {
 }
 
 class _MowizSuccessPageState extends State<MowizSuccessPage> {
+  static const double _buttonHeight = 51;
+  static const TextStyle _buttonTextStyle = TextStyle(fontSize: 20);
   int _seconds = 30;
   Timer? _timer;
 
@@ -147,6 +149,9 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                       'ticket|plate:${widget.plate}|zone:${widget.zone}|start:${widget.start.toIso8601String()}|end:${finish.toIso8601String()}|price:${widget.price}',
                   version: QrVersions.auto,
                   size: 250,
+                  foregroundColor: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black,
                 ),
               ),
             ),
@@ -203,41 +208,62 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
               ),
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () {}, // TODO: implement print functionality
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(64),
-              ),
-              child: Text(t('printTicket')),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: _showEmailDialog,
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(64),
-              ),
-              child: Text(t('sendByEmail')),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: _showSmsDialog,
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(64),
-              ),
-              child: Text(t('sendBySms')),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: Size.fromHeight(_buttonHeight),
+                          textStyle: _buttonTextStyle,
+                        ),
+                        child: Text(t('printTicket')),
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: _showEmailDialog,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: Size.fromHeight(_buttonHeight),
+                          textStyle: _buttonTextStyle,
+                        ),
+                        child: Text(t('sendByEmail')),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    children: [
+                      ElevatedButton(
+                        onPressed: _showSmsDialog,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: Size.fromHeight(_buttonHeight),
+                          textStyle: _buttonTextStyle,
+                        ),
+                        child: Text(t('sendBySms')),
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: _goHome,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: Size.fromHeight(_buttonHeight),
+                          textStyle: _buttonTextStyle,
+                        ),
+                        child: Text(t('goHome')),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             Text(
               t('returningIn', params: {'seconds': '$_seconds'}),
               textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: _goHome,
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(64),
-              ),
-              child: Text(t('goHome')),
             ),
           ],
         ),

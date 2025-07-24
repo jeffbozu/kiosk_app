@@ -59,113 +59,130 @@ class _MowizTimePageState extends State<MowizTimePage> {
 
     return Scaffold(
       appBar: AppBar(title: Text(t('selectDuration'))),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              DateFormat('EEE, d MMM yyyy - HH:mm', locale).format(_now),
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 32),
-            Row(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontal = constraints.maxWidth >= 600 ? 48.0 : 16.0;
+          return Padding(
+            padding: EdgeInsets.all(horizontal),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _modifyMinutes(3),
-                    child: const Text('+3'),
-                  ),
+                Text(
+                  DateFormat('EEE, d MMM yyyy - HH:mm', locale).format(_now),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontSize: 32, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _modifyMinutes(5),
-                    child: const Text('+5'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _modifyMinutes(15),
-                    child: const Text('+15'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _modifyMinutes(-3),
-                    child: const Text('-3'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _modifyMinutes(-5),
-                    child: const Text('-5'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _modifyMinutes(-15),
-                    child: const Text('-15'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-            Text(
-              durationStr,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '${t('price')}: ${price.toStringAsFixed(2)} €',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '${t('until')}: ${DateFormat('HH:mm', locale).format(finish)}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const Spacer(),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => MowizSummaryPage(
-                      plate: widget.plate,
-                      zone: widget.zone,
-                      start: _now,
-                      minutes: _minutes,
-                      price: price,
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => _modifyMinutes(3),
+                        child: const Text('+3'),
+                      ),
                     ),
-                  ),
-                );
-              },
-              child: Text(t('continue')),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => _modifyMinutes(5),
+                        child: const Text('+5'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => _modifyMinutes(15),
+                        child: const Text('+15'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => _modifyMinutes(-3),
+                        child: const Text('-3'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => _modifyMinutes(-5),
+                        child: const Text('-5'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => _modifyMinutes(-15),
+                        child: const Text('-15'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                Text(
+                  durationStr,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontSize: 40, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '${t('price')}: ${price.toStringAsFixed(2)} €',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '${t('until')}: ${DateFormat('HH:mm', locale).format(finish)}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const Spacer(),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      PageRouteBuilder(
+                        transitionDuration: const Duration(milliseconds: 300),
+                        pageBuilder: (_, __, ___) => MowizSummaryPage(
+                          plate: widget.plate,
+                          zone: widget.zone,
+                          start: _now,
+                          minutes: _minutes,
+                          price: price,
+                        ),
+                        transitionsBuilder: (_, anim, __, child) =>
+                            FadeTransition(opacity: anim, child: child),
+                      ),
+                    );
+                  },
+                  child: Text(t('continue')),
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      PageRouteBuilder(
+                        transitionDuration: const Duration(milliseconds: 300),
+                        pageBuilder: (_, __, ___) => const MowizPage(),
+                        transitionsBuilder: (_, anim, __, child) =>
+                            FadeTransition(opacity: anim, child: child),
+                      ),
+                      (route) => false,
+                    );
+                  },
+                  child: Text(t('cancel')),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const MowizPage()),
-                  (route) => false,
-                );
-              },
-              child: Text(t('cancel')),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

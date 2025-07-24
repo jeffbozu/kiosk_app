@@ -77,8 +77,9 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         barrierDismissible: false,
         builder: (_) => _EmailSentDialog(onClose: _startTimer),
       );
+    } else {
+      _startTimer();
     }
-    if (mounted) _startTimer();
   }
 
   Future<void> _showSmsDialog() async {
@@ -95,8 +96,9 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         barrierDismissible: false,
         builder: (_) => _SmsSentDialog(onClose: _startTimer),
       );
+    } else {
+      _startTimer();
     }
-    if (mounted) _startTimer();
   }
 
   @override
@@ -119,7 +121,8 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
 
     return Scaffold(
       appBar: AppBar(automaticallyImplyLeading: false),
-      body: Padding(
+      body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -129,31 +132,25 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
               height: 150,
               repeat: false,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Text(
               t('paymentSuccess'),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-            Expanded(
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 250,
               child: Center(
-                child: Builder(
-                  builder: (context) {
-                    final isDark = Theme.of(context).brightness == Brightness.dark;
-                    return Container(
-                      color: isDark ? Colors.white : Colors.transparent,
-                      child: QrImageView(
-                        data: 'SIMULATED', // TODO: replace with real data
-                        version: QrVersions.auto,
-                        size: 250,
-                      ),
-                    );
-                  },
+                child: QrImageView(
+                  data:
+                      'ticket|plate:${widget.plate}|zone:${widget.zone}|start:${widget.start.toIso8601String()}|end:${finish.toIso8601String()}|price:${widget.price}',
+                  version: QrVersions.auto,
+                  size: 250,
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
@@ -209,36 +206,36 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
             ElevatedButton(
               onPressed: () {}, // TODO: implement print functionality
               style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(80),
+                minimumSize: const Size.fromHeight(64),
               ),
               child: Text(t('printTicket')),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             ElevatedButton(
               onPressed: _showEmailDialog,
               style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(80),
+                minimumSize: const Size.fromHeight(64),
               ),
               child: Text(t('sendByEmail')),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             ElevatedButton(
               onPressed: _showSmsDialog,
               style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(80),
+                minimumSize: const Size.fromHeight(64),
               ),
               child: Text(t('sendBySms')),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Text(
               t('returningIn', params: {'seconds': '$_seconds'}),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             ElevatedButton(
               onPressed: _goHome,
               style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(80),
+                minimumSize: const Size.fromHeight(64),
               ),
               child: Text(t('goHome')),
             ),
@@ -340,7 +337,10 @@ class _EmailSentDialogState extends State<_EmailSentDialog> {
         setState(() => _seconds--);
       } else {
         t.cancel();
-        widget.onClose();
+        if (mounted) {
+          Navigator.of(context).pop();
+          widget.onClose();
+        }
       }
     });
   }
@@ -365,7 +365,10 @@ class _EmailSentDialogState extends State<_EmailSentDialog> {
       ),
       actions: [
         ElevatedButton(
-          onPressed: widget.onClose,
+          onPressed: () {
+            Navigator.of(context).pop();
+            widget.onClose();
+          },
           child: Text(l.t('close')),
         ),
       ],
@@ -394,7 +397,10 @@ class _SmsSentDialogState extends State<_SmsSentDialog> {
         setState(() => _seconds--);
       } else {
         t.cancel();
-        widget.onClose();
+        if (mounted) {
+          Navigator.of(context).pop();
+          widget.onClose();
+        }
       }
     });
   }
@@ -419,7 +425,10 @@ class _SmsSentDialogState extends State<_SmsSentDialog> {
       ),
       actions: [
         ElevatedButton(
-          onPressed: widget.onClose,
+          onPressed: () {
+            Navigator.of(context).pop();
+            widget.onClose();
+          },
           child: Text(l.t('close')),
         ),
       ],

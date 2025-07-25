@@ -147,7 +147,9 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: paymentButton('mobile', Icons.phone_iphone, t('mobilePay')),
             ),
-            const Spacer(),
+            // Spacer is not allowed inside SingleChildScrollView; use fixed
+            // spacing instead to avoid layout errors on this page.
+            const SizedBox(height: 32),
             FilledButton(
               onPressed: _method != null ? _pay : null,
               style: kMowizFilledButtonStyle,

@@ -325,9 +325,10 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
             ),
           ],
         ),
-      );
-    },
-  ),
+      ],
+    );
+  },
+),
     );
   }
 }

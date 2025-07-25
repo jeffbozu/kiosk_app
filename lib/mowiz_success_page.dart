@@ -323,10 +323,11 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: titleFont - 6),
             ),
-          ],
+            ],
+          ),
         ),
-      ],
-    );
+        ],
+      );
   },
 ),
     );

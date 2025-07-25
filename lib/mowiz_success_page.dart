@@ -221,37 +221,67 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            // Botones grandes apilados verticalmente
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                FilledButton(
-                  onPressed: () {},
-                  style: kMowizFilledButtonStyle,
-                  child: Text(t('printTicket')),
+            const SizedBox(height: 24),
+            // Acciones distribuidas en dos filas de dos botones
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: FilledButton(
+                            onPressed: () {},
+                            style: kMowizFilledButtonStyle,
+                            child: Text(t('printTicket')),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: FilledButton(
+                            onPressed: _showSmsDialog,
+                            style: kMowizFilledButtonStyle,
+                            child: Text(t('sendBySms')),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: FilledButton(
+                            onPressed: _showEmailDialog,
+                            style: kMowizFilledButtonStyle,
+                            child: Text(t('sendByEmail')),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: FilledButton(
+                            onPressed: _goHome,
+                            style: kMowizFilledButtonStyle,
+                            child: Text(t('goHome')),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: _showSmsDialog,
-                  style: kMowizFilledButtonStyle,
-                  child: Text(t('sendBySms')),
-                ),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: _showEmailDialog,
-                  style: kMowizFilledButtonStyle,
-                  child: Text(t('sendByEmail')),
-                ),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: _goHome,
-                  style: kMowizFilledButtonStyle,
-                  child: Text(t('goHome')),
-                ),
-              ],
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 24),
             Text(
               t('returningIn', params: {'seconds': '$_seconds'}),
               textAlign: TextAlign.center,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'l10n/app_localizations.dart';
 import 'mowiz_time_page.dart';
+import 'mowiz/mowiz_scaffold.dart';
 
 class MowizPayPage extends StatefulWidget {
   const MowizPayPage({super.key});
@@ -26,8 +27,8 @@ class _MowizPayPageState extends State<MowizPayPage> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context).t;
     final colorScheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      appBar: AppBar(title: Text(t('payTicket'))),
+    return MowizScaffold(
+      title: t('payTicket'),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

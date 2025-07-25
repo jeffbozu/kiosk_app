@@ -4,6 +4,7 @@ import 'theme_mode_button.dart';
 import 'l10n/app_localizations.dart';
 import 'mowiz_pay_page.dart';
 import 'mowiz_cancel_page.dart';
+import 'mowiz/mowiz_scaffold.dart';
 
 class MowizPage extends StatelessWidget {
   const MowizPage({super.key});
@@ -11,15 +12,8 @@ class MowizPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context).t;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(t('mowizTitle')),
-        actions: const [
-          LanguageSelector(),
-          SizedBox(width: 8),
-          ThemeModeButton(),
-        ],
-      ),
+    return MowizScaffold(
+      title: t('mowizTitle'),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

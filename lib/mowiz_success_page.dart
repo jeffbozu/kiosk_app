@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:confetti/confetti.dart';
 
 import 'l10n/app_localizations.dart';
 import 'mowiz_page.dart';
+import 'mowiz/mowiz_scaffold.dart';
 
 class MowizSuccessPage extends StatefulWidget {
   final String plate;
@@ -35,10 +37,13 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
   static const TextStyle _buttonTextStyle = TextStyle(fontSize: 16);
   int _seconds = 30;
   Timer? _timer;
+  late final ConfettiController _confettiController;
 
   @override
   void initState() {
     super.initState();
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 3))..play();
     _startTimer();
   }
 
@@ -74,6 +79,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
     );
     if (!mounted) return;
     if (email != null) {
+      // TODO lógica real de envío de email
       await showDialog(
         context: context,
         barrierDismissible: false,
@@ -93,6 +99,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
     );
     if (!mounted) return;
     if (phone != null) {
+      // TODO lógica real de envío de SMS
       await showDialog(
         context: context,
         barrierDismissible: false,
@@ -106,6 +113,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
   @override
   void dispose() {
     _timer?.cancel();
+    _confettiController.dispose();
     super.dispose();
   }
 
@@ -120,12 +128,24 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
             ? 'ca_ES'
             : 'en_GB';
     final timeFormat = DateFormat('EEE, d MMM yyyy - HH:mm', localeCode);
+    final ticketJson =
+        'ticket|plate:${widget.plate}|zone:${widget.zone}|start:${widget.start.toIso8601String()}|end:${finish.toIso8601String()}|price:${widget.price}'; // TODO lógica real
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      appBar: AppBar(automaticallyImplyLeading: false),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+    return MowizScaffold(
+      body: Stack(
+        children: [
+          Align(
+            alignment: Alignment.topCenter,
+            child: ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirectionality: BlastDirectionality.explosive,
+              shouldLoop: false,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Lottie.asset(
@@ -144,13 +164,9 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
               height: 200,
               child: Center(
                 child: QrImageView(
-                  data:
-                      'ticket|plate:${widget.plate}|zone:${widget.zone}|start:${widget.start.toIso8601String()}|end:${finish.toIso8601String()}|price:${widget.price}',
-                  version: QrVersions.auto,
-                  size: 180,
-                  foregroundColor: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white
-                      : Colors.black,
+                  data: ticketJson,
+                  size: 220,
+                  foregroundColor: isDark ? Colors.white : Colors.black,
                 ),
               ),
             ),
@@ -263,6 +279,8 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
             ),
           ],
         ),
+      ),
+        ],
       ),
     );
   }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'l10n/app_localizations.dart';
 import 'mowiz_time_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
+// Estilo común para botones grandes
+import 'styles/mowiz_buttons.dart';
 
 class MowizPayPage extends StatefulWidget {
   const MowizPayPage({super.key});
@@ -87,7 +89,7 @@ class _MowizPayPageState extends State<MowizPayPage> {
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 32),
-            ElevatedButton(
+            FilledButton(
               onPressed: _confirmEnabled
                   ? () {
                       Navigator.of(context).push(
@@ -100,19 +102,15 @@ class _MowizPayPageState extends State<MowizPayPage> {
                       );
                     }
                   : null,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                textStyle: const TextStyle(fontSize: 24),
-              ),
+              // Estilo grande reutilizado
+              style: kMowizFilledButtonStyle,
               child: Text(t('confirm')),
             ),
             const SizedBox(height: 16),
-            TextButton(
+            FilledButton(
               onPressed: () => Navigator.of(context).pop(),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                textStyle: const TextStyle(fontSize: 24),
-              ),
+              // Estilo grande reutilizado
+              style: kMowizFilledButtonStyle,
               child: Text(t('cancel')),
             ),
           ],

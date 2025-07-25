@@ -5,6 +5,8 @@ import 'l10n/app_localizations.dart';
 import 'mowiz_pay_page.dart';
 import 'mowiz_cancel_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
+// Estilo de botones grandes reutilizable
+import 'styles/mowiz_buttons.dart';
 
 class MowizPage extends StatelessWidget {
   const MowizPage({super.key});
@@ -33,13 +35,8 @@ class MowizPage extends StatelessWidget {
                   ),
                 );
               },
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                textStyle: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              // Uso de estilo común para botones grandes
+              style: kMowizFilledButtonStyle,
               child: Text(t('payTicket')),
             ),
             const SizedBox(height: 16),
@@ -51,13 +48,8 @@ class MowizPage extends StatelessWidget {
                   ),
                 );
               },
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                textStyle: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              // Uso de estilo común para botones grandes
+              style: kMowizFilledButtonStyle,
               child: Text(t('cancelDenuncia')),
             ),
           ],

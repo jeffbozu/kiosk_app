@@ -146,32 +146,35 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
           // Envolver todo en SingleChildScrollView para evitar overflow
           SingleChildScrollView(
             padding: const EdgeInsets.all(16),
-            child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Lottie.asset(
-              'assets/success.json',
-              height: 120,
-              repeat: false,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              t('paymentSuccess'),
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 200,
-              child: Center(
-                child: QrImageView(
-                  data: ticketJson,
-                  size: 220,
-                  foregroundColor: isDark ? Colors.white : Colors.black,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Lottie.asset(
+                    'assets/success.json',
+                    height: 120,
+                    repeat: false,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    t('paymentSuccess'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 200,
+                    child: Center(
+                      child: QrImageView(
+                        data: ticketJson,
+                        size: 220,
+                        foregroundColor: isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
             // Recuadro de resumen sin altura fija para evitar overflow
             Card(
                 shape: RoundedRectangleBorder(
@@ -219,7 +222,6 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                   ),
                 ),
               ),
-            ),
             const SizedBox(height: 32), // Separación mayor entre resumen y botones
             // Acciones distribuidas en dos filas de dos botones
             Column(

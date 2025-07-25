@@ -58,6 +58,16 @@ class _MowizTimePageState extends State<MowizTimePage> {
     final durationStr = '${_minutes ~/ 60}h ${_minutes % 60}m';
     final price = 0.0; // TODO: calculate real price
 
+    final ButtonStyle timeButtonStyle = ElevatedButton.styleFrom(
+      textStyle: const TextStyle(fontSize: 24),
+    ).copyWith(
+      overlayColor: MaterialStateProperty.resolveWith(
+        (states) => states.contains(MaterialState.pressed)
+            ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
+            : null,
+      ),
+    );
+
     return MowizScaffold(
       title: t('selectDuration'),
       body: Padding(
@@ -75,6 +85,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
               children: [
                 Expanded(
                   child: ElevatedButton(
+                    style: timeButtonStyle,
                     onPressed: () => _modifyMinutes(3),
                     child: const Text('+3'),
                   ),
@@ -82,6 +93,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
+                    style: timeButtonStyle,
                     onPressed: () => _modifyMinutes(5),
                     child: const Text('+5'),
                   ),
@@ -89,6 +101,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
+                    style: timeButtonStyle,
                     onPressed: () => _modifyMinutes(15),
                     child: const Text('+15'),
                   ),
@@ -100,6 +113,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
               children: [
                 Expanded(
                   child: ElevatedButton(
+                    style: timeButtonStyle,
                     onPressed: () => _modifyMinutes(-3),
                     child: const Text('-3'),
                   ),
@@ -107,6 +121,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
+                    style: timeButtonStyle,
                     onPressed: () => _modifyMinutes(-5),
                     child: const Text('-5'),
                   ),
@@ -114,6 +129,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
+                    style: timeButtonStyle,
                     onPressed: () => _modifyMinutes(-15),
                     child: const Text('-15'),
                   ),

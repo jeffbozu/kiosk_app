@@ -37,7 +37,7 @@ class _MowizPayPageState extends State<MowizPayPage> {
             Text(
               t('selectZone'),
               textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
             ),
             const SizedBox(height: 16),
             Row(
@@ -51,7 +51,10 @@ class _MowizPayPageState extends State<MowizPayPage> {
                           ? colorScheme.primary
                           : colorScheme.secondary,
                     ),
-                    child: Text(t('zoneBlue')),
+                    child: Text(
+                      t('zoneBlue'),
+                      style: const TextStyle(fontSize: 24),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -64,7 +67,10 @@ class _MowizPayPageState extends State<MowizPayPage> {
                           ? colorScheme.primary
                           : colorScheme.secondary,
                     ),
-                    child: Text(t('zoneGreen')),
+                    child: Text(
+                      t('zoneGreen'),
+                      style: const TextStyle(fontSize: 24),
+                    ),
                   ),
                 ),
               ],
@@ -77,6 +83,7 @@ class _MowizPayPageState extends State<MowizPayPage> {
                 labelText: t('plate'),
                 hintText: t('enterPlate'),
               ),
+              style: const TextStyle(fontSize: 24),
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 32),
@@ -95,6 +102,7 @@ class _MowizPayPageState extends State<MowizPayPage> {
                   : null,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 24),
+                textStyle: const TextStyle(fontSize: 24),
               ),
               child: Text(t('confirm')),
             ),
@@ -103,6 +111,7 @@ class _MowizPayPageState extends State<MowizPayPage> {
               onPressed: () => Navigator.of(context).pop(),
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 24),
+                textStyle: const TextStyle(fontSize: 24),
               ),
               child: Text(t('cancel')),
             ),

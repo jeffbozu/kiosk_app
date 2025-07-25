@@ -14,6 +14,11 @@ class MowizPage extends StatelessWidget {
     final t = AppLocalizations.of(context).t;
     return MowizScaffold(
       title: t('mowizTitle'),
+      actions: const [
+        LanguageSelector(),
+        SizedBox(width: 8),
+        ThemeModeButton(),
+      ],
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

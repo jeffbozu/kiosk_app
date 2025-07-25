@@ -3,7 +3,13 @@ import 'package:flutter/material.dart';
 class MowizScaffold extends StatelessWidget {
   final Widget body;
   final String? title;
-  const MowizScaffold({required this.body, this.title, super.key});
+  final List<Widget>? actions;
+  const MowizScaffold({
+    required this.body,
+    this.title,
+    this.actions,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +27,12 @@ class MowizScaffold extends StatelessWidget {
     return Theme(
       data: mowizTheme,
       child: Scaffold(
-        appBar: title == null ? null : AppBar(title: Text(title!)),
+        appBar: title == null
+            ? null
+            : AppBar(
+                title: Text(title!),
+                actions: actions,
+              ),
         body: body,
       ),
     );

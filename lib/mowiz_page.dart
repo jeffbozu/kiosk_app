@@ -7,6 +7,7 @@ import 'mowiz_cancel_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
 // Estilo de botones grandes reutilizable
 import 'styles/mowiz_buttons.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 
 class MowizPage extends StatelessWidget {
   const MowizPage({super.key});
@@ -21,13 +22,26 @@ class MowizPage extends StatelessWidget {
         SizedBox(width: 8),
         ThemeModeButton(),
       ],
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            FilledButton(
+      body: LayoutBuilder(
+        // LayoutBuilder nos da el ancho disponible para calcular
+        // paddings y tamaños de forma proporcional.
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          // Breakpoints personalizables
+          final isLargeTablet = width >= 900;
+          final isTablet = width >= 600 && width < 900;
+          // Padding y separación basados en el ancho de pantalla
+          final padding = EdgeInsets.all(width * 0.05);
+          final double gap = width * 0.04;
+          // Tamaño de fuente adaptativo para los botones principales
+          final double fontSize = isLargeTablet
+              ? 32
+              : isTablet
+                  ? 28
+                  : 24;
+
+          final payBtn = Expanded(
+            child: FilledButton(
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -35,12 +49,20 @@ class MowizPage extends StatelessWidget {
                   ),
                 );
               },
-              // Uso de estilo común para botones grandes
-              style: kMowizFilledButtonStyle,
-              child: Text(t('payTicket')),
+              style: kMowizFilledButtonStyle.copyWith(
+                textStyle: MaterialStatePropertyAll(
+                  TextStyle(fontSize: fontSize),
+                ),
+              ),
+              child: AutoSizeText(
+                t('payTicket'),
+                maxLines: 1,
+              ),
             ),
-            const SizedBox(height: 16),
-            FilledButton(
+          );
+
+          final cancelBtn = Expanded(
+            child: FilledButton(
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -48,14 +70,35 @@ class MowizPage extends StatelessWidget {
                   ),
                 );
               },
-              // Uso de estilo común para botones grandes
               style: kMowizFilledButtonStyle.copyWith(
-                backgroundColor: const MaterialStatePropertyAll(Color(0xFFA7A7A7)),
+                backgroundColor:
+                    const MaterialStatePropertyAll(Color(0xFFA7A7A7)),
+                textStyle: MaterialStatePropertyAll(
+                  TextStyle(fontSize: fontSize),
+                ),
               ),
-              child: Text(t('cancelDenuncia')),
+              child: AutoSizeText(
+                t('cancelDenuncia'),
+                maxLines: 1,
+              ),
             ),
-          ],
-        ),
+          );
+
+          final rowChildren = <Widget>[payBtn, SizedBox(width: gap), cancelBtn];
+          final columnChildren =
+              <Widget>[payBtn, SizedBox(height: gap), cancelBtn];
+
+          return Padding(
+            padding: padding,
+            child: isTablet || isLargeTablet
+                ? Row(children: rowChildren)
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: columnChildren,
+                  ),
+          );
+        },
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'l10n/app_localizations.dart';
 import 'mowiz_time_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
@@ -31,88 +32,125 @@ class _MowizPayPageState extends State<MowizPayPage> {
     final colorScheme = Theme.of(context).colorScheme;
     return MowizScaffold(
       title: t('payTicket'),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              t('selectZone'),
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () => setState(() => _selectedZone = 'blue'),
-                    style: kMowizFilledButtonStyle.copyWith(
-                      backgroundColor: MaterialStatePropertyAll(
-                        // Color corporativo para la zona azul
-                        _selectedZone == 'blue'
-                            ? const Color(0xFF007CF7)
-                            : colorScheme.secondary,
-                      ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final isLargeTablet = width >= 900;
+          final isTablet = width >= 600 && width < 900;
+          final padding = EdgeInsets.all(width * 0.05);
+          final double gap = width * 0.04;
+          final double titleFont = isLargeTablet
+              ? 32
+              : isTablet
+                  ? 28
+                  : 24;
+          final double inputFont = isLargeTablet
+              ? 28
+              : isTablet
+                  ? 24
+                  : 20;
+
+          final zoneButton = (String value, String text, Color color) =>
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => setState(() => _selectedZone = value),
+                  style: kMowizFilledButtonStyle.copyWith(
+                    backgroundColor: MaterialStatePropertyAll(
+                      _selectedZone == value ? color : colorScheme.secondary,
                     ),
-                    child: Text(t('zoneBlue')),
+                    textStyle: MaterialStatePropertyAll(
+                      TextStyle(fontSize: inputFont),
+                    ),
+                  ),
+                  child: AutoSizeText(
+                    text,
+                    maxLines: 1,
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () => setState(() => _selectedZone = 'green'),
-                    style: kMowizFilledButtonStyle.copyWith(
-                      backgroundColor: MaterialStatePropertyAll(
-                        // Color corporativo para la zona verde
-                        _selectedZone == 'green'
-                            ? const Color(0xFF01AE00)
-                            : colorScheme.secondary,
-                      ),
+              );
+
+          return Padding(
+            padding: padding,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AutoSizeText(
+                    t('selectZone'),
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: titleFont,
                     ),
-                    child: Text(t('zoneGreen')),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _plateCtrl,
-              enabled: _selectedZone != null,
-              decoration: InputDecoration(
-                labelText: t('plate'),
-                hintText: t('enterPlate'),
+                  SizedBox(height: gap),
+                  Row(
+                    children: [
+                      zoneButton(
+                        'blue',
+                        t('zoneBlue'),
+                        const Color(0xFF007CF7),
+                      ),
+                      SizedBox(width: gap),
+                      zoneButton(
+                        'green',
+                        t('zoneGreen'),
+                        const Color(0xFF01AE00),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: gap),
+                  TextField(
+                    controller: _plateCtrl,
+                    enabled: _selectedZone != null,
+                    decoration: InputDecoration(
+                      labelText: t('plate'),
+                      hintText: t('enterPlate'),
+                    ),
+                    style: TextStyle(fontSize: inputFont),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  SizedBox(height: gap * 1.5),
+                  FilledButton(
+                    onPressed: _confirmEnabled
+                        ? () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => MowizTimePage(
+                                  zone: _selectedZone!,
+                                  plate: _plateCtrl.text.trim(),
+                                ),
+                              ),
+                            );
+                          }
+                        : null,
+                    style: kMowizFilledButtonStyle.copyWith(
+                      textStyle:
+                          MaterialStatePropertyAll(TextStyle(fontSize: titleFont)),
+                    ),
+                    child: AutoSizeText(
+                      t('confirm'),
+                      maxLines: 1,
+                    ),
+                  ),
+                  SizedBox(height: gap),
+                  FilledButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: kMowizFilledButtonStyle.copyWith(
+                      textStyle:
+                          MaterialStatePropertyAll(TextStyle(fontSize: titleFont)),
+                    ),
+                    child: AutoSizeText(
+                      t('cancel'),
+                      maxLines: 1,
+                    ),
+                  ),
+                ],
               ),
-              style: const TextStyle(fontSize: 24),
-              onChanged: (_) => setState(() {}),
             ),
-            const SizedBox(height: 32),
-            FilledButton(
-              onPressed: _confirmEnabled
-                  ? () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => MowizTimePage(
-                            zone: _selectedZone!,
-                            plate: _plateCtrl.text.trim(),
-                          ),
-                        ),
-                      );
-                    }
-                  : null,
-              // Estilo grande reutilizado
-              style: kMowizFilledButtonStyle,
-              child: Text(t('confirm')),
-            ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(),
-              // Estilo grande reutilizado
-              style: kMowizFilledButtonStyle,
-              child: Text(t('cancel')),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

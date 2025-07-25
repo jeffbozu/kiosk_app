@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:intl/intl.dart';
 import 'l10n/app_localizations.dart';
 import 'mowiz_page.dart';
@@ -59,139 +60,147 @@ class _MowizTimePageState extends State<MowizTimePage> {
     final durationStr = '${_minutes ~/ 60}h ${_minutes % 60}m';
     final price = 0.0; // TODO: calculate real price
 
-    final ButtonStyle timeButtonStyle = ElevatedButton.styleFrom(
-      textStyle: const TextStyle(fontSize: 24),
-    ).copyWith(
-      overlayColor: MaterialStateProperty.resolveWith(
-        (states) => states.contains(MaterialState.pressed)
-            ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-            : null,
-      ),
-    );
-
     return MowizScaffold(
       title: t('selectDuration'),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              DateFormat('EEE, d MMM yyyy - HH:mm', locale).format(_now),
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final isLargeTablet = width >= 900;
+          final isTablet = width >= 600 && width < 900;
+          final padding = EdgeInsets.all(width * 0.05);
+          final double gap = width * 0.04;
+          final double titleFont = isLargeTablet
+              ? 32
+              : isTablet
+                  ? 28
+                  : 24;
+          final double bigFont = isLargeTablet
+              ? 40
+              : isTablet
+                  ? 36
+                  : 32;
+          final double btnFont = isLargeTablet
+              ? 28
+              : isTablet
+                  ? 24
+                  : 20;
+
+          final ButtonStyle timeButtonStyle = ElevatedButton.styleFrom(
+            textStyle: TextStyle(fontSize: btnFont),
+          ).copyWith(
+            overlayColor: MaterialStateProperty.resolveWith(
+              (states) => states.contains(MaterialState.pressed)
+                  ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
+                  : null,
             ),
-            const SizedBox(height: 32),
-            Row(
+          );
+
+          Widget timeBtn(String text, int delta) => Expanded(
+                child: ElevatedButton(
+                  style: timeButtonStyle,
+                  onPressed: () => _modifyMinutes(delta),
+                  child: AutoSizeText(text, maxLines: 1),
+                ),
+              );
+
+          return Padding(
+            padding: padding,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: ElevatedButton(
-                    style: timeButtonStyle,
-                    onPressed: () => _modifyMinutes(3),
-                    child: const Text('+3'),
-                  ),
+                AutoSizeText(
+                  DateFormat('EEE, d MMM yyyy - HH:mm', locale).format(_now),
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                  style:
+                      TextStyle(fontSize: titleFont, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    style: timeButtonStyle,
-                    onPressed: () => _modifyMinutes(5),
-                    child: const Text('+5'),
-                  ),
+                SizedBox(height: gap),
+                Row(
+                  children: [
+                    timeBtn('+3', 3),
+                    SizedBox(width: gap),
+                    timeBtn('+5', 5),
+                    SizedBox(width: gap),
+                    timeBtn('+15', 15),
+                  ],
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    style: timeButtonStyle,
-                    onPressed: () => _modifyMinutes(15),
-                    child: const Text('+15'),
-                  ),
+                SizedBox(height: gap),
+                Row(
+                  children: [
+                    timeBtn('-3', -3),
+                    SizedBox(width: gap),
+                    timeBtn('-5', -5),
+                    SizedBox(width: gap),
+                    timeBtn('-15', -15),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    style: timeButtonStyle,
-                    onPressed: () => _modifyMinutes(-3),
-                    child: const Text('-3'),
-                  ),
+                SizedBox(height: gap),
+                AutoSizeText(
+                  durationStr,
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                  style:
+                      TextStyle(fontSize: bigFont, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    style: timeButtonStyle,
-                    onPressed: () => _modifyMinutes(-5),
-                    child: const Text('-5'),
-                  ),
+                SizedBox(height: gap / 2),
+                AutoSizeText(
+                  '${t('price')}: ${price.toStringAsFixed(2)} €',
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                  style:
+                      TextStyle(fontSize: titleFont, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    style: timeButtonStyle,
-                    onPressed: () => _modifyMinutes(-15),
-                    child: const Text('-15'),
-                  ),
+                SizedBox(height: gap / 2),
+                AutoSizeText(
+                  '${t('until')}: ${DateFormat('HH:mm', locale).format(finish)}',
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                  style:
+                      TextStyle(fontSize: titleFont, fontWeight: FontWeight.bold),
                 ),
-              ],
-            ),
-            const SizedBox(height: 32),
-            Text(
-              durationStr,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '${t('price')}: ${price.toStringAsFixed(2)} €',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '${t('until')}: ${DateFormat('HH:mm', locale).format(finish)}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const Spacer(),
-            // Botón grande para continuar con el pago
-            FilledButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => MowizSummaryPage(
-                      plate: widget.plate,
-                      zone: widget.zone,
-                      start: _now,
-                      minutes: _minutes,
-                      price: price,
+                const Spacer(),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => MowizSummaryPage(
+                          plate: widget.plate,
+                          zone: widget.zone,
+                          start: _now,
+                          minutes: _minutes,
+                          price: price,
+                        ),
+                      ),
+                    );
+                  },
+                  style: kMowizFilledButtonStyle.copyWith(
+                    textStyle:
+                        MaterialStatePropertyAll(TextStyle(fontSize: titleFont)),
+                  ),
+                  child: AutoSizeText(t('continue'), maxLines: 1),
+                ),
+                SizedBox(height: gap),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const MowizPage()),
+                      (route) => false,
+                    );
+                  },
+                  style: kMowizFilledButtonStyle.copyWith(
+                    backgroundColor: MaterialStatePropertyAll(
+                      Theme.of(context).colorScheme.secondary,
                     ),
+                    textStyle:
+                        MaterialStatePropertyAll(TextStyle(fontSize: titleFont)),
                   ),
-                );
-              },
-              style: kMowizFilledButtonStyle,
-              child: Text(t('continue')),
-            ),
-            const SizedBox(height: 16),
-            // Botón grande de cancelación
-            FilledButton(
-              onPressed: () {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const MowizPage()),
-                  (route) => false,
-                );
-              },
-              style: kMowizFilledButtonStyle.copyWith(
-                backgroundColor: MaterialStatePropertyAll(
-                  Theme.of(context).colorScheme.secondary,
+                  child: AutoSizeText(t('cancel'), maxLines: 1),
                 ),
-              ),
-              child: Text(t('cancel')),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

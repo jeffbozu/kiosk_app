@@ -84,17 +84,18 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Cuadro con la información resumida del ticket.
-            // Ajusta `height` o `padding` si necesitas más espacio en el futuro.
+            // Se deja crecer de forma dinámica y con scroll interno
+            // para evitar cualquier overflow si hay mucho texto.
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
               ),
               elevation: 4,
-              child: SizedBox(
-                height: 180,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: SingleChildScrollView(
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                     Text(

@@ -5,6 +5,7 @@ import 'l10n/app_localizations.dart';
 import 'mowiz_page.dart';
 import 'mowiz_success_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
+import 'styles/mowiz_buttons.dart';
 
 class MowizSummaryPage extends StatefulWidget {
   final String plate;
@@ -43,14 +44,14 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
     Widget paymentButton(String value, IconData icon, String text) {
       final selected = _method == value;
       final scheme = Theme.of(context).colorScheme;
-      return ElevatedButton.icon(
+      return FilledButton.icon(
         onPressed: () => setState(() => _method = value),
         icon: Icon(icon, size: 40),
         label: Text(text),
-        style: ElevatedButton.styleFrom(
-          minimumSize: const Size.fromHeight(80),
-          backgroundColor: selected ? scheme.primary : scheme.secondary,
-          foregroundColor: Colors.white,
+        style: kMowizFilledButtonStyle.copyWith(
+          backgroundColor: MaterialStatePropertyAll(
+            selected ? scheme.primary : scheme.secondary,
+          ),
         ),
       );
     }
@@ -77,19 +78,25 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
       title: t('summaryPay'),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
+        // ScrollView para evitar overflow en pantallas pequeñas
+        child: SingleChildScrollView(
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Cuadro con la información resumida del ticket.
+            // Ajusta `height` o `padding` si necesitas más espacio en el futuro.
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
               ),
               elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+              child: SizedBox(
+                height: 180,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                     Text(
                       t('totalTime'),
                       style: const TextStyle(
@@ -124,30 +131,39 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-            paymentButton('card', Icons.credit_card, t('card')),
+            const SizedBox(height: 32),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: paymentButton('card', Icons.credit_card, t('card')),
+            ),
             const SizedBox(height: 16),
-            paymentButton('qr', Icons.qr_code_2, t('qrPay')),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: paymentButton('qr', Icons.qr_code_2, t('qrPay')),
+            ),
             const SizedBox(height: 16),
-            paymentButton('mobile', Icons.phone_iphone, t('mobilePay')),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: paymentButton('mobile', Icons.phone_iphone, t('mobilePay')),
+            ),
             const Spacer(),
-            ElevatedButton(
+            FilledButton(
               onPressed: _method != null ? _pay : null,
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(80),
-              ),
+              style: kMowizFilledButtonStyle,
               child: Text(t('pay')),
             ),
             const SizedBox(height: 16),
-            TextButton(
+            FilledButton(
               onPressed: () {
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const MowizPage()),
                   (route) => false,
                 );
               },
-              style: TextButton.styleFrom(
-                minimumSize: const Size.fromHeight(80),
+              style: kMowizFilledButtonStyle.copyWith(
+                backgroundColor: MaterialStatePropertyAll(
+                  Theme.of(context).colorScheme.secondary,
+                ),
               ),
               child: Text(t('cancel')),
             ),

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'l10n/app_localizations.dart';
 import 'mowiz/mowiz_scaffold.dart';
 import 'styles/mowiz_buttons.dart';
@@ -67,38 +68,59 @@ class _MowizCancelPageState extends State<MowizCancelPage> {
     final t = AppLocalizations.of(context).t;
     return MowizScaffold(
       title: t('cancelDenuncia'),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextField(
-                controller: _plateCtrl,
-                decoration: InputDecoration(hintText: t('enterPlate')),
-              ),
-              const SizedBox(height: 24),
-              // Botón principal para validar la matrícula
-              FilledButton(
-                onPressed: _validate,
-                style: kMowizFilledButtonStyle,
-                child: Text(t('validate')),
-              ),
-              const SizedBox(height: 16),
-              // Botón de cancelación
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: kMowizFilledButtonStyle.copyWith(
-                  backgroundColor: const MaterialStatePropertyAll(
-                    Color(0xFFA7A7A7),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final isLargeTablet = width >= 900;
+          final isTablet = width >= 600 && width < 900;
+          final padding = EdgeInsets.all(width * 0.05);
+          final double gap = width * 0.04;
+          final double fontSize = isLargeTablet
+              ? 28
+              : isTablet
+                  ? 24
+                  : 20;
+
+          return Center(
+            child: Padding(
+              padding: padding,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    controller: _plateCtrl,
+                    decoration: InputDecoration(hintText: t('enterPlate')),
+                    style: TextStyle(fontSize: fontSize),
                   ),
-                ),
-                child: Text(t('cancel')),
+                  SizedBox(height: gap * 1.2),
+                  FilledButton(
+                    onPressed: _validate,
+                    style: kMowizFilledButtonStyle.copyWith(
+                      textStyle: MaterialStatePropertyAll(
+                        TextStyle(fontSize: fontSize),
+                      ),
+                    ),
+                    child: AutoSizeText(t('validate'), maxLines: 1),
+                  ),
+                  SizedBox(height: gap),
+                  FilledButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: kMowizFilledButtonStyle.copyWith(
+                      backgroundColor: const MaterialStatePropertyAll(
+                        Color(0xFFA7A7A7),
+                      ),
+                      textStyle: MaterialStatePropertyAll(
+                        TextStyle(fontSize: fontSize),
+                      ),
+                    ),
+                    child: AutoSizeText(t('cancel'), maxLines: 1),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -137,27 +159,39 @@ class _SuccessDialogState extends State<_SuccessDialog> {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context).t;
-    return AlertDialog(
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            t('cancellationSuccess'),
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final double fontSize = width > 300 ? 20 : 16;
+        return AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AutoSizeText(
+                t('cancellationSuccess'),
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                style:
+                    TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              AutoSizeText(
+                t('autoCloseIn', params: {'seconds': '$_seconds'}),
+                maxLines: 1,
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(t('autoCloseIn', params: {'seconds': '$_seconds'})),
-        ],
-      ),
-      // Diálogo de éxito tras la anulación
-      actions: [
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(),
-          style: kMowizFilledButtonStyle,
-          child: Text(t('close')),
-        ),
-      ],
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: kMowizFilledButtonStyle.copyWith(
+                textStyle: MaterialStatePropertyAll(TextStyle(fontSize: fontSize)),
+              ),
+              child: AutoSizeText(t('close'), maxLines: 1),
+            ),
+          ],
+        );
+      },
     );
   }
 }

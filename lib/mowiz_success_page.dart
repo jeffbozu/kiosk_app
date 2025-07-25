@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -133,48 +134,62 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return MowizScaffold(
-      body: Stack(
-        children: [
-          Align(
-            alignment: Alignment.topCenter,
-            child: ConfettiWidget(
-              confettiController: _confettiController,
-              blastDirectionality: BlastDirectionality.explosive,
-              shouldLoop: false,
-            ),
-          ),
-          // Envolver todo en SingleChildScrollView para evitar overflow
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Lottie.asset(
-                    'assets/success.json',
-                    height: 120,
-                    repeat: false,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    t('paymentSuccess'),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final isLargeTablet = width >= 900;
+          final isTablet = width >= 600 && width < 900;
+          final padding = EdgeInsets.all(width * 0.05);
+          final double gap = width * 0.04;
+          final double titleFont = isLargeTablet
+              ? 32
+              : isTablet
+                  ? 28
+                  : 24;
+          final double qrSize = width * 0.4;
+
+          return Stack(
+            children: [
+              Align(
+                alignment: Alignment.topCenter,
+                child: ConfettiWidget(
+                  confettiController: _confettiController,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  shouldLoop: false,
+                ),
+              ),
+              SingleChildScrollView(
+                padding: padding,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Lottie.asset(
+                      'assets/success.json',
+                      height: qrSize * 0.6,
+                      repeat: false,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 200,
-                    child: Center(
-                      child: QrImageView(
-                        data: ticketJson,
-                        size: 220,
-                        foregroundColor: isDark ? Colors.white : Colors.black,
+                    SizedBox(height: gap / 2),
+                    AutoSizeText(
+                      t('paymentSuccess'),
+                      maxLines: 1,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: titleFont,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
+                    SizedBox(height: gap / 2),
+                    SizedBox(
+                      height: qrSize,
+                      child: Center(
+                        child: QrImageView(
+                          data: ticketJson,
+                          size: qrSize,
+                          foregroundColor: isDark ? Colors.white : Colors.black,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: gap / 2),
             // Recuadro de resumen sin altura fija para evitar overflow
             Card(
                 shape: RoundedRectangleBorder(
@@ -187,42 +202,49 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      Text(
+                      AutoSizeText(
                         t('ticketSummary'),
-                        style: const TextStyle(
-                          fontSize: 16,
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontSize: titleFont - 6,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Text(
+                      AutoSizeText(
                         '${t('plate')}: ${widget.plate}',
-                        style: const TextStyle(fontSize: 16),
+                        maxLines: 1,
+                        style: TextStyle(fontSize: titleFont - 8),
                       ),
-                      Text(
+                      AutoSizeText(
                         '${t('zone')}: ${widget.zone}',
-                        style: const TextStyle(fontSize: 16),
+                        maxLines: 1,
+                        style: TextStyle(fontSize: titleFont - 8),
                       ),
-                      Text(
+                      AutoSizeText(
                         '${t('startTime')}: ${timeFormat.format(widget.start)}',
-                        style: const TextStyle(fontSize: 16),
+                        maxLines: 1,
+                        style: TextStyle(fontSize: titleFont - 8),
                       ),
-                      Text(
+                      AutoSizeText(
                         '${t('endTime')}: ${timeFormat.format(finish)}',
-                        style: const TextStyle(fontSize: 16),
+                        maxLines: 1,
+                        style: TextStyle(fontSize: titleFont - 8),
                       ),
-                      Text(
+                      AutoSizeText(
                         '${t('totalPrice')}: ${widget.price.toStringAsFixed(2)} €',
-                        style: const TextStyle(fontSize: 16),
+                        maxLines: 1,
+                        style: TextStyle(fontSize: titleFont - 8),
                       ),
-                      Text(
+                      AutoSizeText(
                         '${t('paymentMethod')}: ${widget.method}',
-                        style: const TextStyle(fontSize: 16),
+                        maxLines: 1,
+                        style: TextStyle(fontSize: titleFont - 8),
                       ),
                     ],
                   ),
                 ),
               ),
-            const SizedBox(height: 32), // Separación mayor entre resumen y botones
+            SizedBox(height: gap * 2),
             // Acciones distribuidas en dos filas de dos botones
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -234,8 +256,12 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                           padding: const EdgeInsets.only(right: 8),
                           child: FilledButton(
                             onPressed: () {},
-                            style: kMowizFilledButtonStyle,
-                            child: Text(t('printTicket')),
+                            style: kMowizFilledButtonStyle.copyWith(
+                              textStyle: MaterialStatePropertyAll(
+                                TextStyle(fontSize: titleFont - 6),
+                              ),
+                            ),
+                            child: AutoSizeText(t('printTicket'), maxLines: 1),
                           ),
                         ),
                       ),
@@ -244,14 +270,18 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                           padding: const EdgeInsets.only(left: 8),
                           child: FilledButton(
                             onPressed: _showSmsDialog,
-                            style: kMowizFilledButtonStyle,
-                            child: Text(t('sendBySms')),
+                            style: kMowizFilledButtonStyle.copyWith(
+                              textStyle: MaterialStatePropertyAll(
+                                TextStyle(fontSize: titleFont - 6),
+                              ),
+                            ),
+                            child: AutoSizeText(t('sendBySms'), maxLines: 1),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                    SizedBox(height: gap),
                   Row(
                     children: [
                       Expanded(
@@ -259,8 +289,12 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                           padding: const EdgeInsets.only(right: 8),
                           child: FilledButton(
                             onPressed: _showEmailDialog,
-                            style: kMowizFilledButtonStyle,
-                            child: Text(t('sendByEmail')),
+                            style: kMowizFilledButtonStyle.copyWith(
+                              textStyle: MaterialStatePropertyAll(
+                                TextStyle(fontSize: titleFont - 6),
+                              ),
+                            ),
+                            child: AutoSizeText(t('sendByEmail'), maxLines: 1),
                           ),
                         ),
                       ),
@@ -269,8 +303,12 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                           padding: const EdgeInsets.only(left: 8),
                           child: FilledButton(
                             onPressed: _goHome,
-                            style: kMowizFilledButtonStyle,
-                            child: Text(t('goHome')),
+                            style: kMowizFilledButtonStyle.copyWith(
+                              textStyle: MaterialStatePropertyAll(
+                                TextStyle(fontSize: titleFont - 6),
+                              ),
+                            ),
+                            child: AutoSizeText(t('goHome'), maxLines: 1),
                           ),
                         ),
                       ),
@@ -278,10 +316,12 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                   ),
               ],
             ),
-            const SizedBox(height: 24),
-            Text(
+            SizedBox(height: gap * 1.5),
+            AutoSizeText(
               t('returningIn', params: {'seconds': '$_seconds'}),
+              maxLines: 1,
               textAlign: TextAlign.center,
+              style: TextStyle(fontSize: titleFont - 6),
             ),
           ],
         ),

@@ -143,7 +143,8 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
               shouldLoop: false,
             ),
           ),
-          Padding(
+          // Envolver todo en SingleChildScrollView para evitar overflow
+          SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -171,10 +172,8 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
               ),
             ),
             const SizedBox(height: 8),
-            // Altura reducida para dejar espacio a los botones inferiores
-            SizedBox(
-              height: 170,
-              child: Card(
+            // Recuadro de resumen sin altura fija para evitar overflow
+            Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                 ),
@@ -221,13 +220,11 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32), // Separación mayor entre resumen y botones
             // Acciones distribuidas en dos filas de dos botones
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
                   Row(
                     children: [
                       Expanded(
@@ -277,9 +274,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                       ),
                     ],
                   ),
-                  ],
-                ),
-              ),
+              ],
             ),
             const SizedBox(height: 24),
             Text(

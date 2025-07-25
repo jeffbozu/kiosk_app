@@ -211,32 +211,32 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                         ),
                       ),
                       AutoSizeText(
-                        '${t('plate')}: ${widget.plate}',
+                        "${t('plate')}: ${widget.plate}",
                         maxLines: 1,
                         style: TextStyle(fontSize: titleFont - 8),
                       ),
                       AutoSizeText(
-                        '${t('zone')}: ${widget.zone}',
+                        "${t('zone')}: ${widget.zone}",
                         maxLines: 1,
                         style: TextStyle(fontSize: titleFont - 8),
                       ),
                       AutoSizeText(
-                        '${t('startTime')}: ${timeFormat.format(widget.start)}',
+                        "${t('startTime')}: ${timeFormat.format(widget.start)}",
                         maxLines: 1,
                         style: TextStyle(fontSize: titleFont - 8),
                       ),
                       AutoSizeText(
-                        '${t('endTime')}: ${timeFormat.format(finish)}',
+                        "${t('endTime')}: ${timeFormat.format(finish)}",
                         maxLines: 1,
                         style: TextStyle(fontSize: titleFont - 8),
                       ),
                       AutoSizeText(
-                        '${t('totalPrice')}: ${widget.price.toStringAsFixed(2)} €',
+                        "${t('totalPrice')}: ${widget.price.toStringAsFixed(2)} €",
                         maxLines: 1,
                         style: TextStyle(fontSize: titleFont - 8),
                       ),
                       AutoSizeText(
-                        '${t('paymentMethod')}: ${widget.method}',
+                        "${t('paymentMethod')}: ${widget.method}",
                         maxLines: 1,
                         style: TextStyle(fontSize: titleFont - 8),
                       ),
@@ -325,9 +325,10 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
             ),
           ],
         ),
-      );
-    },
-  ),
+      ],
+    );
+  },
+),
     );
   }
 }

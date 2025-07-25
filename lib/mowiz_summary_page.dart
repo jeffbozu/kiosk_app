@@ -131,6 +131,7 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
                 ),
               ),
             ),
+            ),
             const SizedBox(height: 32),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),

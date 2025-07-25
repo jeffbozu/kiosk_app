@@ -9,6 +9,8 @@ import 'package:confetti/confetti.dart';
 import 'l10n/app_localizations.dart';
 import 'mowiz_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
+// Estilo de botones grandes reutilizable para toda la app
+import 'styles/mowiz_buttons.dart';
 
 class MowizSuccessPage extends StatefulWidget {
   final String plate;
@@ -33,8 +35,6 @@ class MowizSuccessPage extends StatefulWidget {
 }
 
 class _MowizSuccessPageState extends State<MowizSuccessPage> {
-  static const double _buttonHeight = 44;
-  static const TextStyle _buttonTextStyle = TextStyle(fontSize: 16);
   int _seconds = 30;
   Timer? _timer;
   late final ConfettiController _confettiController;
@@ -171,7 +171,9 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
               ),
             ),
             const SizedBox(height: 8),
-            Expanded(
+            // Altura reducida para dejar espacio a los botones inferiores
+            SizedBox(
+              height: 170,
               child: Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
@@ -220,55 +222,32 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
               ),
             ),
             const SizedBox(height: 16),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            // Botones grandes apilados verticalmente
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: Column(
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: Size.fromHeight(_buttonHeight),
-                          textStyle: _buttonTextStyle,
-                        ),
-                        child: Text(t('printTicket')),
-                      ),
-                      const SizedBox(height: 8),
-                      ElevatedButton(
-                        onPressed: _showEmailDialog,
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: Size.fromHeight(_buttonHeight),
-                          textStyle: _buttonTextStyle,
-                        ),
-                        child: Text(t('sendByEmail')),
-                      ),
-                    ],
-                  ),
+                FilledButton(
+                  onPressed: () {},
+                  style: kMowizFilledButtonStyle,
+                  child: Text(t('printTicket')),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    children: [
-                      ElevatedButton(
-                        onPressed: _showSmsDialog,
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: Size.fromHeight(_buttonHeight),
-                          textStyle: _buttonTextStyle,
-                        ),
-                        child: Text(t('sendBySms')),
-                      ),
-                      const SizedBox(height: 8),
-                      ElevatedButton(
-                        onPressed: _goHome,
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: Size.fromHeight(_buttonHeight),
-                          textStyle: _buttonTextStyle,
-                        ),
-                        child: Text(t('goHome')),
-                      ),
-                    ],
-                  ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: _showSmsDialog,
+                  style: kMowizFilledButtonStyle,
+                  child: Text(t('sendBySms')),
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: _showEmailDialog,
+                  style: kMowizFilledButtonStyle,
+                  child: Text(t('sendByEmail')),
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: _goHome,
+                  style: kMowizFilledButtonStyle,
+                  child: Text(t('goHome')),
                 ),
               ],
             ),

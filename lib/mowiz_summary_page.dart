@@ -170,6 +170,7 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
             ),
           ],
         ),
+        ),
       ),
     );
   }

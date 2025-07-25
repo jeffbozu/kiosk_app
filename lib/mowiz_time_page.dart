@@ -5,6 +5,7 @@ import 'l10n/app_localizations.dart';
 import 'mowiz_page.dart';
 import 'mowiz_summary_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
+import 'styles/mowiz_buttons.dart';
 
 class MowizTimePage extends StatefulWidget {
   final String zone;
@@ -155,7 +156,8 @@ class _MowizTimePageState extends State<MowizTimePage> {
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const Spacer(),
-            ElevatedButton(
+            // Botón grande para continuar con el pago
+            FilledButton(
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -169,16 +171,23 @@ class _MowizTimePageState extends State<MowizTimePage> {
                   ),
                 );
               },
+              style: kMowizFilledButtonStyle,
               child: Text(t('continue')),
             ),
             const SizedBox(height: 16),
-            TextButton(
+            // Botón grande de cancelación
+            FilledButton(
               onPressed: () {
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const MowizPage()),
                   (route) => false,
                 );
               },
+              style: kMowizFilledButtonStyle.copyWith(
+                backgroundColor: MaterialStatePropertyAll(
+                  Theme.of(context).colorScheme.secondary,
+                ),
+              ),
               child: Text(t('cancel')),
             ),
           ],

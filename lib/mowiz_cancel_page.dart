@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'l10n/app_localizations.dart';
 import 'mowiz/mowiz_scaffold.dart';
+import 'styles/mowiz_buttons.dart';
 
 class MowizCancelPage extends StatefulWidget {
   const MowizCancelPage({super.key});
@@ -33,12 +34,20 @@ class _MowizCancelPageState extends State<MowizCancelPage> {
       builder: (ctx) => AlertDialog(
         content: Text(t('confirmCancellation')),
         actions: [
-          TextButton(
+          // Botón "No" del diálogo de confirmación
+          FilledButton(
             onPressed: () => Navigator.pop(ctx, false),
+            style: kMowizFilledButtonStyle.copyWith(
+              backgroundColor: MaterialStatePropertyAll(
+                Theme.of(ctx).colorScheme.secondary,
+              ),
+            ),
             child: Text(t('no')),
           ),
-          ElevatedButton(
+          // Botón "Sí" del diálogo de confirmación
+          FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
+            style: kMowizFilledButtonStyle,
             child: Text(t('yes')),
           ),
         ],
@@ -70,17 +79,21 @@ class _MowizCancelPageState extends State<MowizCancelPage> {
                 decoration: InputDecoration(hintText: t('enterPlate')),
               ),
               const SizedBox(height: 24),
-              ElevatedButton(
+              // Botón principal para validar la matrícula
+              FilledButton(
                 onPressed: _validate,
-                style:
-                    ElevatedButton.styleFrom(padding: const EdgeInsets.all(24)),
+                style: kMowizFilledButtonStyle,
                 child: Text(t('validate')),
               ),
               const SizedBox(height: 16),
-              TextButton(
+              // Botón de cancelación
+              FilledButton(
                 onPressed: () => Navigator.of(context).pop(),
-                style:
-                    TextButton.styleFrom(padding: const EdgeInsets.all(24)),
+                style: kMowizFilledButtonStyle.copyWith(
+                  backgroundColor: const MaterialStatePropertyAll(
+                    Color(0xFFA7A7A7),
+                  ),
+                ),
                 child: Text(t('cancel')),
               ),
             ],
@@ -137,9 +150,11 @@ class _SuccessDialogState extends State<_SuccessDialog> {
           Text(t('autoCloseIn', params: {'seconds': '$_seconds'})),
         ],
       ),
+      // Diálogo de éxito tras la anulación
       actions: [
-        ElevatedButton(
+        FilledButton(
           onPressed: () => Navigator.of(context).pop(),
+          style: kMowizFilledButtonStyle,
           child: Text(t('close')),
         ),
       ],

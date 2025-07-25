@@ -45,34 +45,32 @@ class _MowizPayPageState extends State<MowizPayPage> {
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton(
+                  child: FilledButton(
                     onPressed: () => setState(() => _selectedZone = 'blue'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      backgroundColor: _selectedZone == 'blue'
-                          ? colorScheme.primary
-                          : colorScheme.secondary,
+                    style: kMowizFilledButtonStyle.copyWith(
+                      backgroundColor: MaterialStatePropertyAll(
+                        // Color corporativo para la zona azul
+                        _selectedZone == 'blue'
+                            ? const Color(0xFF007CF7)
+                            : colorScheme.secondary,
+                      ),
                     ),
-                    child: Text(
-                      t('zoneBlue'),
-                      style: const TextStyle(fontSize: 24),
-                    ),
+                    child: Text(t('zoneBlue')),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: ElevatedButton(
+                  child: FilledButton(
                     onPressed: () => setState(() => _selectedZone = 'green'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      backgroundColor: _selectedZone == 'green'
-                          ? colorScheme.primary
-                          : colorScheme.secondary,
+                    style: kMowizFilledButtonStyle.copyWith(
+                      backgroundColor: MaterialStatePropertyAll(
+                        // Color corporativo para la zona verde
+                        _selectedZone == 'green'
+                            ? const Color(0xFF01AE00)
+                            : colorScheme.secondary,
+                      ),
                     ),
-                    child: Text(
-                      t('zoneGreen'),
-                      style: const TextStyle(fontSize: 24),
-                    ),
+                    child: Text(t('zoneGreen')),
                   ),
                 ),
               ],

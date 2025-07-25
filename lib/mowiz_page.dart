@@ -49,7 +49,9 @@ class MowizPage extends StatelessWidget {
                 );
               },
               // Uso de estilo común para botones grandes
-              style: kMowizFilledButtonStyle,
+              style: kMowizFilledButtonStyle.copyWith(
+                backgroundColor: const MaterialStatePropertyAll(Color(0xFFA7A7A7)),
+              ),
               child: Text(t('cancelDenuncia')),
             ),
           ],

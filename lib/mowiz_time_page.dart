@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'l10n/app_localizations.dart';
 import 'mowiz_page.dart';
 import 'mowiz_summary_page.dart';
+import 'mowiz/mowiz_scaffold.dart';
 
 class MowizTimePage extends StatefulWidget {
   final String zone;
@@ -57,8 +58,8 @@ class _MowizTimePageState extends State<MowizTimePage> {
     final durationStr = '${_minutes ~/ 60}h ${_minutes % 60}m';
     final price = 0.0; // TODO: calculate real price
 
-    return Scaffold(
-      appBar: AppBar(title: Text(t('selectDuration'))),
+    return MowizScaffold(
+      title: t('selectDuration'),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

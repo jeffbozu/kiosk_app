@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'l10n/app_localizations.dart';
+import 'mowiz/mowiz_scaffold.dart';
 
 class MowizCancelPage extends StatefulWidget {
   const MowizCancelPage({super.key});
@@ -55,8 +56,8 @@ class _MowizCancelPageState extends State<MowizCancelPage> {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context).t;
-    return Scaffold(
-      appBar: AppBar(title: Text(t('cancelDenuncia'))),
+    return MowizScaffold(
+      title: t('cancelDenuncia'),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16),

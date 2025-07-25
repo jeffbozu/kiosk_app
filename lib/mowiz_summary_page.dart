@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'l10n/app_localizations.dart';
 import 'mowiz_page.dart';
 import 'mowiz_success_page.dart';
+import 'mowiz/mowiz_scaffold.dart';
 
 class MowizSummaryPage extends StatefulWidget {
   final String plate;
@@ -72,8 +73,8 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(title: Text(t('summaryPay'))),
+    return MowizScaffold(
+      title: t('summaryPay'),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

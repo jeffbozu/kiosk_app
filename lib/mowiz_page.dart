@@ -28,18 +28,38 @@ class MowizPage extends StatelessWidget {
         // paddings y tamaños de forma proporcional.
         builder: (context, constraints) {
           final width = constraints.maxWidth;
-          // Breakpoints personalizables
-          final isLargeTablet = width >= 900;
-          final isTablet = width >= 600 && width < 900;
-          // Padding y separación basados en el ancho de pantalla
-          final padding = EdgeInsets.all(width * 0.05);
-          final double gap = width * 0.04;
+
+          // Punto de quiebre para pantallas anchas. Modifica este valor si
+          // necesitas cambiar la responsividad de la página.
+          const double breakpoint = 700;
+          final bool isWide = width >= breakpoint;
+
+          // Padding y separación basados en el ancho disponible. Utilizamos
+          // un porcentaje para que los botones ocupen entre el 80% y 95%
+          // del ancho sin pegarse a los bordes.
+          final padding = EdgeInsets.symmetric(horizontal: width * 0.05);
+          final double gap = isWide ? 32 : 24;
+
           // Tamaño de fuente adaptativo para los botones principales
-          final double fontSize = isLargeTablet
-              ? 32
-              : isTablet
-                  ? 28
-                  : 24;
+          final double fontSize = isWide ? 28 : 24;
+
+          // Estilo base para ambos botones. Se define una altura mínima de
+          // 120 px y esquinas redondeadas para que luzcan proporcionados en
+          // cualquier orientación.
+          final ButtonStyle baseStyle = kMowizFilledButtonStyle.copyWith(
+            minimumSize: const MaterialStatePropertyAll(Size.fromHeight(120)),
+            padding: const MaterialStatePropertyAll(
+              EdgeInsets.symmetric(vertical: 24),
+            ),
+            shape: const MaterialStatePropertyAll(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(30)),
+              ),
+            ),
+            textStyle: MaterialStatePropertyAll(
+              TextStyle(fontSize: fontSize),
+            ),
+          );
 
           final payBtn = Expanded(
             child: FilledButton(
@@ -51,11 +71,7 @@ class MowizPage extends StatelessWidget {
                   ),
                 );
               },
-              style: kMowizFilledButtonStyle.copyWith(
-                textStyle: MaterialStatePropertyAll(
-                  TextStyle(fontSize: fontSize),
-                ),
-              ),
+              style: baseStyle,
               child: AutoSizeText(
                 t('payTicket'),
                 maxLines: 1,
@@ -73,11 +89,12 @@ class MowizPage extends StatelessWidget {
                   ),
                 );
               },
-              style: kMowizFilledButtonStyle.copyWith(
-                backgroundColor:
-                    const MaterialStatePropertyAll(Color(0xFFA7A7A7)),
-                textStyle: MaterialStatePropertyAll(
-                  TextStyle(fontSize: fontSize),
+              style: baseStyle.copyWith(
+                backgroundColor: MaterialStatePropertyAll(
+                  Theme.of(context).colorScheme.secondary,
+                ),
+                foregroundColor: MaterialStatePropertyAll(
+                  Theme.of(context).colorScheme.onSecondary,
                 ),
               ),
               child: AutoSizeText(
@@ -91,15 +108,20 @@ class MowizPage extends StatelessWidget {
           final columnChildren =
               <Widget>[payBtn, SizedBox(height: gap), cancelBtn];
 
-          return Padding(
-            padding: padding,
-            child: isTablet || isLargeTablet
-                ? Row(children: rowChildren)
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: columnChildren,
-                  ),
+          return Center(
+            child: FractionallySizedBox(
+              widthFactor: isWide ? 1 : 0.9,
+              child: Padding(
+                padding: padding,
+                child: isWide
+                    ? Row(children: rowChildren)
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: columnChildren,
+                      ),
+              ),
+            ),
           );
         },
       ),

@@ -10,10 +10,10 @@ Antes de ejecutar la aplicación por primera vez ejecuta:
 flutter pub get
 ```
 
-Este comando descarga todos los paquetes requeridos, como `cloud_functions_web`. Si falta esta dependencia se producirá un error parecido a:
+Este comando descarga todos los paquetes requeridos, como `cloud_functions_web` o `audioplayers`. Si falta alguna dependencia se producirá un error parecido a:
 
 ```
-Error: Couldn't resolve the package 'cloud_functions_web'
+Error: Couldn't resolve the package 'audioplayers'
 ```
 
 Ejecutar `flutter pub get` soluciona el problema.

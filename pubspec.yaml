@@ -30,6 +30,7 @@ dependencies:
   lottie: ^2.7.0             # Animaciones Lottie para la página de éxito
   confetti: ^0.7.0           # Animación de confeti en pantalla de éxito
   auto_size_text: ^3.0.0     # Texto escalable automaticamente
+  audioplayers: ^6.5.0       # Reproducción de efectos de sonido
 
 dev_dependencies:
   flutter_test:
@@ -41,3 +42,4 @@ flutter:
   assets:
     - assets/logo.png
     - assets/success.json
+    - assets/sound/start.mp3

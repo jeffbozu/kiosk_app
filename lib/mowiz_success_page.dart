@@ -12,6 +12,7 @@ import 'mowiz_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
 // Estilo de botones grandes reutilizable para toda la app
 import 'styles/mowiz_buttons.dart';
+import 'sound_helper.dart';
 
 class MowizSuccessPage extends StatefulWidget {
   final String plate;
@@ -255,7 +256,9 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                         child: Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: FilledButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              SoundHelper.playTap();
+                            },
                             style: kMowizFilledButtonStyle.copyWith(
                               textStyle: MaterialStatePropertyAll(
                                 TextStyle(fontSize: titleFont - 6),
@@ -269,7 +272,10 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                         child: Padding(
                           padding: const EdgeInsets.only(left: 8),
                           child: FilledButton(
-                            onPressed: _showSmsDialog,
+                            onPressed: () {
+                              SoundHelper.playTap();
+                              _showSmsDialog();
+                            },
                             style: kMowizFilledButtonStyle.copyWith(
                               textStyle: MaterialStatePropertyAll(
                                 TextStyle(fontSize: titleFont - 6),
@@ -288,7 +294,10 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                         child: Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: FilledButton(
-                            onPressed: _showEmailDialog,
+                            onPressed: () {
+                              SoundHelper.playTap();
+                              _showEmailDialog();
+                            },
                             style: kMowizFilledButtonStyle.copyWith(
                               textStyle: MaterialStatePropertyAll(
                                 TextStyle(fontSize: titleFont - 6),
@@ -302,7 +311,10 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                         child: Padding(
                           padding: const EdgeInsets.only(left: 8),
                           child: FilledButton(
-                            onPressed: _goHome,
+                            onPressed: () {
+                              SoundHelper.playTap();
+                              _goHome();
+                            },
                             style: kMowizFilledButtonStyle.copyWith(
                               textStyle: MaterialStatePropertyAll(
                                 TextStyle(fontSize: titleFont - 6),
@@ -357,11 +369,17 @@ class _EmailDialogState extends State<_EmailDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            SoundHelper.playTap();
+            Navigator.pop(context);
+          },
           child: Text(l.t('close')),
         ),
         ElevatedButton(
-          onPressed: () => Navigator.pop(context, _email.trim()),
+          onPressed: () {
+            SoundHelper.playTap();
+            Navigator.pop(context, _email.trim());
+          },
           child: Text(l.t('send')),
         ),
       ],
@@ -392,11 +410,17 @@ class _SmsDialogState extends State<_SmsDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            SoundHelper.playTap();
+            Navigator.pop(context);
+          },
           child: Text(l.t('close')),
         ),
         ElevatedButton(
-          onPressed: () => Navigator.pop(context, _phone.trim()),
+          onPressed: () {
+            SoundHelper.playTap();
+            Navigator.pop(context, _phone.trim());
+          },
           child: Text(l.t('send')),
         ),
       ],
@@ -454,6 +478,7 @@ class _EmailSentDialogState extends State<_EmailSentDialog> {
       actions: [
         ElevatedButton(
           onPressed: () {
+            SoundHelper.playTap();
             Navigator.of(context).pop();
             widget.onClose();
           },
@@ -514,6 +539,7 @@ class _SmsSentDialogState extends State<_SmsSentDialog> {
       actions: [
         ElevatedButton(
           onPressed: () {
+            SoundHelper.playTap();
             Navigator.of(context).pop();
             widget.onClose();
           },

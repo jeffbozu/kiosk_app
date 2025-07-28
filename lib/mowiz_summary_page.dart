@@ -7,6 +7,7 @@ import 'mowiz_page.dart';
 import 'mowiz_success_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
 import 'styles/mowiz_buttons.dart';
+import 'sound_helper.dart';
 
 class MowizSummaryPage extends StatefulWidget {
   final String plate;
@@ -46,7 +47,10 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
       final selected = _method == value;
       final scheme = Theme.of(context).colorScheme;
       return FilledButton.icon(
-        onPressed: () => setState(() => _method = value),
+        onPressed: () {
+          SoundHelper.playTap();
+          setState(() => _method = value);
+        },
         icon: Icon(icon, size: fSize + 12),
         label: AutoSizeText(text, maxLines: 1),
         style: kMowizFilledButtonStyle.copyWith(
@@ -58,10 +62,10 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
       );
     }
 
-    Future<void> _pay() async {
-      if (_method == null) return;
-      // TODO: integrate real payment logic and backend communication
-      if (!mounted) return;
+  Future<void> _pay() async {
+    if (_method == null) return;
+    // TODO: integrate real payment logic and backend communication
+    if (!mounted) return;
       await Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => MowizSuccessPage(
@@ -170,7 +174,12 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
             ),
             SizedBox(height: gap * 2),
             FilledButton(
-              onPressed: _method != null ? _pay : null,
+              onPressed: _method != null
+                  ? () {
+                      SoundHelper.playTap();
+                      _pay();
+                    }
+                  : null,
               style: kMowizFilledButtonStyle.copyWith(
                 textStyle: MaterialStatePropertyAll(
                   TextStyle(fontSize: titleFont),
@@ -181,6 +190,7 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
             SizedBox(height: gap),
             FilledButton(
               onPressed: () {
+                SoundHelper.playTap();
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const MowizPage()),
                   (route) => false,

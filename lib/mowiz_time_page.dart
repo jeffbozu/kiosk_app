@@ -7,6 +7,7 @@ import 'mowiz_page.dart';
 import 'mowiz_summary_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
 import 'styles/mowiz_buttons.dart';
+import 'sound_helper.dart';
 
 class MowizTimePage extends StatefulWidget {
   final String zone;
@@ -98,7 +99,10 @@ class _MowizTimePageState extends State<MowizTimePage> {
           Widget timeBtn(String text, int delta) => Expanded(
                 child: ElevatedButton(
                   style: timeButtonStyle,
-                  onPressed: () => _modifyMinutes(delta),
+                  onPressed: () {
+                    SoundHelper.playTap();
+                    _modifyMinutes(delta);
+                  },
                   child: AutoSizeText(text, maxLines: 1),
                 ),
               );
@@ -162,6 +166,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                 const Spacer(),
                 FilledButton(
                   onPressed: () {
+                    SoundHelper.playTap();
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => MowizSummaryPage(
@@ -183,6 +188,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                 SizedBox(height: gap),
                 FilledButton(
                   onPressed: () {
+                    SoundHelper.playTap();
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(builder: (_) => const MowizPage()),
                       (route) => false,

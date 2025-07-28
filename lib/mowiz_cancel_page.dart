@@ -4,6 +4,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'l10n/app_localizations.dart';
 import 'mowiz/mowiz_scaffold.dart';
 import 'styles/mowiz_buttons.dart';
+import 'sound_helper.dart';
 
 class MowizCancelPage extends StatefulWidget {
   const MowizCancelPage({super.key});
@@ -37,7 +38,10 @@ class _MowizCancelPageState extends State<MowizCancelPage> {
         actions: [
           // Botón "No" del diálogo de confirmación
           FilledButton(
-            onPressed: () => Navigator.pop(ctx, false),
+            onPressed: () {
+              SoundHelper.playTap();
+              Navigator.pop(ctx, false);
+            },
             style: kMowizFilledButtonStyle.copyWith(
               backgroundColor: MaterialStatePropertyAll(
                 Theme.of(ctx).colorScheme.secondary,
@@ -47,7 +51,10 @@ class _MowizCancelPageState extends State<MowizCancelPage> {
           ),
           // Botón "Sí" del diálogo de confirmación
           FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
+            onPressed: () {
+              SoundHelper.playTap();
+              Navigator.pop(ctx, true);
+            },
             style: kMowizFilledButtonStyle,
             child: Text(t('yes')),
           ),
@@ -95,7 +102,10 @@ class _MowizCancelPageState extends State<MowizCancelPage> {
                   ),
                   SizedBox(height: gap * 1.2),
                   FilledButton(
-                    onPressed: _validate,
+                    onPressed: () {
+                      SoundHelper.playTap();
+                      _validate();
+                    },
                     style: kMowizFilledButtonStyle.copyWith(
                       textStyle: MaterialStatePropertyAll(
                         TextStyle(fontSize: fontSize),
@@ -105,7 +115,10 @@ class _MowizCancelPageState extends State<MowizCancelPage> {
                   ),
                   SizedBox(height: gap),
                   FilledButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () {
+                      SoundHelper.playTap();
+                      Navigator.of(context).pop();
+                    },
                     style: kMowizFilledButtonStyle.copyWith(
                       backgroundColor: const MaterialStatePropertyAll(
                         Color(0xFFA7A7A7),
@@ -183,7 +196,10 @@ class _SuccessDialogState extends State<_SuccessDialog> {
           ),
           actions: [
             FilledButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                SoundHelper.playTap();
+                Navigator.of(context).pop();
+              },
               style: kMowizFilledButtonStyle.copyWith(
                 textStyle: MaterialStatePropertyAll(TextStyle(fontSize: fontSize)),
               ),

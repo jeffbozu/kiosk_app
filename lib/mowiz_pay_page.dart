@@ -5,6 +5,7 @@ import 'mowiz_time_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
 // Estilo común para botones grandes
 import 'styles/mowiz_buttons.dart';
+import 'sound_helper.dart';
 
 class MowizPayPage extends StatefulWidget {
   const MowizPayPage({super.key});
@@ -53,7 +54,10 @@ class _MowizPayPageState extends State<MowizPayPage> {
           final zoneButton = (String value, String text, Color color) =>
               Expanded(
                 child: FilledButton(
-                  onPressed: () => setState(() => _selectedZone = value),
+                  onPressed: () {
+                    SoundHelper.playTap();
+                    setState(() => _selectedZone = value);
+                  },
                   style: kMowizFilledButtonStyle.copyWith(
                     backgroundColor: MaterialStatePropertyAll(
                       _selectedZone == value ? color : colorScheme.secondary,
@@ -115,6 +119,7 @@ class _MowizPayPageState extends State<MowizPayPage> {
                   FilledButton(
                     onPressed: _confirmEnabled
                         ? () {
+                            SoundHelper.playTap();
                             Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (_) => MowizTimePage(
@@ -136,7 +141,10 @@ class _MowizPayPageState extends State<MowizPayPage> {
                   ),
                   SizedBox(height: gap),
                   FilledButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () {
+                      SoundHelper.playTap();
+                      Navigator.of(context).pop();
+                    },
                     style: kMowizFilledButtonStyle.copyWith(
                       textStyle:
                           MaterialStatePropertyAll(TextStyle(fontSize: titleFont)),

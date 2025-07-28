@@ -8,6 +8,7 @@ import 'mowiz/mowiz_scaffold.dart';
 // Estilo de botones grandes reutilizable
 import 'styles/mowiz_buttons.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'sound_helper.dart';
 
 class MowizPage extends StatelessWidget {
   const MowizPage({super.key});
@@ -43,6 +44,7 @@ class MowizPage extends StatelessWidget {
           final payBtn = Expanded(
             child: FilledButton(
               onPressed: () {
+                SoundHelper.playTap();
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const MowizPayPage(),
@@ -64,6 +66,7 @@ class MowizPage extends StatelessWidget {
           final cancelBtn = Expanded(
             child: FilledButton(
               onPressed: () {
+                SoundHelper.playTap();
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const MowizCancelPage(),

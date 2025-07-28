@@ -43,13 +43,19 @@ class MowizPage extends StatelessWidget {
           // Tamaño de fuente adaptativo para los botones principales
           final double fontSize = isWide ? 28 : 24;
 
-          // Estilo base para ambos botones. Se define una altura mínima de
-          // 120 px y esquinas redondeadas para que luzcan proporcionados en
-          // cualquier orientación.
+          // Alto deseado para los botones. En orientación vertical se reduce
+          // para evitar que ocupen toda la pantalla.
+          final double buttonHeight = isWide ? 120 : 68;
+          final double buttonPadding = isWide ? 24 : 16;
+
+          // Estilo base para ambos botones. Las esquinas redondeadas y el
+          // padding se mantienen, pero la altura mínima se ajusta según la
+          // orientación para que en vertical se vean proporcionados.
           final ButtonStyle baseStyle = kMowizFilledButtonStyle.copyWith(
-            minimumSize: const MaterialStatePropertyAll(Size.fromHeight(120)),
-            padding: const MaterialStatePropertyAll(
-              EdgeInsets.symmetric(vertical: 24),
+            minimumSize:
+                MaterialStatePropertyAll(Size.fromHeight(buttonHeight)),
+            padding: MaterialStatePropertyAll(
+              EdgeInsets.symmetric(vertical: buttonPadding),
             ),
             shape: const MaterialStatePropertyAll(
               RoundedRectangleBorder(
@@ -61,52 +67,53 @@ class MowizPage extends StatelessWidget {
             ),
           );
 
-          final payBtn = Expanded(
-            child: FilledButton(
-              onPressed: () {
-                SoundHelper.playTap();
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const MowizPayPage(),
-                  ),
-                );
-              },
-              style: baseStyle,
-              child: AutoSizeText(
-                t('payTicket'),
-                maxLines: 1,
-              ),
+          final payBtn = FilledButton(
+            onPressed: () {
+              SoundHelper.playTap();
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const MowizPayPage(),
+                ),
+              );
+            },
+            style: baseStyle,
+            child: AutoSizeText(
+              t('payTicket'),
+              maxLines: 1,
             ),
           );
 
-          final cancelBtn = Expanded(
-            child: FilledButton(
-              onPressed: () {
-                SoundHelper.playTap();
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const MowizCancelPage(),
-                  ),
-                );
-              },
-              style: baseStyle.copyWith(
-                backgroundColor: MaterialStatePropertyAll(
-                  Theme.of(context).colorScheme.secondary,
+          final cancelBtn = FilledButton(
+            onPressed: () {
+              SoundHelper.playTap();
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const MowizCancelPage(),
                 ),
-                foregroundColor: MaterialStatePropertyAll(
-                  Theme.of(context).colorScheme.onSecondary,
-                ),
+              );
+            },
+            style: baseStyle.copyWith(
+              backgroundColor: MaterialStatePropertyAll(
+                Theme.of(context).colorScheme.secondary,
               ),
-              child: AutoSizeText(
-                t('cancelDenuncia'),
-                maxLines: 1,
+              foregroundColor: MaterialStatePropertyAll(
+                Theme.of(context).colorScheme.onSecondary,
               ),
+            ),
+            child: AutoSizeText(
+              t('cancelDenuncia'),
+              maxLines: 1,
             ),
           );
 
-          final rowChildren = <Widget>[payBtn, SizedBox(width: gap), cancelBtn];
-          final columnChildren =
-              <Widget>[payBtn, SizedBox(height: gap), cancelBtn];
+          // En horizontal los botones se expanden para ocupar el ancho
+          // disponible. En vertical se muestran con su tamaño natural.
+          final rowChildren = <Widget>[
+            Expanded(child: payBtn),
+            SizedBox(width: gap),
+            Expanded(child: cancelBtn),
+          ];
+          final columnChildren = <Widget>[payBtn, SizedBox(height: gap), cancelBtn];
 
           return Center(
             child: FractionallySizedBox(

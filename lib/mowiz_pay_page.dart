@@ -66,10 +66,7 @@ class _MowizPayPageState extends State<MowizPayPage> {
                       TextStyle(fontSize: inputFont),
                     ),
                   ),
-                  child: AutoSizeText(
-                    text,
-                    maxLines: 1,
-                  ),
+                  child: Text(text, maxLines: 1),
                 ),
               );
 
@@ -79,7 +76,7 @@ class _MowizPayPageState extends State<MowizPayPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  AutoSizeText(
+                  Text(
                     t('selectZone'),
                     maxLines: 1,
                     textAlign: TextAlign.center,
@@ -134,10 +131,7 @@ class _MowizPayPageState extends State<MowizPayPage> {
                       textStyle:
                           MaterialStatePropertyAll(TextStyle(fontSize: titleFont)),
                     ),
-                    child: AutoSizeText(
-                      t('confirm'),
-                      maxLines: 1,
-                    ),
+                    child: Text(t('confirm'), maxLines: 1),
                   ),
                   SizedBox(height: gap),
                   FilledButton(
@@ -149,10 +143,7 @@ class _MowizPayPageState extends State<MowizPayPage> {
                       textStyle:
                           MaterialStatePropertyAll(TextStyle(fontSize: titleFont)),
                     ),
-                    child: AutoSizeText(
-                      t('cancel'),
-                      maxLines: 1,
-                    ),
+                    child: Text(t('cancel'), maxLines: 1),
                   ),
                 ],
               ),

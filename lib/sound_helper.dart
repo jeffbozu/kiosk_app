@@ -14,6 +14,16 @@ class SoundHelper {
   /// Ruta del sonido de tap dentro de assets.
   static const String _tapAsset = 'sound/start.mp3';
 
+  // Utilizamos el mismo sonido para éxito y error por ahora, pero se pueden
+  // cambiar estas rutas en el futuro.
+  static const String _successAsset = 'sound/start.mp3';
+  static const String _errorAsset = 'sound/start.mp3';
+
+  static final AudioPlayer _successPlayer =
+      AudioPlayer()..setReleaseMode(ReleaseMode.stop);
+  static final AudioPlayer _errorPlayer =
+      AudioPlayer()..setReleaseMode(ReleaseMode.stop);
+
   /// Reproduce el sonido de tap. Se llama al pulsar cualquier botón.
   static Future<void> playTap() async {
     try {
@@ -25,6 +35,25 @@ class SoundHelper {
     await _tapPlayer.play(AssetSource(_tapAsset));
   }
 
-  // Aquí podrían añadirse métodos como `playSuccess()` o `playError()` usando
-  // otros AudioPlayer si fuese necesario en el futuro.
+  /// Reproduce el sonido de éxito al validar o guardar un ticket.
+  static Future<void> playSuccess() async {
+    try {
+      await _successPlayer.stop();
+    } catch (_) {
+      // Ignoramos errores al detener
+    }
+    await _successPlayer.play(AssetSource(_successAsset));
+  }
+
+  /// Reproduce el sonido de error para notificar fallos.
+  static Future<void> playError() async {
+    try {
+      await _errorPlayer.stop();
+    } catch (_) {
+      // Ignoramos errores al detener
+    }
+    await _errorPlayer.play(AssetSource(_errorAsset));
+  }
+
+  // Se pueden añadir más métodos y reproducir diferentes sonidos en el futuro.
 }

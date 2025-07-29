@@ -31,6 +31,7 @@ dependencies:
   confetti: ^0.7.0           # Animación de confeti en pantalla de éxito
   auto_size_text: ^3.0.0     # Texto escalable automaticamente
   audioplayers: ^6.5.0       # Reproducción de efectos de sonido
+  http: ^1.1.0               # Peticiones HTTP
 
 dev_dependencies:
   flutter_test:

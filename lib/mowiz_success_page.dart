@@ -124,12 +124,28 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
     final l = AppLocalizations.of(context);
     final t = l.t;
     final finish = widget.start.add(Duration(minutes: widget.minutes));
+    // i18n determine locale specific formats
     final localeCode = l.locale.languageCode == 'es'
         ? 'es_ES'
         : l.locale.languageCode == 'ca'
             ? 'ca_ES'
-            : 'en_GB';
-    final timeFormat = DateFormat('EEE, d MMM yyyy - HH:mm', localeCode);
+            : 'en_US';
+    final timeFormat = l.locale.languageCode == 'en'
+        ? DateFormat('MMM d, yyyy – HH:mm', localeCode)
+        : DateFormat('d MMM yyyy – HH:mm', localeCode);
+    final currencyFormat = NumberFormat.currency(locale: localeCode, symbol: '€');
+    // i18n payment method translation
+    final methodMap = {
+      'card': t('card'),
+      'qr': t('qrPay'),
+      'mobile': t('mobilePay'),
+      'cash': l.locale.languageCode == 'es'
+          ? 'Efectivo'
+          : l.locale.languageCode == 'ca'
+              ? 'Efectiu'
+              : 'Cash',
+      'bizum': 'Bizum',
+    };
     final ticketJson =
         'ticket|plate:${widget.plate}|zone:${widget.zone}|start:${widget.start.toIso8601String()}|end:${finish.toIso8601String()}|price:${widget.price}'; // TODO lógica real
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -217,7 +233,8 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                         style: TextStyle(fontSize: titleFont - 8),
                       ),
                       AutoSizeText(
-                        "${t('zone')}: ${widget.zone}",
+                        // i18n zone name
+                        "${t('zone')}: ${widget.zone == 'green' ? t('zoneGreen') : t('zoneBlue')}",
                         maxLines: 1,
                         style: TextStyle(fontSize: titleFont - 8),
                       ),
@@ -232,12 +249,14 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                         style: TextStyle(fontSize: titleFont - 8),
                       ),
                       AutoSizeText(
-                        "${t('totalPrice')}: ${widget.price.toStringAsFixed(2)} €",
+                        // i18n price format
+                        "${t('totalPrice')}: ${currencyFormat.format(widget.price)}",
                         maxLines: 1,
                         style: TextStyle(fontSize: titleFont - 8),
                       ),
                       AutoSizeText(
-                        "${t('paymentMethod')}: ${widget.method}",
+                        // i18n payment method
+                        "${t('paymentMethod')}: ${methodMap[widget.method] ?? widget.method}",
                         maxLines: 1,
                         style: TextStyle(fontSize: titleFont - 8),
                       ),

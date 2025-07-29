@@ -25,7 +25,6 @@ class MowizTimePage extends StatefulWidget {
 class _MowizTimePageState extends State<MowizTimePage> {
   late DateTime _now;
   Timer? _clock;
-  static final http.Client _client = http.Client();
 
   // Datos que llegan del backend
   Map<int, int> _stepsMap = {};        // minutos → precio céntimos
@@ -52,26 +51,19 @@ class _MowizTimePageState extends State<MowizTimePage> {
     final url =
         'http://localhost:3000/v1/onstreet-service/product/by-zone/${widget.zone}&plate=${widget.plate}';
     try {
-      final res = await _client.get(Uri.parse(url));
+      final res = await http.get(Uri.parse(url));
       if (res.statusCode == 200) {
         final list = jsonDecode(res.body) as List;
-        Map<int, int> stepsMap = {};
-        int? maxDuration;
         if (list.isNotEmpty) {
           final rate = list.first['rateSteps'] as Map<String, dynamic>;
           final steps = List<Map<String, dynamic>>.from(rate['steps'] ?? []);
-          stepsMap = {
+          _stepsMap = {
             for (final s in steps)
               (s['timeInSeconds'] as int) ~/ 60: s['priceInCents'] as int
           };
-          maxDuration = rate['maxDurationSeconds'] as int?;
+          _maxDuration = rate['maxDurationSeconds'] as int?;
         }
-        if (!mounted) return;
-        setState(() {
-          _stepsMap = stepsMap;
-          _maxDuration = maxDuration;
-          _tariffLoaded = true;
-        });
+        setState(() => _tariffLoaded = true);
       } else {
         debugPrint('HTTP ${res.statusCode}');
       }
@@ -235,20 +227,17 @@ class _TariffList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final entries = map.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: entries.length,
-      itemBuilder: (context, index) {
-        final e = entries[index];
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: Text(
-            '${e.key} min - ${(e.value / 100).toStringAsFixed(2)} €',
-            textAlign: TextAlign.center,
-          ),
-        );
-      },
+    return Column(
+      children: entries
+          .map((e) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: AutoSizeText(
+                  '${e.key} min - ${(e.value / 100).toStringAsFixed(2)} €',
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                ),
+              ))
+          .toList(),
     );
   }
 }

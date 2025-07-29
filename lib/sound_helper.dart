@@ -27,8 +27,11 @@ class SoundHelper {
   /// Reproduce el sonido de tap. Se llama al pulsar cualquier botón.
   static Future<void> playTap() async {
     try {
-      await _tapPlayer.seek(Duration.zero);
-    } catch (_) {}
+      // Si el sonido estaba sonando, lo reiniciamos para reproducirlo de nuevo
+      await _tapPlayer.stop();
+    } catch (_) {
+      // Ignoramos cualquier error al detener
+    }
     await _tapPlayer.play(AssetSource(_tapAsset));
   }
 

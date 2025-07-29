@@ -14,6 +14,7 @@ class MowizScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     // Clona el tema actual y sólo activa Material 3
     final mowizTheme = theme.copyWith(
       useMaterial3: true,

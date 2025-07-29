@@ -18,6 +18,7 @@ class MowizCancelPage extends StatefulWidget {
 class _MowizCancelPageState extends State<MowizCancelPage> {
   final _plateCtrl = TextEditingController();
   bool _loading = false;
+  static final http.Client _client = http.Client();
 
   bool get _validateDisabled => _plateCtrl.text.trim().isEmpty || _loading;
 
@@ -33,16 +34,15 @@ class _MowizCancelPageState extends State<MowizCancelPage> {
     final plate = _plateCtrl.text.trim().toUpperCase();
     setState(() => _loading = true);
     try {
-      // API call
-      final res = await http.get(
+      final res = await _client.get(
         Uri.parse(
             'http://localhost:3000/v1/onstreet-service/validate-ticket/$plate'),
       );
       if (res.statusCode == 200) {
+        if (!mounted) return;
         final data = jsonDecode(res.body);
         final valid = data['valid'] == true;
         final msg = data['message'] as String?;
-        // SnackBar
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(valid
@@ -62,24 +62,26 @@ class _MowizCancelPageState extends State<MowizCancelPage> {
         }
       } else {
         debugPrint('HTTP ${res.statusCode}: ${res.body}');
-        // SnackBar
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(t('networkError')),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        SoundHelper.playError();
+      }
+    } catch (e) {
+      debugPrint('Error: $e');
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(t('networkError')),
             backgroundColor: Colors.red,
           ),
         );
-        SoundHelper.playError();
       }
-    } catch (e) {
-      debugPrint('Error: $e');
-      // SnackBar
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(t('networkError')),
-          backgroundColor: Colors.red,
-        ),
-      );
       SoundHelper.playError();
     } finally {
       if (mounted) setState(() => _loading = false);

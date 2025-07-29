@@ -25,17 +25,22 @@ class MowizTimePage extends StatefulWidget {
 class _MowizTimePageState extends State<MowizTimePage> {
   late DateTime _now;
   Timer? _timer;
-  // TODO: max duration will come from backend
 
   List<dynamic>? _tariffData;
-  // TODO: added state variables for dynamic pricing and duration
-  Map<int, int> _stepsMap = {}; // minutes -> price in cents
+  Map<int, int> _stepsMap = {}; // minutos -> precio céntimos
   int? _maxDurationSeconds;
   int totalSeconds = 0;
   int totalPriceCents = 0;
-  // TODO: end added state variables
+
+  // Control de bloques sumados/restados para evitar inconsistencias
+  final Map<int, int> _bloquesSeleccionados = {3: 0, 5: 0, 15: 0};
 
   Future<void> _fetchTariff() async {
+    // Resetear estado cada vez que se piden tarifas nuevas
+    totalSeconds = 0;
+    totalPriceCents = 0;
+    _bloquesSeleccionados.updateAll((key, value) => 0);
+
     final url =
         'http://localhost:3000/v1/onstreet-service/product/by-zone/${widget.zone}&plate=${widget.plate}';
     try {
@@ -43,7 +48,6 @@ class _MowizTimePageState extends State<MowizTimePage> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as List<dynamic>;
         debugPrint('Tariff response: $data');
-        // TODO: map steps and max duration from backend response
         if (data.isNotEmpty) {
           final first = data.first as Map<String, dynamic>;
           final rate = first['rateSteps'] as Map<String, dynamic>?;
@@ -56,7 +60,6 @@ class _MowizTimePageState extends State<MowizTimePage> {
           _maxDurationSeconds = rate?['maxDurationSeconds'] as int?;
         }
         setState(() => _tariffData = data);
-        // TODO: end map steps and max duration
       } else {
         debugPrint('Request failed with status: ${response.statusCode}');
       }
@@ -82,10 +85,20 @@ class _MowizTimePageState extends State<MowizTimePage> {
   }
 
   void _modifyMinutes(int delta) {
-    // TODO: handle increment/decrement of selected time and price
+    final absDelta = delta.abs();
+    if (!_stepsMap.containsKey(absDelta)) {
+      // Si el backend no tiene este bloque, ignora el botón.
+      return;
+    }
     final deltaSeconds = delta * 60;
-    final priceBlock = _stepsMap[delta.abs()] ?? 0;
+    final priceBlock = _stepsMap[absDelta] ?? 0;
+    int newCount = _bloquesSeleccionados[absDelta]! + (delta > 0 ? 1 : -1);
+
+    // No permitir restar más veces de las que se han sumado
+    if (newCount < 0) return;
+
     final newSeconds = totalSeconds + deltaSeconds;
+    final newPrice = totalPriceCents + (delta > 0 ? priceBlock : -priceBlock);
 
     if (_maxDurationSeconds != null && newSeconds > _maxDurationSeconds!) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -93,13 +106,13 @@ class _MowizTimePageState extends State<MowizTimePage> {
       );
       return;
     }
+    if (newSeconds < 0 || newPrice < 0) return;
 
     setState(() {
-      totalSeconds = newSeconds.clamp(0, _maxDurationSeconds ?? newSeconds);
-      final newPrice = totalPriceCents + (delta.isNegative ? -priceBlock : priceBlock);
-      totalPriceCents = newPrice < 0 ? 0 : newPrice;
+      totalSeconds = newSeconds;
+      totalPriceCents = newPrice;
+      _bloquesSeleccionados[absDelta] = newCount;
     });
-    // TODO: end handle increment/decrement
   }
 
   @override
@@ -111,13 +124,11 @@ class _MowizTimePageState extends State<MowizTimePage> {
             ? 'ca_ES'
             : 'en_GB';
 
-    // TODO: calculate finish time, duration and formatted price from totals
     final minutes = totalSeconds ~/ 60;
     final finish = _now.add(Duration(seconds: totalSeconds));
     final durationStr = '${minutes ~/ 60}h ${minutes % 60}m';
     final priceStr = NumberFormat.currency(locale: 'es_ES', symbol: '€')
         .format(totalPriceCents / 100);
-    // TODO: end calculate finish time, duration and formatted price
 
     return MowizScaffold(
       title: t('selectDuration'),
@@ -227,20 +238,22 @@ class _MowizTimePageState extends State<MowizTimePage> {
                 ],
                 const Spacer(),
                 FilledButton(
-                  onPressed: () {
-                    SoundHelper.playTap();
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => MowizSummaryPage(
-                          plate: widget.plate,
-                          zone: widget.zone,
-                          start: _now,
-                          minutes: minutes,
-                          price: totalPriceCents / 100,
-                        ),
-                      ),
-                    );
-                  },
+                  onPressed: totalSeconds > 0
+                      ? () {
+                          SoundHelper.playTap();
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => MowizSummaryPage(
+                                plate: widget.plate,
+                                zone: widget.zone,
+                                start: _now,
+                                minutes: minutes,
+                                price: totalPriceCents / 100,
+                              ),
+                            ),
+                          );
+                        }
+                      : null,
                   style: kMowizFilledButtonStyle.copyWith(
                     textStyle:
                         MaterialStatePropertyAll(TextStyle(fontSize: titleFont)),

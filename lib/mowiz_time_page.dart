@@ -30,6 +30,9 @@ class _MowizTimePageState extends State<MowizTimePage> {
   final int _maxDuration = 24 * 60; // placeholder for max duration in minutes
 
   List<dynamic>? _tariffData;
+  // Parsed list of steps to display in the UI.
+  // Call setState(() => _steps = newSteps) if the steps change in the future.
+  List<dynamic> _steps = [];
 
   Future<void> _fetchTariff() async {
     final url =
@@ -39,7 +42,10 @@ class _MowizTimePageState extends State<MowizTimePage> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as List<dynamic>;
         debugPrint('Tariff response: $data');
-        setState(() => _tariffData = data);
+        setState(() {
+          _tariffData = data;
+          _steps = (data.first['rateSteps']?['steps'] as List<dynamic>? ?? []);
+        });
       } else {
         debugPrint('Request failed with status: ${response.statusCode}');
       }
@@ -70,6 +76,34 @@ class _MowizTimePageState extends State<MowizTimePage> {
       if (_minutes < 0) _minutes = 0;
       if (_minutes > _maxDuration) _minutes = _maxDuration; // maxDuration limit
     });
+  }
+
+  Widget buildStepsList(double fontSize) {
+    if (_steps.isEmpty) {
+      return const Text(
+        'No hay tarifas disponibles',
+        textAlign: TextAlign.center,
+      );
+    }
+    final currency = NumberFormat.currency(locale: 'es_ES', symbol: '€');
+    return ListView.builder(
+      shrinkWrap: true,
+      itemCount: _steps.length,
+      itemBuilder: (context, index) {
+        final step = _steps[index] as Map<String, dynamic>;
+        final minutes = (step['timeInSeconds'] as int) ~/ 60;
+        final euros =
+            currency.format((step['priceInCents'] as int) / 100);
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Text(
+            '$minutes min — $euros',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: fontSize),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -189,7 +223,17 @@ class _MowizTimePageState extends State<MowizTimePage> {
                 ),
                 if (_tariffData != null) ...[
                   SizedBox(height: gap),
-                  _RateStepsList(_tariffData!, titleFont: titleFont),
+                  AutoSizeText(
+                    'Tarifas disponibles',
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: titleFont,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: gap / 2),
+                  buildStepsList(titleFont),
                 ],
                 const Spacer(),
                 FilledButton(
@@ -240,33 +284,3 @@ class _MowizTimePageState extends State<MowizTimePage> {
   }
 }
 
-class _RateStepsList extends StatelessWidget {
-  const _RateStepsList(this.data, {required this.titleFont});
-
-  final List<dynamic> data;
-  final double titleFont;
-
-  @override
-  Widget build(BuildContext context) {
-    if (data.isEmpty) return const SizedBox.shrink();
-    final steps = (data.first['rateSteps']?['steps'] as List<dynamic>? ?? []);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: steps.map((step) {
-        final seconds = step['timeInSeconds'] as int? ?? 0;
-        final price = step['priceInCents'] as int? ?? 0;
-        final mins = (seconds / 60).round();
-        final euros = (price / 100).toStringAsFixed(2);
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: AutoSizeText(
-            '$mins min - $euros €',
-            maxLines: 1,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: titleFont),
-          ),
-        );
-      }).toList(),
-    );
-  }
-}

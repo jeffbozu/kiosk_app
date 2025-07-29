@@ -25,11 +25,15 @@ class MowizTimePage extends StatefulWidget {
 class _MowizTimePageState extends State<MowizTimePage> {
   late DateTime _now;
   Timer? _timer;
-  int _minutes = 0;
-  // TODO: define maxDuration from tariff or business logic
-  final int _maxDuration = 24 * 60; // placeholder for max duration in minutes
+  // TODO: max duration will come from backend
 
   List<dynamic>? _tariffData;
+  // TODO: added state variables for dynamic pricing and duration
+  Map<int, int> _stepsMap = {}; // minutes -> price in cents
+  int? _maxDurationSeconds;
+  int totalSeconds = 0;
+  int totalPriceCents = 0;
+  // TODO: end added state variables
 
   Future<void> _fetchTariff() async {
     final url =
@@ -39,7 +43,20 @@ class _MowizTimePageState extends State<MowizTimePage> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as List<dynamic>;
         debugPrint('Tariff response: $data');
+        // TODO: map steps and max duration from backend response
+        if (data.isNotEmpty) {
+          final first = data.first as Map<String, dynamic>;
+          final rate = first['rateSteps'] as Map<String, dynamic>?;
+          final steps = rate?['steps'] as List<dynamic>? ?? [];
+          _stepsMap = {
+            for (final s in steps)
+              ((s['timeInSeconds'] as int? ?? 0) ~/ 60):
+                  (s['priceInCents'] as int? ?? 0)
+          };
+          _maxDurationSeconds = rate?['maxDurationSeconds'] as int?;
+        }
         setState(() => _tariffData = data);
+        // TODO: end map steps and max duration
       } else {
         debugPrint('Request failed with status: ${response.statusCode}');
       }
@@ -65,11 +82,24 @@ class _MowizTimePageState extends State<MowizTimePage> {
   }
 
   void _modifyMinutes(int delta) {
+    // TODO: handle increment/decrement of selected time and price
+    final deltaSeconds = delta * 60;
+    final priceBlock = _stepsMap[delta.abs()] ?? 0;
+    final newSeconds = totalSeconds + deltaSeconds;
+
+    if (_maxDurationSeconds != null && newSeconds > _maxDurationSeconds!) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Duración máxima alcanzada')),
+      );
+      return;
+    }
+
     setState(() {
-      _minutes += delta;
-      if (_minutes < 0) _minutes = 0;
-      if (_minutes > _maxDuration) _minutes = _maxDuration; // maxDuration limit
+      totalSeconds = newSeconds.clamp(0, _maxDurationSeconds ?? newSeconds);
+      final newPrice = totalPriceCents + (delta.isNegative ? -priceBlock : priceBlock);
+      totalPriceCents = newPrice < 0 ? 0 : newPrice;
     });
+    // TODO: end handle increment/decrement
   }
 
   @override
@@ -81,9 +111,13 @@ class _MowizTimePageState extends State<MowizTimePage> {
             ? 'ca_ES'
             : 'en_GB';
 
-    final finish = _now.add(Duration(minutes: _minutes));
-    final durationStr = '${_minutes ~/ 60}h ${_minutes % 60}m';
-    final price = 0.0; // TODO: calculate real price
+    // TODO: calculate finish time, duration and formatted price from totals
+    final minutes = totalSeconds ~/ 60;
+    final finish = _now.add(Duration(seconds: totalSeconds));
+    final durationStr = '${minutes ~/ 60}h ${minutes % 60}m';
+    final priceStr = NumberFormat.currency(locale: 'es_ES', symbol: '€')
+        .format(totalPriceCents / 100);
+    // TODO: end calculate finish time, duration and formatted price
 
     return MowizScaffold(
       title: t('selectDuration'),
@@ -173,7 +207,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                 ),
                 SizedBox(height: gap / 2),
                 AutoSizeText(
-                  '${t('price')}: ${price.toStringAsFixed(2)} €',
+                  '${t('price')}: $priceStr',
                   maxLines: 1,
                   textAlign: TextAlign.center,
                   style:
@@ -201,8 +235,8 @@ class _MowizTimePageState extends State<MowizTimePage> {
                           plate: widget.plate,
                           zone: widget.zone,
                           start: _now,
-                          minutes: _minutes,
-                          price: price,
+                          minutes: minutes,
+                          price: totalPriceCents / 100,
                         ),
                       ),
                     );

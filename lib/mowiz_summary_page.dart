@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 import 'l10n/app_localizations.dart';
 import 'mowiz_page.dart';
@@ -64,7 +66,20 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
 
   Future<void> _pay() async {
     if (_method == null) return;
-    // TODO: integrate real payment logic and backend communication
+    final plate = widget.plate.toUpperCase();
+    try {
+      // save paid plate
+      final res = await http.post(
+        Uri.parse('http://localhost:3000/v1/onstreet-service/pay-ticket'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'plate': plate}),
+      );
+      if (res.statusCode != 200) {
+        debugPrint('HTTP ${res.statusCode}: ${res.body}');
+      }
+    } catch (e) {
+      debugPrint('Error: $e');
+    }
     if (!mounted) return;
       await Navigator.of(context).push(
         MaterialPageRoute(

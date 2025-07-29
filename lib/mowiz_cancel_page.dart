@@ -1,6 +1,8 @@
-import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:http/http.dart' as http;
+
 import 'l10n/app_localizations.dart';
 import 'mowiz/mowiz_scaffold.dart';
 import 'styles/mowiz_buttons.dart';
@@ -15,6 +17,9 @@ class MowizCancelPage extends StatefulWidget {
 
 class _MowizCancelPageState extends State<MowizCancelPage> {
   final _plateCtrl = TextEditingController();
+  bool _loading = false;
+
+  bool get _validateDisabled => _plateCtrl.text.trim().isEmpty || _loading;
 
   @override
   void dispose() {
@@ -23,58 +28,69 @@ class _MowizCancelPageState extends State<MowizCancelPage> {
   }
 
   Future<void> _validate() async {
-    final t = AppLocalizations.of(context).t;
-    final plate = _plateCtrl.text.trim();
-    if (plate.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(t('plateNotFound'))));
-      return;
-    }
-    final confirm = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        content: Text(t('confirmCancellation')),
-        actions: [
-          // Botón "No" del diálogo de confirmación
-          FilledButton(
-            onPressed: () {
-              SoundHelper.playTap();
-              Navigator.pop(ctx, false);
-            },
-            style: kMowizFilledButtonStyle.copyWith(
-              backgroundColor: MaterialStatePropertyAll(
-                Theme.of(ctx).colorScheme.secondary,
-              ),
-            ),
-            child: Text(t('no')),
-          ),
-          // Botón "Sí" del diálogo de confirmación
-          FilledButton(
-            onPressed: () {
-              SoundHelper.playTap();
-              Navigator.pop(ctx, true);
-            },
-            style: kMowizFilledButtonStyle,
-            child: Text(t('yes')),
-          ),
-        ],
-      ),
-    );
-    if (confirm == true) {
-      await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const _SuccessDialog(),
+    final l = AppLocalizations.of(context);
+    final t = l.t; // i18n
+    final plate = _plateCtrl.text.trim().toUpperCase();
+    setState(() => _loading = true);
+    try {
+      // API call
+      final res = await http.get(
+        Uri.parse(
+            'http://localhost:3000/v1/onstreet-service/validate-ticket/$plate'),
       );
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        final valid = data['valid'] == true;
+        final msg = data['message'] as String?;
+        // SnackBar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(valid
+                ? (msg?.isNotEmpty == true
+                    ? msg!
+                    : t('ticketValid'))
+                : t('ticketNotFound')),
+            backgroundColor: valid ? Colors.green : Colors.red,
+          ),
+        );
+        if (valid) {
+          SoundHelper.playSuccess();
+          await Future.delayed(const Duration(seconds: 2));
+          if (mounted) Navigator.of(context).pop();
+        } else {
+          SoundHelper.playError();
+        }
+      } else {
+        debugPrint('HTTP ${res.statusCode}: ${res.body}');
+        // SnackBar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(t('networkError')),
+            backgroundColor: Colors.red,
+          ),
+        );
+        SoundHelper.playError();
+      }
+    } catch (e) {
+      debugPrint('Error: $e');
+      // SnackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t('networkError')),
+          backgroundColor: Colors.red,
+        ),
+      );
+      SoundHelper.playError();
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context).t;
+    final t = AppLocalizations.of(context).t; // i18n
     return MowizScaffold(
-      title: t('cancelDenuncia'),
+      title: t('cancelFine'),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
@@ -82,11 +98,8 @@ class _MowizCancelPageState extends State<MowizCancelPage> {
           final isTablet = width >= 600 && width < 900;
           final padding = EdgeInsets.all(width * 0.05);
           final double gap = width * 0.04;
-          final double fontSize = isLargeTablet
-              ? 28
-              : isTablet
-                  ? 24
-                  : 20;
+          final double fontSize =
+              isLargeTablet ? 28 : isTablet ? 24 : 20;
 
           return Center(
             child: Padding(
@@ -97,21 +110,30 @@ class _MowizCancelPageState extends State<MowizCancelPage> {
                 children: [
                   TextField(
                     controller: _plateCtrl,
+                    textCapitalization: TextCapitalization.characters,
                     decoration: InputDecoration(hintText: t('enterPlate')),
                     style: TextStyle(fontSize: fontSize),
+                    onChanged: (_) => setState(() {}),
                   ),
                   SizedBox(height: gap * 1.2),
                   FilledButton(
-                    onPressed: () {
-                      SoundHelper.playTap();
-                      _validate();
-                    },
+                    onPressed: _validateDisabled
+                        ? null
+                        : () {
+                            SoundHelper.playTap();
+                            _validate();
+                          },
                     style: kMowizFilledButtonStyle.copyWith(
-                      textStyle: MaterialStatePropertyAll(
-                        TextStyle(fontSize: fontSize),
-                      ),
+                      textStyle:
+                          MaterialStatePropertyAll(TextStyle(fontSize: fontSize)),
                     ),
-                    child: AutoSizeText(t('validate'), maxLines: 1),
+                    child: _loading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : AutoSizeText(t('validate'), maxLines: 1),
                   ),
                   SizedBox(height: gap),
                   FilledButton(
@@ -120,12 +142,10 @@ class _MowizCancelPageState extends State<MowizCancelPage> {
                       Navigator.of(context).pop();
                     },
                     style: kMowizFilledButtonStyle.copyWith(
-                      backgroundColor: const MaterialStatePropertyAll(
-                        Color(0xFFA7A7A7),
-                      ),
-                      textStyle: MaterialStatePropertyAll(
-                        TextStyle(fontSize: fontSize),
-                      ),
+                      backgroundColor:
+                          const MaterialStatePropertyAll(Color(0xFFA7A7A7)),
+                      textStyle:
+                          MaterialStatePropertyAll(TextStyle(fontSize: fontSize)),
                     ),
                     child: AutoSizeText(t('cancel'), maxLines: 1),
                   ),
@@ -135,79 +155,6 @@ class _MowizCancelPageState extends State<MowizCancelPage> {
           );
         },
       ),
-    );
-  }
-}
-
-class _SuccessDialog extends StatefulWidget {
-  const _SuccessDialog();
-
-  @override
-  State<_SuccessDialog> createState() => _SuccessDialogState();
-}
-
-class _SuccessDialogState extends State<_SuccessDialog> {
-  int _seconds = 10;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (_seconds > 1) {
-        setState(() => _seconds--);
-      } else {
-        t.cancel();
-        Navigator.of(context).pop();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context).t;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final double fontSize = width > 300 ? 20 : 16;
-        return AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AutoSizeText(
-                t('cancellationSuccess'),
-                maxLines: 2,
-                textAlign: TextAlign.center,
-                style:
-                    TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              AutoSizeText(
-                t('autoCloseIn', params: {'seconds': '$_seconds'}),
-                maxLines: 1,
-              ),
-            ],
-          ),
-          actions: [
-            FilledButton(
-              onPressed: () {
-                SoundHelper.playTap();
-                Navigator.of(context).pop();
-              },
-              style: kMowizFilledButtonStyle.copyWith(
-                textStyle: MaterialStatePropertyAll(TextStyle(fontSize: fontSize)),
-              ),
-              child: AutoSizeText(t('close'), maxLines: 1),
-            ),
-          ],
-        );
-      },
     );
   }
 }

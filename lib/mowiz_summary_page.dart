@@ -37,6 +37,36 @@ class MowizSummaryPage extends StatefulWidget {
 class _MowizSummaryPageState extends State<MowizSummaryPage> {
   String? _method;
 
+  Future<void> _pay() async {
+    if (_method == null) return;
+    final plate = widget.plate.toUpperCase();
+    try {
+      final res = await http.post(
+        Uri.parse('$apiBaseUrl/v1/onstreet-service/pay-ticket'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'plate': plate}),
+      );
+      if (res.statusCode != 200) {
+        debugPrint('HTTP ${res.statusCode}: ${res.body}');
+      }
+    } catch (e) {
+      debugPrint('Error: $e');
+    }
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => MowizSuccessPage(
+          plate: widget.plate,
+          zone: widget.zone,
+          start: widget.start,
+          minutes: widget.minutes,
+          price: widget.price,
+          method: _method!,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -64,38 +94,6 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
           textStyle: MaterialStatePropertyAll(TextStyle(fontSize: fSize)),
           backgroundColor: MaterialStatePropertyAll(
             selected ? scheme.primary : scheme.secondary,
-          ),
-        ),
-      );
-    }
-
-  Future<void> _pay() async {
-    if (_method == null) return;
-    final plate = widget.plate.toUpperCase();
-    try {
-      // save paid plate
-        // Use the base URL constant here
-      final res = await http.post(
-        Uri.parse('$apiBaseUrl/v1/onstreet-service/pay-ticket'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'plate': plate}),
-      );
-      if (res.statusCode != 200) {
-        debugPrint('HTTP ${res.statusCode}: ${res.body}');
-      }
-    } catch (e) {
-      debugPrint('Error: $e');
-    }
-    if (!mounted) return;
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => MowizSuccessPage(
-            plate: widget.plate,
-            zone: widget.zone,
-            start: widget.start,
-            minutes: widget.minutes,
-            price: widget.price,
-            method: _method!,
           ),
         ),
       );

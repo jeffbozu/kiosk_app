@@ -339,7 +339,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                                 TextStyle(fontSize: titleFont - 6),
                               ),
                             ),
-                            child: AutoSizeText(t('goHome'), maxLines: 1),
+                            child: AutoSizeText(t('home'), maxLines: 1),
                           ),
                         ),
                       ),

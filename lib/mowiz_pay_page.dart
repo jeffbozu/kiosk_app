@@ -3,6 +3,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'l10n/app_localizations.dart';
 import 'mowiz_time_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
+import 'mowiz_page.dart';
 // Estilo común para botones grandes
 import 'styles/mowiz_buttons.dart';
 import 'sound_helper.dart';
@@ -32,7 +33,7 @@ class _MowizPayPageState extends State<MowizPayPage> {
     final t = AppLocalizations.of(context).t;
     final colorScheme = Theme.of(context).colorScheme;
     return MowizScaffold(
-      title: t('payTicket'),
+      title: 'MeyPark - ${t('selectZone')}',
       body: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
@@ -143,14 +144,17 @@ class _MowizPayPageState extends State<MowizPayPage> {
                   FilledButton(
                     onPressed: () {
                       SoundHelper.playTap();
-                      Navigator.of(context).pop();
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (_) => const MowizPage()),
+                        (route) => false,
+                      );
                     },
                     style: kMowizFilledButtonStyle.copyWith(
                       textStyle:
                           MaterialStatePropertyAll(TextStyle(fontSize: titleFont)),
                     ),
                     child: AutoSizeText(
-                      t('cancel'),
+                      t('back'),
                       maxLines: 1,
                     ),
                   ),

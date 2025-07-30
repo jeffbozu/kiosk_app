@@ -28,8 +28,8 @@ class _MowizTimePageState extends State<MowizTimePage> {
   late DateTime _now;
   Timer? _clock;
 
-  Map<int, int> _stepsMap = {};        // minutos → precio céntimos
-  int? _maxDuration;                   // segundos
+  Map<int, int> _stepsMap = {};
+  int? _maxDuration;
   bool _tariffLoaded = false;
 
   final Map<int, int> _bloques = {3: 0, 5: 0, 15: 0};
@@ -123,20 +123,20 @@ class _MowizTimePageState extends State<MowizTimePage> {
         NumberFormat.currency(symbol: '€', locale: 'es_ES').format(_totalCents / 100);
 
     Widget btn(String label, int min, double fontSize, double btnHeight) => Expanded(
-      child: SizedBox(
-        height: btnHeight,
-        child: ElevatedButton(
-          style: kMowizFilledButtonStyle.copyWith(
-            textStyle: MaterialStatePropertyAll(TextStyle(fontSize: fontSize)),
+          child: SizedBox(
+            height: btnHeight,
+            child: ElevatedButton(
+              style: kMowizFilledButtonStyle.copyWith(
+                textStyle: MaterialStatePropertyAll(TextStyle(fontSize: fontSize)),
+              ),
+              onPressed: () {
+                SoundHelper.playTap();
+                _change(min);
+              },
+              child: AutoSizeText(label, maxLines: 1, minFontSize: 13),
+            ),
           ),
-          onPressed: () {
-            SoundHelper.playTap();
-            _change(min);
-          },
-          child: AutoSizeText(label, maxLines: 1, minFontSize: 13),
-        ),
-      ),
-    );
+        );
 
     return MowizScaffold(
       title: 'MeyPark - ${t('selectDuration')}',
@@ -155,17 +155,16 @@ class _MowizTimePageState extends State<MowizTimePage> {
             final double mainValueSz = isWide ? 36 : 26;
             final double btnHeight = isWide ? 58 : 46;
 
+            // 👇 Envolvemos TODO en SingleChildScrollView para evitar overflow SIEMPRE
             return Center(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
                   maxWidth: maxContentWidth,
                   minWidth: 260,
-                  minHeight: height,
                 ),
-                child: Padding(
+                child: SingleChildScrollView(
                   padding: EdgeInsets.symmetric(horizontal: contentWidth * 0.05, vertical: 18),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       AutoSizeText(
@@ -219,7 +218,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                           padding: EdgeInsets.symmetric(vertical: 16),
                           child: Center(child: CircularProgressIndicator()),
                         ),
-                      const Spacer(),
+                      SizedBox(height: 16),
                       FilledButton(
                         onPressed: _totalSec > 0
                             ? () {

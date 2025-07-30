@@ -151,11 +151,13 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return MowizScaffold(
+      // SafeArea aplicada en MowizScaffold
       body: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
-          final padding = EdgeInsets.all(width * 0.05);
-          final double gap = width * 0.05;
+          final height = constraints.maxHeight;
+          final padding = EdgeInsets.all(height * 0.05);
+          final double gap = height * 0.05;
           final double titleFont = max(16, width * 0.05);
           final double qrSize = width * 0.4;
 
@@ -173,7 +175,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                 padding: padding,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Lottie.asset(
                       'assets/success.json',

@@ -156,11 +156,13 @@ class _MowizTimePageState extends State<MowizTimePage> {
 
     return MowizScaffold(
       title: 'MeyPark - ${t('selectDuration')}',
+      // SafeArea ya aplicada en MowizScaffold
       body: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
-          final padding = EdgeInsets.all(width * 0.05);
-          final double gap = width * 0.05;
+          final height = constraints.maxHeight;
+          final padding = EdgeInsets.all(height * 0.05);
+          final double gap = height * 0.05;
           final double titleFont = max(16, width * 0.05);
           final double valueFont = max(16, width * 0.06);
 
@@ -170,7 +172,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
             padding: padding,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 FittedBox(
                   fit: BoxFit.scaleDown,
@@ -200,7 +202,12 @@ class _MowizTimePageState extends State<MowizTimePage> {
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: titleFont, fontWeight: FontWeight.bold)),
                 ),
-                if (_tariffLoaded) _TariffList(_stepsMap, font: titleFont) else const CircularProgressIndicator(),
+                if (_tariffLoaded)
+                  Expanded(
+                    child: _TariffList(_stepsMap, font: titleFont),
+                  )
+                else
+                  const CircularProgressIndicator(),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 400, minHeight: 48),
                   child: FilledButton(

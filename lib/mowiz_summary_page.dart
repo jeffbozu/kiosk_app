@@ -107,11 +107,13 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
 
     return MowizScaffold(
       title: t('summaryPay'),
+      // SafeArea ya aplicada en MowizScaffold
       body: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
-          final padding = EdgeInsets.all(width * 0.05);
-          final double gap = width * 0.05;
+          final height = constraints.maxHeight;
+          final padding = EdgeInsets.all(height * 0.05);
+          final double gap = height * 0.05;
           final double titleFont = max(16, width * 0.05);
 
           return Padding(
@@ -123,17 +125,18 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
             // Cuadro con la información resumida del ticket.
             // Se deja crecer de forma dinámica y con scroll interno
             // para evitar cualquier overflow si hay mucho texto.
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+            Expanded(
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                elevation: 4,
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
@@ -182,6 +185,7 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
                   ],
                 ),
               ),
+            ),
             ),
             SizedBox(height: gap * 2),
             Padding(

@@ -34,13 +34,18 @@ class _MowizPayPageState extends State<MowizPayPage> {
     final colorScheme = Theme.of(context).colorScheme;
     return MowizScaffold(
       title: 'MeyPark - ${t('selectZone')}',
+      // SafeArea ya aplicada en MowizScaffold
       body: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
+          final height = constraints.maxHeight;
           final screenWidth = MediaQuery.of(context).size.width;
           final double buttonWidth = min(screenWidth * 0.9, 400);
-          final padding = EdgeInsets.all(width * 0.05);
-          final double gap = width * 0.05;
+          final padding = EdgeInsets.symmetric(
+            horizontal: width * 0.05,
+            vertical: height * 0.05,
+          );
+          final double gap = height * 0.05;
           final double titleFont = max(16, width * 0.05);
           final double inputFont = max(16, width * 0.045);
           final buttonConstraints = BoxConstraints(
@@ -74,12 +79,12 @@ class _MowizPayPageState extends State<MowizPayPage> {
             padding: padding,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      t('selectZone'),
+                const Spacer(),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    t('selectZone'),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
@@ -87,9 +92,9 @@ class _MowizPayPageState extends State<MowizPayPage> {
                       ),
                     ),
                   ),
-                  SizedBox(height: gap),
-                  Row(
-                    children: [
+                SizedBox(height: gap),
+                Row(
+                  children: [
                       zoneButton(
                         'blue',
                         t('zoneBlue'),
@@ -103,8 +108,8 @@ class _MowizPayPageState extends State<MowizPayPage> {
                       ),
                     ],
                   ),
-                  SizedBox(height: gap),
-                  TextField(
+                SizedBox(height: gap),
+                TextField(
                     controller: _plateCtrl,
                     enabled: _selectedZone != null,
                     decoration: InputDecoration(
@@ -114,8 +119,8 @@ class _MowizPayPageState extends State<MowizPayPage> {
                     style: TextStyle(fontSize: inputFont),
                     onChanged: (_) => setState(() {}),
                   ),
-                  SizedBox(height: gap * 1.5),
-                  ConstrainedBox(
+                SizedBox(height: gap * 1.5),
+                ConstrainedBox(
                     constraints: buttonConstraints,
                     child: FilledButton(
                     onPressed: _confirmEnabled
@@ -141,8 +146,8 @@ class _MowizPayPageState extends State<MowizPayPage> {
                     ),
                   ),
                   ),
-                  SizedBox(height: gap),
-                  ConstrainedBox(
+                SizedBox(height: gap),
+                ConstrainedBox(
                     constraints: buttonConstraints,
                     child: FilledButton(
                     onPressed: () {
@@ -161,9 +166,10 @@ class _MowizPayPageState extends State<MowizPayPage> {
                       child: Text(t('back')),
                     ),
                   ),
-                  ),
-                ],
-              ),
+                ),
+                const Spacer(),
+              ],
+            ),
           );
         },
       ),

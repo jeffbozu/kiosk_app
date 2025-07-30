@@ -32,6 +32,7 @@ class MowizPage extends StatelessWidget {
         // paddings y tamaños de forma proporcional.
         builder: (context, constraints) {
           final width = constraints.maxWidth;
+          final height = constraints.maxHeight;
           final screenWidth = MediaQuery.of(context).size.width;
           final double buttonWidth = min(screenWidth * 0.9, 400);
 
@@ -40,8 +41,11 @@ class MowizPage extends StatelessWidget {
           const double breakpoint = 700;
           final bool isWide = width >= breakpoint;
 
-          final padding = EdgeInsets.symmetric(horizontal: width * 0.05);
-          final double gap = width * 0.05;
+          final padding = EdgeInsets.symmetric(
+            horizontal: width * 0.05,
+            vertical: height * 0.05,
+          );
+          final double gap = height * 0.05;
 
           final double fontSize = max(16, width * 0.045);
           final double buttonHeight = max(48, width * 0.15);
@@ -144,7 +148,10 @@ class MowizPage extends StatelessWidget {
         ),
       ),
           Padding(
-            padding: const EdgeInsets.only(bottom: 16),
+            // Espacio inferior proporcional
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).size.height * 0.02,
+            ),
             child: TextButton(
               onPressed: () {
                 SoundHelper.playTap();

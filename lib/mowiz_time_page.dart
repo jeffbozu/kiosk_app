@@ -29,18 +29,20 @@ class _MowizTimePageState extends State<MowizTimePage> {
   Timer? _clock;
 
   Map<int, int> _stepsMap = {};
+  List<int> _blocks = [];
   int? _maxDuration;
   bool _tariffLoaded = false;
 
-  final Map<int, int> _bloques = {3: 0, 5: 0, 15: 0};
+  Map<int, int> _bloques = {};
   int _totalSec = 0;
   int _totalCents = 0;
 
   Future<void> _loadTariff() async {
     setState(() {
       _stepsMap.clear();
+      _blocks = [];
       _maxDuration = null;
-      _bloques.updateAll((k, v) => 0);
+      _bloques.clear();
       _totalSec = 0;
       _totalCents = 0;
       _tariffLoaded = false;
@@ -59,6 +61,8 @@ class _MowizTimePageState extends State<MowizTimePage> {
             for (final s in steps)
               (s['timeInSeconds'] as int) ~/ 60: s['priceInCents'] as int
           };
+          _blocks = _stepsMap.keys.toList()..sort();
+          _bloques = {for (final b in _blocks) b: 0};
           _maxDuration = rate['maxDurationSeconds'] as int?;
         }
         setState(() => _tariffLoaded = true);
@@ -88,7 +92,8 @@ class _MowizTimePageState extends State<MowizTimePage> {
     setState(() {
       _totalSec = nextSec;
       _totalCents = nextCents;
-      _bloques[minutos.abs()] = _bloques[minutos.abs()]! + (minutos > 0 ? 1 : -1);
+      _bloques[minutos.abs()] =
+          (_bloques[minutos.abs()] ?? 0) + (minutos > 0 ? 1 : -1);
     });
   }
 
@@ -154,6 +159,9 @@ class _MowizTimePageState extends State<MowizTimePage> {
             final double labelSz = isWide ? 23 : 16;
             final double mainValueSz = isWide ? 36 : 26;
             final double btnHeight = isWide ? 58 : 46;
+            final int cols = _blocks.isEmpty ? 1 : _blocks.length.clamp(1, 3);
+            final double btnWidth =
+                (contentWidth - gap * (cols - 1)) / cols;
 
             // 👇 Envolvemos TODO en SingleChildScrollView para evitar overflow SIEMPRE
             return Center(
@@ -174,21 +182,31 @@ class _MowizTimePageState extends State<MowizTimePage> {
                         style: TextStyle(fontSize: labelSz, fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: gap),
-                      Row(children: [
-                        btn('+3', 3, fontSz, btnHeight),
-                        SizedBox(width: gap),
-                        btn('+5', 5, fontSz, btnHeight),
-                        SizedBox(width: gap),
-                        btn('+15', 15, fontSz, btnHeight),
-                      ]),
-                      SizedBox(height: gap),
-                      Row(children: [
-                        btn('-3', -3, fontSz, btnHeight),
-                        SizedBox(width: gap),
-                        btn('-5', -5, fontSz, btnHeight),
-                        SizedBox(width: gap),
-                        btn('-15', -15, fontSz, btnHeight),
-                      ]),
+                      if (_tariffLoaded) ...[
+                        Wrap(
+                          spacing: gap,
+                          runSpacing: gap,
+                          children: _blocks
+                              .map((b) => SizedBox(
+                                    width: btnWidth,
+                                    child: btn('+$b', b, fontSz, btnHeight),
+                                  ))
+                              .toList(),
+                        ),
+                        SizedBox(height: gap),
+                        Wrap(
+                          spacing: gap,
+                          runSpacing: gap,
+                          children: _blocks
+                              .map((b) => SizedBox(
+                                    width: btnWidth,
+                                    child: btn('-$b', -b, fontSz, btnHeight),
+                                  ))
+                              .toList(),
+                        ),
+                      ]
+                      else
+                        const Center(child: CircularProgressIndicator()),
                       SizedBox(height: gap * 1.1),
                       AutoSizeText(
                         '${minutes ~/ 60}h ${minutes % 60}m',

@@ -53,9 +53,10 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
       final selected = _method == value;
       final scheme = Theme.of(context).colorScheme;
       return FilledButton.icon(
-        onPressed: () {
+        onPressed: () async {
           SoundHelper.playTap();
           setState(() => _method = value);
+          await _pay();
         },
         icon: Icon(icon, size: fSize + 12),
         label: AutoSizeText(text, maxLines: 1),
@@ -193,21 +194,6 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
                   paymentButton('mobile', Icons.phone_iphone, t('mobilePay'), titleFont),
             ),
             SizedBox(height: gap * 2),
-            FilledButton(
-              onPressed: _method != null
-                  ? () {
-                      SoundHelper.playTap();
-                      _pay();
-                    }
-                  : null,
-              style: kMowizFilledButtonStyle.copyWith(
-                textStyle: MaterialStatePropertyAll(
-                  TextStyle(fontSize: titleFont),
-                ),
-              ),
-              child: AutoSizeText(t('pay'), maxLines: 1),
-            ),
-            SizedBox(height: gap),
             FilledButton(
               onPressed: () {
                 SoundHelper.playTap();

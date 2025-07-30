@@ -6,6 +6,9 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
+// Base URL configuration for API calls
+import 'api_config.dart';
+
 import 'l10n/app_localizations.dart';
 import 'mowiz_page.dart';
 import 'mowiz_summary_page.dart';
@@ -48,8 +51,9 @@ class _MowizTimePageState extends State<MowizTimePage> {
       _tariffLoaded = false;
     });
 
+    // Build the request URL using the base constant
     final url =
-        'http://localhost:3000/v1/onstreet-service/product/by-zone/${widget.zone}&plate=${widget.plate}';
+        '$apiBaseUrl/v1/onstreet-service/product/by-zone/${widget.zone}&plate=${widget.plate}';
     try {
       final res = await http.get(Uri.parse(url));
       if (res.statusCode == 200) {

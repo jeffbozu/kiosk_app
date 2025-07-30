@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:http/http.dart' as http;
 
+// Base URL configuration for API calls
+import 'api_config.dart';
+
 import 'l10n/app_localizations.dart';
 import 'mowiz/mowiz_scaffold.dart';
 import 'styles/mowiz_buttons.dart';
@@ -35,8 +38,8 @@ class _MowizCancelPageState extends State<MowizCancelPage> {
     try {
       // API call
       final res = await http.get(
-        Uri.parse(
-            'http://localhost:3000/v1/onstreet-service/validate-ticket/$plate'),
+        // Use the base URL constant here
+        Uri.parse('$apiBaseUrl/v1/onstreet-service/validate-ticket/$plate'),
       );
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+
+// Base URL configuration for API calls
+import 'api_config.dart';
 import 'dart:convert';
 
 import 'l10n/app_localizations.dart';
@@ -69,8 +72,9 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
     final plate = widget.plate.toUpperCase();
     try {
       // save paid plate
+        // Use the base URL constant here
       final res = await http.post(
-        Uri.parse('http://localhost:3000/v1/onstreet-service/pay-ticket'),
+        Uri.parse('$apiBaseUrl/v1/onstreet-service/pay-ticket'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'plate': plate}),
       );

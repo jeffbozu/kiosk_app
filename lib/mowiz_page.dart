@@ -6,7 +6,6 @@ import 'mowiz_pay_page.dart';
 import 'mowiz_cancel_page.dart';
 import 'home_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
-// Estilo de botones grandes reutilizable
 import 'styles/mowiz_buttons.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'sound_helper.dart';
@@ -24,135 +23,146 @@ class MowizPage extends StatelessWidget {
         SizedBox(width: 8),
         ThemeModeButton(),
       ],
-      body: Column(
-        children: [
-          Expanded(
-            child: LayoutBuilder(
-        // LayoutBuilder nos da el ancho disponible para calcular
-        // paddings y tamaños de forma proporcional.
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
+      body: SafeArea(
+        // 🟢 SafeArea para evitar solapamientos inferiores y superiores
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final height = constraints.maxHeight;
 
-          // Punto de quiebre para pantallas anchas. Modifica este valor si
-          // necesitas cambiar la responsividad de la página.
-          const double breakpoint = 700;
-          final bool isWide = width >= breakpoint;
+            // 🔵 Definimos un ancho máximo profesional para contenido
+            const double maxContentWidth = 500;
+            final double contentWidth = width > maxContentWidth ? maxContentWidth : width;
+            final EdgeInsets padding = EdgeInsets.symmetric(horizontal: contentWidth * 0.05);
 
-          // Padding y separación basados en el ancho disponible. Utilizamos
-          // un porcentaje para que los botones ocupen entre el 80% y 95%
-          // del ancho sin pegarse a los bordes.
-          final padding = EdgeInsets.symmetric(horizontal: width * 0.05);
-          final double gap = isWide ? 32 : 24;
+            final bool isWide = contentWidth >= 700;
+            final double gap = isWide ? 32 : 24;
+            final double fontSize = isWide ? 28 : 22;
+            final double buttonHeight = isWide ? 100 : 60;
 
-          // Tamaño de fuente adaptativo para los botones principales
-          final double fontSize = isWide ? 28 : 24;
-
-          // Alto deseado para los botones. En orientación vertical se reduce
-          // para evitar que ocupen toda la pantalla.
-          final double buttonHeight = isWide ? 120 : 68;
-          final double buttonPadding = isWide ? 24 : 16;
-
-          // Estilo base para ambos botones. Las esquinas redondeadas y el
-          // padding se mantienen, pero la altura mínima se ajusta según la
-          // orientación para que en vertical se vean proporcionados.
-          final ButtonStyle baseStyle = kMowizFilledButtonStyle.copyWith(
-            minimumSize:
-                MaterialStatePropertyAll(Size.fromHeight(buttonHeight)),
-            padding: MaterialStatePropertyAll(
-              EdgeInsets.symmetric(vertical: buttonPadding),
-            ),
-            shape: const MaterialStatePropertyAll(
-              RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(30)),
-              ),
-            ),
-            textStyle: MaterialStatePropertyAll(
-              TextStyle(fontSize: fontSize),
-            ),
-          );
-
-          final payBtn = FilledButton(
-            onPressed: () {
-              SoundHelper.playTap();
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const MowizPayPage(),
+            final ButtonStyle baseStyle = kMowizFilledButtonStyle.copyWith(
+              minimumSize: MaterialStatePropertyAll(Size(double.infinity, buttonHeight)),
+              padding: MaterialStatePropertyAll(EdgeInsets.symmetric(vertical: 0)),
+              shape: const MaterialStatePropertyAll(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(30)),
                 ),
-              );
-            },
-            style: baseStyle,
-            child: AutoSizeText(
-              t('payTicket'),
-              maxLines: 1,
-            ),
-          );
-
-          final cancelBtn = FilledButton(
-            onPressed: () {
-              SoundHelper.playTap();
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const MowizCancelPage(),
-                ),
-              );
-            },
-            style: baseStyle.copyWith(
-              backgroundColor: MaterialStatePropertyAll(
-                Theme.of(context).colorScheme.secondary,
               ),
-              foregroundColor: MaterialStatePropertyAll(
-                Theme.of(context).colorScheme.onSecondary,
+              textStyle: MaterialStatePropertyAll(
+                TextStyle(fontSize: fontSize),
               ),
-            ),
-            child: AutoSizeText(
-              t('cancelDenuncia'),
-              maxLines: 1,
-            ),
-          );
+            );
 
-          // En horizontal los botones se expanden para ocupar el ancho
-          // disponible. En vertical se muestran con su tamaño natural.
-          final rowChildren = <Widget>[
-            Expanded(child: payBtn),
-            SizedBox(width: gap),
-            Expanded(child: cancelBtn),
-          ];
-          final columnChildren = <Widget>[payBtn, SizedBox(height: gap), cancelBtn];
-
-          return Center(
-            child: FractionallySizedBox(
-              widthFactor: isWide ? 1 : 0.9,
-              child: Padding(
-                padding: padding,
-                child: isWide
-                    ? Row(children: rowChildren)
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: columnChildren,
-                      ),
-              ),
-            ),
-          );
-        },
-        ),
-      ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: TextButton(
+            final payBtn = FilledButton(
               onPressed: () {
                 SoundHelper.playTap();
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const HomePage()),
-                  (route) => false,
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const MowizPayPage(),
+                  ),
                 );
               },
-              style:
-                  TextButton.styleFrom(minimumSize: const Size.fromHeight(40)),
-              child: Text(t('home')),
-            ),
-          ),
-        ],
+              style: baseStyle,
+              child: AutoSizeText(
+                t('payTicket'),
+                maxLines: 1,
+                minFontSize: 14,
+              ),
+            );
+
+            final cancelBtn = FilledButton(
+              onPressed: () {
+                SoundHelper.playTap();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const MowizCancelPage(),
+                  ),
+                );
+              },
+              style: baseStyle.copyWith(
+                backgroundColor: MaterialStatePropertyAll(
+                  Theme.of(context).colorScheme.secondary,
+                ),
+                foregroundColor: MaterialStatePropertyAll(
+                  Theme.of(context).colorScheme.onSecondary,
+                ),
+              ),
+              child: AutoSizeText(
+                t('cancelDenuncia'),
+                maxLines: 1,
+                minFontSize: 14,
+              ),
+            );
+
+            // 🟣 Botón home (inferior)
+            final homeBtn = Padding(
+              padding: const EdgeInsets.only(top: 28, bottom: 16),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: 320,
+                  ),
+                  child: SizedBox(
+                    width: contentWidth * 0.6,
+                    height: 46,
+                    child: TextButton(
+                      onPressed: () {
+                        SoundHelper.playTap();
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (_) => const HomePage()),
+                          (route) => false,
+                        );
+                      },
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size.fromHeight(40),
+                        textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                      ),
+                      child: Text(t('home')),
+                    ),
+                  ),
+                ),
+              ),
+            );
+
+            Widget mainButtons = isWide
+                ? Row(
+                    children: [
+                      Expanded(child: payBtn),
+                      SizedBox(width: gap),
+                      Expanded(child: cancelBtn),
+                    ],
+                  )
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      payBtn,
+                      SizedBox(height: gap),
+                      cancelBtn,
+                    ],
+                  );
+
+            return Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: maxContentWidth,
+                  minWidth: 260,
+                  minHeight: height,
+                ),
+                child: Padding(
+                  padding: padding,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Expanded(child: mainButtons),
+                      homeBtn,
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }

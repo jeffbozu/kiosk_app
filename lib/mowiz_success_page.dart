@@ -1,7 +1,7 @@
 import 'dart:async';
 
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -154,15 +154,9 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
-          final isLargeTablet = width >= 900;
-          final isTablet = width >= 600 && width < 900;
           final padding = EdgeInsets.all(width * 0.05);
-          final double gap = width * 0.04;
-          final double titleFont = isLargeTablet
-              ? 32
-              : isTablet
-                  ? 28
-                  : 24;
+          final double gap = width * 0.05;
+          final double titleFont = max(16, width * 0.05);
           final double qrSize = width * 0.4;
 
           return Stack(
@@ -175,10 +169,11 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                   shouldLoop: false,
                 ),
               ),
-              SingleChildScrollView(
+              Padding(
                 padding: padding,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Lottie.asset(
                       'assets/success.json',
@@ -186,13 +181,15 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                       repeat: false,
                     ),
                     SizedBox(height: gap / 2),
-                    AutoSizeText(
-                      t('paymentSuccess'),
-                      maxLines: 1,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: titleFont,
-                        fontWeight: FontWeight.bold,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        t('paymentSuccess'),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: titleFont,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     SizedBox(height: gap / 2),
@@ -219,46 +216,60 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      AutoSizeText(
-                        t('ticketSummary'),
-                        maxLines: 1,
-                        style: TextStyle(
-                          fontSize: titleFont - 6,
-                          fontWeight: FontWeight.bold,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          t('ticketSummary'),
+                          style: TextStyle(
+                            fontSize: titleFont - 6,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                      AutoSizeText(
-                        "${t('plate')}: ${widget.plate}",
-                        maxLines: 1,
-                        style: TextStyle(fontSize: titleFont - 8),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          "${t('plate')}: ${widget.plate}",
+                          style: TextStyle(fontSize: titleFont - 8),
+                        ),
                       ),
-                      AutoSizeText(
-                        // i18n zone name
-                        "${t('zone')}: ${widget.zone == 'green' ? t('zoneGreen') : t('zoneBlue')}",
-                        maxLines: 1,
-                        style: TextStyle(fontSize: titleFont - 8),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          // i18n zone name
+                          "${t('zone')}: ${widget.zone == 'green' ? t('zoneGreen') : t('zoneBlue')}",
+                          style: TextStyle(fontSize: titleFont - 8),
+                        ),
                       ),
-                      AutoSizeText(
-                        "${t('startTime')}: ${timeFormat.format(widget.start)}",
-                        maxLines: 1,
-                        style: TextStyle(fontSize: titleFont - 8),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          "${t('startTime')}: ${timeFormat.format(widget.start)}",
+                          style: TextStyle(fontSize: titleFont - 8),
+                        ),
                       ),
-                      AutoSizeText(
-                        "${t('endTime')}: ${timeFormat.format(finish)}",
-                        maxLines: 1,
-                        style: TextStyle(fontSize: titleFont - 8),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          "${t('endTime')}: ${timeFormat.format(finish)}",
+                          style: TextStyle(fontSize: titleFont - 8),
+                        ),
                       ),
-                      AutoSizeText(
-                        // i18n price format
-                        "${t('totalPrice')}: ${currencyFormat.format(widget.price)}",
-                        maxLines: 1,
-                        style: TextStyle(fontSize: titleFont - 8),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          // i18n price format
+                          "${t('totalPrice')}: ${currencyFormat.format(widget.price)}",
+                          style: TextStyle(fontSize: titleFont - 8),
+                        ),
                       ),
-                      AutoSizeText(
-                        // i18n payment method
-                        "${t('paymentMethod')}: ${methodMap[widget.method] ?? widget.method}",
-                        maxLines: 1,
-                        style: TextStyle(fontSize: titleFont - 8),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          // i18n payment method
+                          "${t('paymentMethod')}: ${methodMap[widget.method] ?? widget.method}",
+                          style: TextStyle(fontSize: titleFont - 8),
+                        ),
                       ),
                     ],
                   ),
@@ -283,7 +294,10 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                                 TextStyle(fontSize: titleFont - 6),
                               ),
                             ),
-                            child: AutoSizeText(t('printTicket'), maxLines: 1),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(t('printTicket')),
+                            ),
                           ),
                         ),
                       ),
@@ -300,7 +314,10 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                                 TextStyle(fontSize: titleFont - 6),
                               ),
                             ),
-                            child: AutoSizeText(t('sendBySms'), maxLines: 1),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(t('sendBySms')),
+                            ),
                           ),
                         ),
                       ),
@@ -322,7 +339,10 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                                 TextStyle(fontSize: titleFont - 6),
                               ),
                             ),
-                            child: AutoSizeText(t('sendByEmail'), maxLines: 1),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(t('sendByEmail')),
+                            ),
                           ),
                         ),
                       ),
@@ -339,7 +359,10 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                                 TextStyle(fontSize: titleFont - 6),
                               ),
                             ),
-                            child: AutoSizeText(t('home'), maxLines: 1),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(t('home')),
+                            ),
                           ),
                         ),
                       ),
@@ -348,11 +371,13 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
               ],
             ),
             SizedBox(height: gap * 1.5),
-            AutoSizeText(
-              t('returningIn', params: {'seconds': '$_seconds'}),
-              maxLines: 1,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: titleFont - 6),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                t('returningIn', params: {'seconds': '$_seconds'}),
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: titleFont - 6),
+              ),
             ),
             ],
           ),

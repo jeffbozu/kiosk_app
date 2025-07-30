@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'language_selector.dart';
 import 'theme_mode_button.dart';
@@ -8,7 +9,6 @@ import 'home_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
 // Estilo de botones grandes reutilizable
 import 'styles/mowiz_buttons.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'sound_helper.dart';
 
 class MowizPage extends StatelessWidget {
@@ -38,19 +38,12 @@ class MowizPage extends StatelessWidget {
           const double breakpoint = 700;
           final bool isWide = width >= breakpoint;
 
-          // Padding y separación basados en el ancho disponible. Utilizamos
-          // un porcentaje para que los botones ocupen entre el 80% y 95%
-          // del ancho sin pegarse a los bordes.
           final padding = EdgeInsets.symmetric(horizontal: width * 0.05);
-          final double gap = isWide ? 32 : 24;
+          final double gap = width * 0.05;
 
-          // Tamaño de fuente adaptativo para los botones principales
-          final double fontSize = isWide ? 28 : 24;
-
-          // Alto deseado para los botones. En orientación vertical se reduce
-          // para evitar que ocupen toda la pantalla.
-          final double buttonHeight = isWide ? 120 : 68;
-          final double buttonPadding = isWide ? 24 : 16;
+          final double fontSize = max(16, width * 0.045);
+          final double buttonHeight = max(48, width * 0.15);
+          final double buttonPadding = width * 0.03;
 
           // Estilo base para ambos botones. Las esquinas redondeadas y el
           // padding se mantienen, pero la altura mínima se ajusta según la
@@ -66,47 +59,58 @@ class MowizPage extends StatelessWidget {
                 borderRadius: BorderRadius.all(Radius.circular(30)),
               ),
             ),
-            textStyle: MaterialStatePropertyAll(
-              TextStyle(fontSize: fontSize),
+            textStyle:
+                MaterialStatePropertyAll(TextStyle(fontSize: fontSize)),
+          );
+
+          final buttonConstraints = BoxConstraints(
+            maxWidth: 400,
+            minWidth: isWide ? width * 0.4 : width * 0.9,
+            minHeight: 48,
+          );
+
+          final payBtn = ConstrainedBox(
+            constraints: buttonConstraints,
+            child: FilledButton(
+              onPressed: () {
+                SoundHelper.playTap();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const MowizPayPage(),
+                  ),
+                );
+              },
+              style: baseStyle,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(t('payTicket')),
+              ),
             ),
           );
 
-          final payBtn = FilledButton(
-            onPressed: () {
-              SoundHelper.playTap();
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const MowizPayPage(),
+          final cancelBtn = ConstrainedBox(
+            constraints: buttonConstraints,
+            child: FilledButton(
+              onPressed: () {
+                SoundHelper.playTap();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const MowizCancelPage(),
+                  ),
+                );
+              },
+              style: baseStyle.copyWith(
+                backgroundColor: MaterialStatePropertyAll(
+                  Theme.of(context).colorScheme.secondary,
                 ),
-              );
-            },
-            style: baseStyle,
-            child: AutoSizeText(
-              t('payTicket'),
-              maxLines: 1,
-            ),
-          );
-
-          final cancelBtn = FilledButton(
-            onPressed: () {
-              SoundHelper.playTap();
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const MowizCancelPage(),
+                foregroundColor: MaterialStatePropertyAll(
+                  Theme.of(context).colorScheme.onSecondary,
                 ),
-              );
-            },
-            style: baseStyle.copyWith(
-              backgroundColor: MaterialStatePropertyAll(
-                Theme.of(context).colorScheme.secondary,
               ),
-              foregroundColor: MaterialStatePropertyAll(
-                Theme.of(context).colorScheme.onSecondary,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(t('cancelDenuncia')),
               ),
-            ),
-            child: AutoSizeText(
-              t('cancelDenuncia'),
-              maxLines: 1,
             ),
           );
 

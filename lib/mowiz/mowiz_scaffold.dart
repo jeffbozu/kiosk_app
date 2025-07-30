@@ -33,7 +33,7 @@ class MowizScaffold extends StatelessWidget {
                 title: Text(title!),
                 actions: actions,
               ),
-        body: body,
+        body: SafeArea(child: body),
       ),
     );
   }

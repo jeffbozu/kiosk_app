@@ -1,5 +1,5 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
@@ -82,18 +82,24 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
     Widget paymentButton(String value, IconData icon, String text, double fSize) {
       final selected = _method == value;
       final scheme = Theme.of(context).colorScheme;
-      return FilledButton.icon(
-        onPressed: () async {
-          SoundHelper.playTap();
-          setState(() => _method = value);
-          await _pay();
-        },
-        icon: Icon(icon, size: fSize + 12),
-        label: AutoSizeText(text, maxLines: 1),
-        style: kMowizFilledButtonStyle.copyWith(
-          textStyle: MaterialStatePropertyAll(TextStyle(fontSize: fSize)),
-          backgroundColor: MaterialStatePropertyAll(
-            selected ? scheme.primary : scheme.secondary,
+      return ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 400, minHeight: 48),
+        child: FilledButton.icon(
+          onPressed: () async {
+            SoundHelper.playTap();
+            setState(() => _method = value);
+            await _pay();
+          },
+          icon: Icon(icon, size: fSize + 12),
+          label: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(text),
+          ),
+          style: kMowizFilledButtonStyle.copyWith(
+            textStyle: MaterialStatePropertyAll(TextStyle(fontSize: fSize)),
+            backgroundColor: MaterialStatePropertyAll(
+              selected ? scheme.primary : scheme.secondary,
+            ),
           ),
         ),
       );
@@ -104,22 +110,16 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
-          final isLargeTablet = width >= 900;
-          final isTablet = width >= 600 && width < 900;
           final padding = EdgeInsets.all(width * 0.05);
-          final double gap = width * 0.04;
-          final double titleFont = isLargeTablet
-              ? 32
-              : isTablet
-                  ? 28
-                  : 24;
+          final double gap = width * 0.05;
+          final double titleFont = max(16, width * 0.05);
 
           return Padding(
             padding: padding,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
             // Cuadro con la información resumida del ticket.
             // Se deja crecer de forma dinámica y con scroll interno
             // para evitar cualquier overflow si hay mucho texto.
@@ -130,44 +130,53 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
               elevation: 4,
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                    AutoSizeText(
-                      t('totalTime'),
-                      maxLines: 1,
-                      style: TextStyle(
-                        fontSize: titleFont - 4,
-                        fontWeight: FontWeight.bold,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        t('totalTime'),
+                        style: TextStyle(
+                          fontSize: titleFont - 4,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
-                    AutoSizeText(
-                      '${widget.minutes ~/ 60}h ${widget.minutes % 60}m',
-                      maxLines: 1,
-                      style: TextStyle(fontSize: titleFont + 8),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        '${widget.minutes ~/ 60}h ${widget.minutes % 60}m',
+                        style: TextStyle(fontSize: titleFont + 8),
+                      ),
                     ),
                     const SizedBox(height: 16),
-                    AutoSizeText(
-                      "${t('startTime')}: ${timeFormat.format(widget.start)}",
-                      maxLines: 1,
-                      style: TextStyle(fontSize: titleFont - 4),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        "${t('startTime')}: ${timeFormat.format(widget.start)}",
+                        style: TextStyle(fontSize: titleFont - 4),
+                      ),
                     ),
                     const SizedBox(height: 8),
-                    AutoSizeText(
-                      "${t('endTime')}: ${timeFormat.format(finish)}",
-                      maxLines: 1,
-                      style: TextStyle(fontSize: titleFont - 4),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        "${t('endTime')}: ${timeFormat.format(finish)}",
+                        style: TextStyle(fontSize: titleFont - 4),
+                      ),
                     ),
                     const SizedBox(height: 16),
-                    AutoSizeText(
-                      "${t('totalPrice')}: ${widget.price.toStringAsFixed(2)} €",
-                      maxLines: 1,
-                      style: TextStyle(
-                        fontSize: titleFont,
-                        fontWeight: FontWeight.bold,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        "${t('totalPrice')}: ${widget.price.toStringAsFixed(2)} €",
+                        style: TextStyle(
+                          fontSize: titleFont,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -192,7 +201,9 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
                   paymentButton('mobile', Icons.phone_iphone, t('mobilePay'), titleFont),
             ),
             SizedBox(height: gap * 2),
-            FilledButton(
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400, minHeight: 48),
+              child: FilledButton(
               onPressed: () {
                 SoundHelper.playTap();
                 Navigator.of(context).pushAndRemoveUntil(
@@ -213,7 +224,11 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
                   TextStyle(fontSize: titleFont),
                 ),
               ),
-              child: AutoSizeText(t('back'), maxLines: 1),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(t('back')),
+              ),
+            ),
             ),
           ],
         ),

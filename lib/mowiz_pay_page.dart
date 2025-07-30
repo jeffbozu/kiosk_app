@@ -1,5 +1,5 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'l10n/app_localizations.dart';
 import 'mowiz_time_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
@@ -37,20 +37,15 @@ class _MowizPayPageState extends State<MowizPayPage> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
-          final isLargeTablet = width >= 900;
-          final isTablet = width >= 600 && width < 900;
           final padding = EdgeInsets.all(width * 0.05);
-          final double gap = width * 0.04;
-          final double titleFont = isLargeTablet
-              ? 32
-              : isTablet
-                  ? 28
-                  : 24;
-          final double inputFont = isLargeTablet
-              ? 28
-              : isTablet
-                  ? 24
-                  : 20;
+          final double gap = width * 0.05;
+          final double titleFont = max(16, width * 0.05);
+          final double inputFont = max(16, width * 0.045);
+          final buttonConstraints = BoxConstraints(
+            maxWidth: 400,
+            minWidth: width * 0.9,
+            minHeight: 48,
+          );
 
           final zoneButton = (String value, String text, Color color) =>
               Expanded(
@@ -63,30 +58,31 @@ class _MowizPayPageState extends State<MowizPayPage> {
                     backgroundColor: MaterialStatePropertyAll(
                       _selectedZone == value ? color : colorScheme.secondary,
                     ),
-                    textStyle: MaterialStatePropertyAll(
-                      TextStyle(fontSize: inputFont),
-                    ),
+                    textStyle:
+                        MaterialStatePropertyAll(TextStyle(fontSize: inputFont)),
                   ),
-                  child: AutoSizeText(
-                    text,
-                    maxLines: 1,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(text),
                   ),
                 ),
               );
 
           return Padding(
             padding: padding,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  AutoSizeText(
-                    t('selectZone'),
-                    maxLines: 1,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: titleFont,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      t('selectZone'),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: titleFont,
+                      ),
                     ),
                   ),
                   SizedBox(height: gap),
@@ -117,7 +113,9 @@ class _MowizPayPageState extends State<MowizPayPage> {
                     onChanged: (_) => setState(() {}),
                   ),
                   SizedBox(height: gap * 1.5),
-                  FilledButton(
+                  ConstrainedBox(
+                    constraints: buttonConstraints,
+                    child: FilledButton(
                     onPressed: _confirmEnabled
                         ? () {
                             SoundHelper.playTap();
@@ -135,13 +133,15 @@ class _MowizPayPageState extends State<MowizPayPage> {
                       textStyle:
                           MaterialStatePropertyAll(TextStyle(fontSize: titleFont)),
                     ),
-                    child: AutoSizeText(
-                      t('confirm'),
-                      maxLines: 1,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(t('confirm')),
                     ),
                   ),
                   SizedBox(height: gap),
-                  FilledButton(
+                  ConstrainedBox(
+                    constraints: buttonConstraints,
+                    child: FilledButton(
                     onPressed: () {
                       SoundHelper.playTap();
                       Navigator.of(context).pushAndRemoveUntil(
@@ -153,9 +153,9 @@ class _MowizPayPageState extends State<MowizPayPage> {
                       textStyle:
                           MaterialStatePropertyAll(TextStyle(fontSize: titleFont)),
                     ),
-                    child: AutoSizeText(
-                      t('back'),
-                      maxLines: 1,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(t('back')),
                     ),
                   ),
                 ],

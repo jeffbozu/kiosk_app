@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
@@ -135,90 +135,126 @@ class _MowizTimePageState extends State<MowizTimePage> {
     final priceStr =
         NumberFormat.currency(symbol: '€', locale: 'es_ES').format(_totalCents / 100);
 
-    Widget btn(String label, int min) => Expanded(
-          child: ElevatedButton(
-            style: kMowizFilledButtonStyle,
-            onPressed: () {
-              SoundHelper.playTap();
-              _change(min);
-            },
-            child: AutoSizeText(label, maxLines: 1),
+    Widget btn(String label, int min, double font) => Expanded(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400, minHeight: 48),
+            child: FilledButton(
+              style: kMowizFilledButtonStyle.copyWith(
+                textStyle: MaterialStatePropertyAll(TextStyle(fontSize: font)),
+              ),
+              onPressed: () {
+                SoundHelper.playTap();
+                _change(min);
+              },
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(label),
+              ),
+            ),
           ),
         );
 
     return MowizScaffold(
       title: 'MeyPark - ${t('selectDuration')}',
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AutoSizeText(
-              DateFormat('EEE, d MMM yyyy - HH:mm', locale).format(_now),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Row(children: [btn('+3', 3), const SizedBox(width: 12), btn('+5', 5), const SizedBox(width: 12), btn('+15', 15)]),
-            const SizedBox(height: 12),
-            Row(children: [btn('-3', -3), const SizedBox(width: 12), btn('-5', -5), const SizedBox(width: 12), btn('-15', -15)]),
-            const SizedBox(height: 24),
-            AutoSizeText('${minutes ~/ 60}h ${minutes % 60}m',
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            AutoSizeText('${t('price')}: $priceStr',
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            AutoSizeText('${t('until')}: ${DateFormat('HH:mm', locale).format(finish)}',
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            if (_tariffLoaded) _TariffList(_stepsMap) else const CircularProgressIndicator(),
-            const Spacer(),
-            FilledButton(
-              onPressed: _totalSec > 0
-                  ? () {
-                      SoundHelper.playTap();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => MowizSummaryPage(
-                            plate: widget.plate,
-                            zone: widget.zone,
-                            start: _now,
-                            minutes: minutes,
-                            price: _totalCents / 100,
-                          ),
-                        ),
-                      );
-                    }
-                  : null,
-              style: kMowizFilledButtonStyle,
-              child: AutoSizeText(t('continue'), maxLines: 1),
-            ),
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: () {
-                SoundHelper.playTap();
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const MowizPayPage()),
-                  (route) => false,
-                );
-              },
-              style: kMowizFilledButtonStyle.copyWith(
-                backgroundColor: MaterialStatePropertyAll(
-                  Theme.of(context).colorScheme.secondary,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final padding = EdgeInsets.all(width * 0.05);
+          final double gap = width * 0.05;
+          final double titleFont = max(16, width * 0.05);
+          final double valueFont = max(16, width * 0.06);
+
+          Widget localBtn(String label, int min) => btn(label, min, valueFont);
+
+          return Padding(
+            padding: padding,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    DateFormat('EEE, d MMM yyyy - HH:mm', locale).format(_now),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: titleFont, fontWeight: FontWeight.bold),
+                  ),
                 ),
-              ),
-              child: AutoSizeText(t('back'), maxLines: 1),
+                Row(children: [localBtn('+3', 3), SizedBox(width: gap / 2), localBtn('+5', 5), SizedBox(width: gap / 2), localBtn('+15', 15)]),
+                Row(children: [localBtn('-3', -3), SizedBox(width: gap / 2), localBtn('-5', -5), SizedBox(width: gap / 2), localBtn('-15', -15)]),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('${minutes ~/ 60}h ${minutes % 60}m',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: valueFont + 4, fontWeight: FontWeight.bold)),
+                ),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('${t('price')}: $priceStr',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: titleFont, fontWeight: FontWeight.bold)),
+                ),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('${t('until')}: ${DateFormat('HH:mm', locale).format(finish)}',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: titleFont, fontWeight: FontWeight.bold)),
+                ),
+                if (_tariffLoaded) _TariffList(_stepsMap, font: titleFont) else const CircularProgressIndicator(),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 400, minHeight: 48),
+                  child: FilledButton(
+                    onPressed: _totalSec > 0
+                        ? () {
+                            SoundHelper.playTap();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => MowizSummaryPage(
+                                  plate: widget.plate,
+                                  zone: widget.zone,
+                                  start: _now,
+                                  minutes: minutes,
+                                  price: _totalCents / 100,
+                                ),
+                              ),
+                            );
+                          }
+                        : null,
+                    style: kMowizFilledButtonStyle.copyWith(
+                      textStyle: MaterialStatePropertyAll(TextStyle(fontSize: titleFont)),
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(t('continue')),
+                    ),
+                  ),
+                ),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 400, minHeight: 48),
+                  child: FilledButton(
+                    onPressed: () {
+                      SoundHelper.playTap();
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (_) => const MowizPayPage()),
+                        (route) => false,
+                      );
+                    },
+                    style: kMowizFilledButtonStyle.copyWith(
+                      backgroundColor: MaterialStatePropertyAll(
+                        Theme.of(context).colorScheme.secondary,
+                      ),
+                      textStyle: MaterialStatePropertyAll(TextStyle(fontSize: titleFont)),
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(t('back')),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -226,8 +262,9 @@ class _MowizTimePageState extends State<MowizTimePage> {
 
 /* ───────────────  Widget para mostrar la lista de bloques  ─────────────── */
 class _TariffList extends StatelessWidget {
-  const _TariffList(this.map);
+  const _TariffList(this.map, {required this.font});
   final Map<int, int> map;
+  final double font;
 
   @override
   Widget build(BuildContext context) {
@@ -236,10 +273,13 @@ class _TariffList extends StatelessWidget {
       children: entries
           .map((e) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 2),
-                child: AutoSizeText(
-                  '${e.key} min - ${(e.value / 100).toStringAsFixed(2)} €',
-                  maxLines: 1,
-                  textAlign: TextAlign.center,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '${e.key} min - ${(e.value / 100).toStringAsFixed(2)} €',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: font),
+                  ),
                 ),
               ))
           .toList(),

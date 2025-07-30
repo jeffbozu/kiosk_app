@@ -9,6 +9,7 @@ import 'dart:convert';
 
 import 'l10n/app_localizations.dart';
 import 'mowiz_page.dart';
+import 'mowiz_time_page.dart';
 import 'mowiz_success_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
 import 'styles/mowiz_buttons.dart';
@@ -211,7 +212,12 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
               onPressed: () {
                 SoundHelper.playTap();
                 Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const MowizPage()),
+                  MaterialPageRoute(
+                    builder: (_) => MowizTimePage(
+                      zone: widget.zone,
+                      plate: widget.plate,
+                    ),
+                  ),
                   (route) => false,
                 );
               },
@@ -223,7 +229,7 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
                   TextStyle(fontSize: titleFont),
                 ),
               ),
-              child: AutoSizeText(t('cancel'), maxLines: 1),
+              child: AutoSizeText(t('back'), maxLines: 1),
             ),
           ],
         ),

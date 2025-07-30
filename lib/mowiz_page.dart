@@ -4,6 +4,7 @@ import 'theme_mode_button.dart';
 import 'l10n/app_localizations.dart';
 import 'mowiz_pay_page.dart';
 import 'mowiz_cancel_page.dart';
+import 'home_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
 // Estilo de botones grandes reutilizable
 import 'styles/mowiz_buttons.dart';
@@ -17,13 +18,16 @@ class MowizPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context).t;
     return MowizScaffold(
-      title: t('mowizTitle'),
+      title: 'MeyPark',
       actions: const [
         LanguageSelector(),
         SizedBox(width: 8),
         ThemeModeButton(),
       ],
-      body: LayoutBuilder(
+      body: Column(
+        children: [
+          Expanded(
+            child: LayoutBuilder(
         // LayoutBuilder nos da el ancho disponible para calcular
         // paddings y tamaños de forma proporcional.
         builder: (context, constraints) {
@@ -131,6 +135,24 @@ class MowizPage extends StatelessWidget {
             ),
           );
         },
+        ),
+      ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: TextButton(
+              onPressed: () {
+                SoundHelper.playTap();
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const HomePage()),
+                  (route) => false,
+                );
+              },
+              style:
+                  TextButton.styleFrom(minimumSize: const Size.fromHeight(40)),
+              child: Text(t('home')),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -65,6 +65,7 @@ class AppLocalizations {
       'paymentError': 'Error al procesar el pago',
       // Actualizado: antes "Volver a la pantalla principal"
       'goHome': 'Cerrar',
+      'home': 'Inicio',
       'back': 'Atrás',
       'emergencyTitle': 'ADVERTENCIA',
       'autoCloseIn': 'Cierre automático en {seconds} s',
@@ -150,6 +151,7 @@ class AppLocalizations {
       'paymentError': 'Error en processar el pagament',
       // Actualitzat: abans "Tornar a l'inici"
       'goHome': 'Tancar',
+      'home': 'Inici',
       'back': 'Enrere',
       'emergencyTitle': 'Emergència',
       'autoCloseIn': 'Tancament automàtic en {seconds} s',
@@ -235,6 +237,7 @@ class AppLocalizations {
       'paymentError': 'Payment error',
       // Updated from "Return to main screen"
       'goHome': 'Close',
+      'home': 'Home',
       'back': 'Back',
       'emergencyTitle': 'Emergency',
       'autoCloseIn': 'Auto close in {seconds}s',

@@ -11,6 +11,7 @@ import 'api_config.dart';
 
 import 'l10n/app_localizations.dart';
 import 'mowiz_page.dart';
+import 'mowiz_pay_page.dart';
 import 'mowiz_summary_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
 import 'styles/mowiz_buttons.dart';
@@ -146,7 +147,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
         );
 
     return MowizScaffold(
-      title: t('selectDuration'),
+      title: 'MeyPark - ${t('selectDuration')}',
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -205,7 +206,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
               onPressed: () {
                 SoundHelper.playTap();
                 Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const MowizPage()),
+                  MaterialPageRoute(builder: (_) => const MowizPayPage()),
                   (route) => false,
                 );
               },
@@ -214,7 +215,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                   Theme.of(context).colorScheme.secondary,
                 ),
               ),
-              child: AutoSizeText(t('cancel'), maxLines: 1),
+              child: AutoSizeText(t('back'), maxLines: 1),
             ),
           ],
         ),

@@ -6,9 +6,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
-// Base URL configuration for API calls
 import 'api_config.dart';
-
 import 'l10n/app_localizations.dart';
 import 'mowiz_page.dart';
 import 'mowiz_pay_page.dart';
@@ -30,19 +28,15 @@ class _MowizTimePageState extends State<MowizTimePage> {
   late DateTime _now;
   Timer? _clock;
 
-  // Datos que llegan del backend
   Map<int, int> _stepsMap = {};        // minutos → precio céntimos
   int? _maxDuration;                   // segundos
   bool _tariffLoaded = false;
 
-  // Estado de la selección
   final Map<int, int> _bloques = {3: 0, 5: 0, 15: 0};
   int _totalSec = 0;
   int _totalCents = 0;
 
-  /* ─────────────────────────  PETICIÓN  ───────────────────────── */
   Future<void> _loadTariff() async {
-    // limpiar todo
     setState(() {
       _stepsMap.clear();
       _maxDuration = null;
@@ -52,7 +46,6 @@ class _MowizTimePageState extends State<MowizTimePage> {
       _tariffLoaded = false;
     });
 
-    // Build the request URL using the base constant
     final url =
         '$apiBaseUrl/v1/onstreet-service/product/by-zone/${widget.zone}&plate=${widget.plate}';
     try {
@@ -77,7 +70,6 @@ class _MowizTimePageState extends State<MowizTimePage> {
     }
   }
 
-  /* ───────────────────────  SUMAR / RESTAR  ───────────────────── */
   void _change(int minutos) {
     if (!_tariffLoaded || !_stepsMap.containsKey(minutos.abs())) return;
 
@@ -85,10 +77,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
     final nextSec = _totalSec + minutos * 60;
     final nextCents = _totalCents + (minutos > 0 ? cents : -cents);
 
-    // no permitir negativos
     if (nextSec < 0 || nextCents < 0) return;
-
-    // comprobar duración máxima
     if (_maxDuration != null && nextSec > _maxDuration!) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Duración máxima alcanzada')),
@@ -103,7 +92,6 @@ class _MowizTimePageState extends State<MowizTimePage> {
     });
   }
 
-  /* ─────────────────────────  CICLO DE VIDA  ──────────────────── */
   @override
   void initState() {
     super.initState();
@@ -120,7 +108,6 @@ class _MowizTimePageState extends State<MowizTimePage> {
     super.dispose();
   }
 
-  /* ───────────────────────────  BUILD  ────────────────────────── */
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context).t;
@@ -135,99 +122,160 @@ class _MowizTimePageState extends State<MowizTimePage> {
     final priceStr =
         NumberFormat.currency(symbol: '€', locale: 'es_ES').format(_totalCents / 100);
 
-    Widget btn(String label, int min) => Expanded(
-          child: ElevatedButton(
-            style: kMowizFilledButtonStyle,
-            onPressed: () {
-              SoundHelper.playTap();
-              _change(min);
-            },
-            child: AutoSizeText(label, maxLines: 1),
+    Widget btn(String label, int min, double fontSize, double btnHeight) => Expanded(
+      child: SizedBox(
+        height: btnHeight,
+        child: ElevatedButton(
+          style: kMowizFilledButtonStyle.copyWith(
+            textStyle: MaterialStatePropertyAll(TextStyle(fontSize: fontSize)),
           ),
-        );
+          onPressed: () {
+            SoundHelper.playTap();
+            _change(min);
+          },
+          child: AutoSizeText(label, maxLines: 1, minFontSize: 13),
+        ),
+      ),
+    );
 
     return MowizScaffold(
       title: 'MeyPark - ${t('selectDuration')}',
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AutoSizeText(
-              DateFormat('EEE, d MMM yyyy - HH:mm', locale).format(_now),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Row(children: [btn('+3', 3), const SizedBox(width: 12), btn('+5', 5), const SizedBox(width: 12), btn('+15', 15)]),
-            const SizedBox(height: 12),
-            Row(children: [btn('-3', -3), const SizedBox(width: 12), btn('-5', -5), const SizedBox(width: 12), btn('-15', -15)]),
-            const SizedBox(height: 24),
-            AutoSizeText('${minutes ~/ 60}h ${minutes % 60}m',
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            AutoSizeText('${t('price')}: $priceStr',
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            AutoSizeText('${t('until')}: ${DateFormat('HH:mm', locale).format(finish)}',
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            if (_tariffLoaded) _TariffList(_stepsMap) else const CircularProgressIndicator(),
-            const Spacer(),
-            FilledButton(
-              onPressed: _totalSec > 0
-                  ? () {
-                      SoundHelper.playTap();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => MowizSummaryPage(
-                            plate: widget.plate,
-                            zone: widget.zone,
-                            start: _now,
-                            minutes: minutes,
-                            price: _totalCents / 100,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final height = constraints.maxHeight;
+            const double maxContentWidth = 500;
+            final double contentWidth = width > maxContentWidth ? maxContentWidth : width;
+
+            final bool isWide = contentWidth > 700;
+            final double gap = isWide ? 28 : 16;
+            final double fontSz = isWide ? 26 : 18;
+            final double labelSz = isWide ? 23 : 16;
+            final double mainValueSz = isWide ? 36 : 26;
+            final double btnHeight = isWide ? 58 : 46;
+
+            return Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: maxContentWidth,
+                  minWidth: 260,
+                  minHeight: height,
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: contentWidth * 0.05, vertical: 18),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AutoSizeText(
+                        DateFormat('EEE, d MMM yyyy - HH:mm', locale).format(_now),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        style: TextStyle(fontSize: labelSz, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: gap),
+                      Row(children: [
+                        btn('+3', 3, fontSz, btnHeight),
+                        SizedBox(width: gap),
+                        btn('+5', 5, fontSz, btnHeight),
+                        SizedBox(width: gap),
+                        btn('+15', 15, fontSz, btnHeight),
+                      ]),
+                      SizedBox(height: gap),
+                      Row(children: [
+                        btn('-3', -3, fontSz, btnHeight),
+                        SizedBox(width: gap),
+                        btn('-5', -5, fontSz, btnHeight),
+                        SizedBox(width: gap),
+                        btn('-15', -15, fontSz, btnHeight),
+                      ]),
+                      SizedBox(height: gap * 1.1),
+                      AutoSizeText(
+                        '${minutes ~/ 60}h ${minutes % 60}m',
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        style: TextStyle(fontSize: mainValueSz, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 6),
+                      AutoSizeText(
+                        '${t('price')}: $priceStr',
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        style: TextStyle(fontSize: labelSz, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 6),
+                      AutoSizeText(
+                        '${t('until')}: ${DateFormat('HH:mm', locale).format(finish)}',
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        style: TextStyle(fontSize: labelSz, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 10),
+                      if (_tariffLoaded)
+                        _TariffList(_stepsMap, fontSz)
+                      else
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                      const Spacer(),
+                      FilledButton(
+                        onPressed: _totalSec > 0
+                            ? () {
+                                SoundHelper.playTap();
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => MowizSummaryPage(
+                                      plate: widget.plate,
+                                      zone: widget.zone,
+                                      start: _now,
+                                      minutes: minutes,
+                                      price: _totalCents / 100,
+                                    ),
+                                  ),
+                                );
+                              }
+                            : null,
+                        style: kMowizFilledButtonStyle.copyWith(
+                          minimumSize: MaterialStatePropertyAll(Size(double.infinity, btnHeight + 10)),
+                          textStyle: MaterialStatePropertyAll(TextStyle(fontSize: fontSz)),
+                        ),
+                        child: AutoSizeText(t('continue'), maxLines: 1, minFontSize: 14),
+                      ),
+                      SizedBox(height: 10),
+                      FilledButton(
+                        onPressed: () {
+                          SoundHelper.playTap();
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(builder: (_) => const MowizPayPage()),
+                            (route) => false,
+                          );
+                        },
+                        style: kMowizFilledButtonStyle.copyWith(
+                          minimumSize: MaterialStatePropertyAll(Size(double.infinity, btnHeight + 4)),
+                          backgroundColor: MaterialStatePropertyAll(
+                            Theme.of(context).colorScheme.secondary,
                           ),
                         ),
-                      );
-                    }
-                  : null,
-              style: kMowizFilledButtonStyle,
-              child: AutoSizeText(t('continue'), maxLines: 1),
-            ),
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: () {
-                SoundHelper.playTap();
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const MowizPayPage()),
-                  (route) => false,
-                );
-              },
-              style: kMowizFilledButtonStyle.copyWith(
-                backgroundColor: MaterialStatePropertyAll(
-                  Theme.of(context).colorScheme.secondary,
+                        child: AutoSizeText(t('back'), maxLines: 1, minFontSize: 14),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              child: AutoSizeText(t('back'), maxLines: 1),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
   }
 }
 
-/* ───────────────  Widget para mostrar la lista de bloques  ─────────────── */
 class _TariffList extends StatelessWidget {
-  const _TariffList(this.map);
+  const _TariffList(this.map, this.fontSz);
   final Map<int, int> map;
+  final double fontSz;
 
   @override
   Widget build(BuildContext context) {
@@ -240,6 +288,7 @@ class _TariffList extends StatelessWidget {
                   '${e.key} min - ${(e.value / 100).toStringAsFixed(2)} €',
                   maxLines: 1,
                   textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: fontSz - 3),
                 ),
               ))
           .toList(),

@@ -183,7 +183,6 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
                 ),
               ),
             ),
-            ),
             SizedBox(height: gap * 2),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: width * 0.1),

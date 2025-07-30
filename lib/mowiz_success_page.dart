@@ -10,7 +10,6 @@ import 'package:confetti/confetti.dart';
 import 'l10n/app_localizations.dart';
 import 'mowiz_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
-// Estilo de botones grandes reutilizable para toda la app
 import 'styles/mowiz_buttons.dart';
 import 'sound_helper.dart';
 
@@ -124,7 +123,6 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
     final l = AppLocalizations.of(context);
     final t = l.t;
     final finish = widget.start.add(Duration(minutes: widget.minutes));
-    // i18n determine locale specific formats
     final localeCode = l.locale.languageCode == 'es'
         ? 'es_ES'
         : l.locale.languageCode == 'ca'
@@ -134,7 +132,6 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         ? DateFormat('MMM d, yyyy – HH:mm', localeCode)
         : DateFormat('d MMM yyyy – HH:mm', localeCode);
     final currencyFormat = NumberFormat.currency(locale: localeCode, symbol: '€');
-    // i18n payment method translation
     final methodMap = {
       'card': t('card'),
       'qr': t('qrPay'),
@@ -154,205 +151,205 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
-          final isLargeTablet = width >= 900;
-          final isTablet = width >= 600 && width < 900;
-          final padding = EdgeInsets.all(width * 0.05);
-          final double gap = width * 0.04;
-          final double titleFont = isLargeTablet
-              ? 32
-              : isTablet
-                  ? 28
-                  : 24;
-          final double qrSize = width * 0.4;
+          final height = constraints.maxHeight;
+          // ---------- Escalado dinámico ----------
+          final bool isMobile = width < 500;
+          final double safeWidth = width > 550 ? 500 : width * 0.95;
+          final double qrSize = safeWidth * (isMobile ? 0.6 : 0.38);
+          final double titleFont = safeWidth * (isMobile ? 0.065 : 0.055);
+          final double subFont = safeWidth * (isMobile ? 0.055 : 0.038);
+          final double gap = safeWidth * (isMobile ? 0.03 : 0.035);
 
           return Stack(
             children: [
+              // Confetti
               Align(
                 alignment: Alignment.topCenter,
                 child: ConfettiWidget(
                   confettiController: _confettiController,
                   blastDirectionality: BlastDirectionality.explosive,
                   shouldLoop: false,
+                  numberOfParticles: 25,
+                  maxBlastForce: 20,
+                  minBlastForce: 5,
+                  emissionFrequency: 0.15,
+                  gravity: 0.14,
                 ),
               ),
-              // TODO: Scroll para evitar cualquier overflow en todas las resoluciones
-              SingleChildScrollView(
-                padding: padding,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Lottie.asset(
-                      'assets/success.json',
-                      height: qrSize * 0.6,
-                      repeat: false,
+              Center(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: (width - safeWidth) / 2 + 6, vertical: gap),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: safeWidth,
+                      minWidth: 220,
+                      minHeight: isMobile ? 0 : height * 0.90,
                     ),
-                    SizedBox(height: gap / 2),
-                    AutoSizeText(
-                      t('paymentSuccess'),
-                      maxLines: 1,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: titleFont,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: gap / 2),
-                    SizedBox(
-                      height: qrSize,
-                      child: Center(
-                        child: QrImageView(
-                          data: ticketJson,
-                          size: qrSize,
-                          foregroundColor: isDark ? Colors.white : Colors.black,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: gap / 2),
-                    // Recuadro de resumen con scroll automático
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      elevation: 4,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            AutoSizeText(
-                              t('ticketSummary'),
-                              maxLines: 1,
-                              style: TextStyle(
-                                fontSize: titleFont - 6,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            AutoSizeText(
-                              "${t('plate')}: ${widget.plate}",
-                              maxLines: 1,
-                              style: TextStyle(fontSize: titleFont - 8),
-                            ),
-                            AutoSizeText(
-                              "${t('zone')}: ${widget.zone == 'green' ? t('zoneGreen') : t('zoneBlue')}",
-                              maxLines: 1,
-                              style: TextStyle(fontSize: titleFont - 8),
-                            ),
-                            AutoSizeText(
-                              "${t('startTime')}: ${timeFormat.format(widget.start)}",
-                              maxLines: 1,
-                              style: TextStyle(fontSize: titleFont - 8),
-                            ),
-                            AutoSizeText(
-                              "${t('endTime')}: ${timeFormat.format(finish)}",
-                              maxLines: 1,
-                              style: TextStyle(fontSize: titleFont - 8),
-                            ),
-                            AutoSizeText(
-                              "${t('totalPrice')}: ${currencyFormat.format(widget.price)}",
-                              maxLines: 1,
-                              style: TextStyle(fontSize: titleFont - 8),
-                            ),
-                            AutoSizeText(
-                              "${t('paymentMethod')}: ${methodMap[widget.method] ?? widget.method}",
-                              maxLines: 1,
-                              style: TextStyle(fontSize: titleFont - 8),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: gap * 2),
-                    // Acciones en dos filas
-                    Column(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: FilledButton(
-                                  onPressed: () {
-                                    SoundHelper.playTap();
-                                  },
-                                  style: kMowizFilledButtonStyle.copyWith(
-                                    textStyle: MaterialStatePropertyAll(
-                                      TextStyle(fontSize: titleFont - 6),
-                                    ),
+                        // Lottie: check de éxito
+                        Lottie.asset(
+                          'assets/success.json',
+                          height: qrSize * 0.5,
+                          repeat: false,
+                        ),
+                        SizedBox(height: gap / 2),
+                        AutoSizeText(
+                          t('paymentSuccess'),
+                          maxLines: 1,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: titleFont,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: gap / 2),
+                        // QR
+                        Center(
+                          child: QrImageView(
+                            data: ticketJson,
+                            size: qrSize,
+                            foregroundColor: isDark ? Colors.white : Colors.black,
+                          ),
+                        ),
+                        SizedBox(height: gap),
+                        // Tarjeta resumen
+                        Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          elevation: 4,
+                          child: Padding(
+                            padding: EdgeInsets.all(gap * 0.9),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                AutoSizeText(
+                                  t('ticketSummary'),
+                                  maxLines: 1,
+                                  style: TextStyle(
+                                    fontSize: subFont,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  child: AutoSizeText(t('printTicket'), maxLines: 1),
                                 ),
+                                AutoSizeText(
+                                  "${t('plate')}: ${widget.plate}",
+                                  maxLines: 1,
+                                  style: TextStyle(fontSize: subFont - 2),
+                                ),
+                                AutoSizeText(
+                                  "${t('zone')}: ${widget.zone == 'green' ? t('zoneGreen') : t('zoneBlue')}",
+                                  maxLines: 1,
+                                  style: TextStyle(fontSize: subFont - 3),
+                                ),
+                                AutoSizeText(
+                                  "${t('startTime')}: ${timeFormat.format(widget.start)}",
+                                  maxLines: 1,
+                                  style: TextStyle(fontSize: subFont - 4),
+                                ),
+                                AutoSizeText(
+                                  "${t('endTime')}: ${timeFormat.format(finish)}",
+                                  maxLines: 1,
+                                  style: TextStyle(fontSize: subFont - 4),
+                                ),
+                                AutoSizeText(
+                                  "${t('totalPrice')}: ${currencyFormat.format(widget.price)}",
+                                  maxLines: 1,
+                                  style: TextStyle(
+                                    fontSize: subFont - 3,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                AutoSizeText(
+                                  "${t('paymentMethod')}: ${methodMap[widget.method] ?? widget.method}",
+                                  maxLines: 1,
+                                  style: TextStyle(fontSize: subFont - 3),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: gap),
+                        // Botones de acción
+                        Wrap(
+                          spacing: gap,
+                          runSpacing: gap / 2,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: (safeWidth - gap * 1.5) / 2,
+                              child: FilledButton(
+                                onPressed: () {
+                                  SoundHelper.playTap();
+                                },
+                                style: kMowizFilledButtonStyle.copyWith(
+                                  textStyle: MaterialStatePropertyAll(
+                                    TextStyle(fontSize: subFont - 5),
+                                  ),
+                                ),
+                                child: AutoSizeText(t('printTicket'), maxLines: 1),
                               ),
                             ),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 8),
-                                child: FilledButton(
-                                  onPressed: () {
-                                    SoundHelper.playTap();
-                                    _showSmsDialog();
-                                  },
-                                  style: kMowizFilledButtonStyle.copyWith(
-                                    textStyle: MaterialStatePropertyAll(
-                                      TextStyle(fontSize: titleFont - 6),
-                                    ),
+                            SizedBox(
+                              width: (safeWidth - gap * 1.5) / 2,
+                              child: FilledButton(
+                                onPressed: () {
+                                  SoundHelper.playTap();
+                                  _showSmsDialog();
+                                },
+                                style: kMowizFilledButtonStyle.copyWith(
+                                  textStyle: MaterialStatePropertyAll(
+                                    TextStyle(fontSize: subFont - 5),
                                   ),
-                                  child: AutoSizeText(t('sendBySms'), maxLines: 1),
                                 ),
+                                child: AutoSizeText(t('sendBySms'), maxLines: 1),
+                              ),
+                            ),
+                            SizedBox(
+                              width: (safeWidth - gap * 1.5) / 2,
+                              child: FilledButton(
+                                onPressed: () {
+                                  SoundHelper.playTap();
+                                  _showEmailDialog();
+                                },
+                                style: kMowizFilledButtonStyle.copyWith(
+                                  textStyle: MaterialStatePropertyAll(
+                                    TextStyle(fontSize: subFont - 5),
+                                  ),
+                                ),
+                                child: AutoSizeText(t('sendByEmail'), maxLines: 1),
+                              ),
+                            ),
+                            SizedBox(
+                              width: (safeWidth - gap * 1.5) / 2,
+                              child: FilledButton(
+                                onPressed: () {
+                                  SoundHelper.playTap();
+                                  _goHome();
+                                },
+                                style: kMowizFilledButtonStyle.copyWith(
+                                  textStyle: MaterialStatePropertyAll(
+                                    TextStyle(fontSize: subFont - 5),
+                                  ),
+                                ),
+                                child: AutoSizeText(t('home'), maxLines: 1),
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(height: gap),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: FilledButton(
-                                  onPressed: () {
-                                    SoundHelper.playTap();
-                                    _showEmailDialog();
-                                  },
-                                  style: kMowizFilledButtonStyle.copyWith(
-                                    textStyle: MaterialStatePropertyAll(
-                                      TextStyle(fontSize: titleFont - 6),
-                                    ),
-                                  ),
-                                  child: AutoSizeText(t('sendByEmail'), maxLines: 1),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 8),
-                                child: FilledButton(
-                                  onPressed: () {
-                                    SoundHelper.playTap();
-                                    _goHome();
-                                  },
-                                  style: kMowizFilledButtonStyle.copyWith(
-                                    textStyle: MaterialStatePropertyAll(
-                                      TextStyle(fontSize: titleFont - 6),
-                                    ),
-                                  ),
-                                  child: AutoSizeText(t('home'), maxLines: 1),
-                                ),
-                              ),
-                            ),
-                          ],
+                        SizedBox(height: gap * 1.2),
+                        // Temporizador de retorno
+                        AutoSizeText(
+                          t('returningIn', params: {'seconds': '$_seconds'}),
+                          maxLines: 1,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: subFont - 3),
                         ),
                       ],
                     ),
-                    SizedBox(height: gap * 1.5),
-                    AutoSizeText(
-                      t('returningIn', params: {'seconds': '$_seconds'}),
-                      maxLines: 1,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: titleFont - 6),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ],
@@ -362,8 +359,6 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
     );
   }
 }
-
-// --- [Los Dialogs no necesitan cambios de scroll] ---
 
 // Email input dialog
 class _EmailDialog extends StatefulWidget {

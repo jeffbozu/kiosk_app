@@ -37,13 +37,15 @@ class _MowizPayPageState extends State<MowizPayPage> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
+          final screenWidth = MediaQuery.of(context).size.width;
+          final double buttonWidth = min(screenWidth * 0.9, 400);
           final padding = EdgeInsets.all(width * 0.05);
           final double gap = width * 0.05;
           final double titleFont = max(16, width * 0.05);
           final double inputFont = max(16, width * 0.045);
           final buttonConstraints = BoxConstraints(
-            maxWidth: 400,
-            minWidth: width * 0.9,
+            maxWidth: buttonWidth,
+            minWidth: min(screenWidth * 0.9, buttonWidth),
             minHeight: 48,
           );
 

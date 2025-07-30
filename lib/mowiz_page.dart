@@ -32,6 +32,8 @@ class MowizPage extends StatelessWidget {
         // paddings y tamaños de forma proporcional.
         builder: (context, constraints) {
           final width = constraints.maxWidth;
+          final screenWidth = MediaQuery.of(context).size.width;
+          final double buttonWidth = min(screenWidth * 0.9, 400);
 
           // Punto de quiebre para pantallas anchas. Modifica este valor si
           // necesitas cambiar la responsividad de la página.
@@ -64,8 +66,8 @@ class MowizPage extends StatelessWidget {
           );
 
           final buttonConstraints = BoxConstraints(
-            maxWidth: 400,
-            minWidth: isWide ? width * 0.4 : width * 0.9,
+            maxWidth: buttonWidth,
+            minWidth: min(isWide ? screenWidth * 0.4 : screenWidth * 0.9, buttonWidth),
             minHeight: 48,
           );
 

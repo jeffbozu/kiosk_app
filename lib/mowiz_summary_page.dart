@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
-
-// Base URL configuration for API calls
 import 'api_config.dart';
 import 'dart:convert';
 
@@ -101,125 +99,121 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
 
     return MowizScaffold(
       title: t('summaryPay'),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final isLargeTablet = width >= 900;
-          final isTablet = width >= 600 && width < 900;
-          final padding = EdgeInsets.all(width * 0.05);
-          final double gap = width * 0.04;
-          final double titleFont = isLargeTablet
-              ? 32
-              : isTablet
-                  ? 28
-                  : 24;
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final height = constraints.maxHeight;
+            const double maxContentWidth = 500;
+            final double contentWidth = width > maxContentWidth ? maxContentWidth : width;
+            final EdgeInsets padding = EdgeInsets.symmetric(horizontal: contentWidth * 0.07, vertical: 16);
 
-          return Padding(
-            padding: padding,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-            // Cuadro con la información resumida del ticket.
-            // Se deja crecer de forma dinámica y con scroll interno
-            // para evitar cualquier overflow si hay mucho texto.
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: SingleChildScrollView(
+            final bool isWide = contentWidth >= 700;
+            final double gap = isWide ? 32 : 20;
+            final double titleFont = isWide ? 28 : 22;
+            final double summaryFont = isWide ? 25 : 19;
+
+            return Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: maxContentWidth,
+                  minWidth: 260,
+                  minHeight: height,
+                ),
+                child: Padding(
+                  padding: padding,
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                    AutoSizeText(
-                      t('totalTime'),
-                      maxLines: 1,
-                      style: TextStyle(
-                        fontSize: titleFont - 4,
-                        fontWeight: FontWeight.bold,
+                      // Card con información resumen, nunca overflow ni scroll fuera del Card.
+                      Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        elevation: 4,
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              AutoSizeText(
+                                t('totalTime'),
+                                maxLines: 1,
+                                style: TextStyle(
+                                  fontSize: titleFont - 3,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              AutoSizeText(
+                                '${widget.minutes ~/ 60}h ${widget.minutes % 60}m',
+                                maxLines: 1,
+                                style: TextStyle(fontSize: titleFont + 8),
+                              ),
+                              const SizedBox(height: 16),
+                              AutoSizeText(
+                                "${t('startTime')}: ${timeFormat.format(widget.start)}",
+                                maxLines: 1,
+                                style: TextStyle(fontSize: summaryFont),
+                              ),
+                              const SizedBox(height: 8),
+                              AutoSizeText(
+                                "${t('endTime')}: ${timeFormat.format(finish)}",
+                                maxLines: 1,
+                                style: TextStyle(fontSize: summaryFont),
+                              ),
+                              const SizedBox(height: 16),
+                              AutoSizeText(
+                                "${t('totalPrice')}: ${widget.price.toStringAsFixed(2)} €",
+                                maxLines: 1,
+                                style: TextStyle(
+                                  fontSize: titleFont,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    AutoSizeText(
-                      '${widget.minutes ~/ 60}h ${widget.minutes % 60}m',
-                      maxLines: 1,
-                      style: TextStyle(fontSize: titleFont + 8),
-                    ),
-                    const SizedBox(height: 16),
-                    AutoSizeText(
-                      "${t('startTime')}: ${timeFormat.format(widget.start)}",
-                      maxLines: 1,
-                      style: TextStyle(fontSize: titleFont - 4),
-                    ),
-                    const SizedBox(height: 8),
-                    AutoSizeText(
-                      "${t('endTime')}: ${timeFormat.format(finish)}",
-                      maxLines: 1,
-                      style: TextStyle(fontSize: titleFont - 4),
-                    ),
-                    const SizedBox(height: 16),
-                    AutoSizeText(
-                      "${t('totalPrice')}: ${widget.price.toStringAsFixed(2)} €",
-                      maxLines: 1,
-                      style: TextStyle(
-                        fontSize: titleFont,
-                        fontWeight: FontWeight.bold,
+                      SizedBox(height: gap * 1.6),
+                      paymentButton('card', Icons.credit_card, t('card'), titleFont),
+                      SizedBox(height: gap),
+                      paymentButton('qr', Icons.qr_code_2, t('qrPay'), titleFont),
+                      SizedBox(height: gap),
+                      paymentButton('mobile', Icons.phone_iphone, t('mobilePay'), titleFont),
+                      SizedBox(height: gap * 2),
+                      FilledButton(
+                        onPressed: () {
+                          SoundHelper.playTap();
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                              builder: (_) => MowizTimePage(
+                                zone: widget.zone,
+                                plate: widget.plate,
+                              ),
+                            ),
+                            (route) => false,
+                          );
+                        },
+                        style: kMowizFilledButtonStyle.copyWith(
+                          backgroundColor: MaterialStatePropertyAll(
+                            Theme.of(context).colorScheme.secondary,
+                          ),
+                          textStyle: MaterialStatePropertyAll(
+                            TextStyle(fontSize: titleFont),
+                          ),
+                        ),
+                        child: AutoSizeText(t('back'), maxLines: 1),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            ),
-            SizedBox(height: gap * 2),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: width * 0.1),
-              child: paymentButton('card', Icons.credit_card, t('card'), titleFont),
-            ),
-            SizedBox(height: gap),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: width * 0.1),
-              child: paymentButton('qr', Icons.qr_code_2, t('qrPay'), titleFont),
-            ),
-            SizedBox(height: gap),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: width * 0.1),
-              child:
-                  paymentButton('mobile', Icons.phone_iphone, t('mobilePay'), titleFont),
-            ),
-            SizedBox(height: gap * 2),
-            FilledButton(
-              onPressed: () {
-                SoundHelper.playTap();
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(
-                    builder: (_) => MowizTimePage(
-                      zone: widget.zone,
-                      plate: widget.plate,
-                    ),
+                    ],
                   ),
-                  (route) => false,
-                );
-              },
-              style: kMowizFilledButtonStyle.copyWith(
-                backgroundColor: MaterialStatePropertyAll(
-                  Theme.of(context).colorScheme.secondary,
-                ),
-                textStyle: MaterialStatePropertyAll(
-                  TextStyle(fontSize: titleFont),
                 ),
               ),
-              child: AutoSizeText(t('back'), maxLines: 1),
-            ),
-          ],
+            );
+          },
         ),
-        ),
-      );
-        },
       ),
     );
   }

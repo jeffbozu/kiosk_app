@@ -138,6 +138,7 @@ class _MowizPayPageState extends State<MowizPayPage> {
                       child: Text(t('confirm')),
                     ),
                   ),
+                  ),
                   SizedBox(height: gap),
                   ConstrainedBox(
                     constraints: buttonConstraints,
@@ -157,6 +158,7 @@ class _MowizPayPageState extends State<MowizPayPage> {
                       fit: BoxFit.scaleDown,
                       child: Text(t('back')),
                     ),
+                  ),
                   ),
                 ],
               ),

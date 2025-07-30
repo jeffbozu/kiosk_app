@@ -5,7 +5,6 @@ import 'l10n/app_localizations.dart';
 import 'mowiz_pay_page.dart';
 import 'mowiz_cancel_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
-// Estilo de botones grandes reutilizable
 import 'styles/mowiz_buttons.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'sound_helper.dart';
@@ -23,114 +22,113 @@ class MowizPage extends StatelessWidget {
         SizedBox(width: 8),
         ThemeModeButton(),
       ],
-      body: LayoutBuilder(
-        // LayoutBuilder nos da el ancho disponible para calcular
-        // paddings y tamaños de forma proporcional.
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
+      body: SafeArea( // 🟩 SafeArea para evitar solapamiento con notch/barras
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final height = constraints.maxHeight;
 
-          // Punto de quiebre para pantallas anchas. Modifica este valor si
-          // necesitas cambiar la responsividad de la página.
-          const double breakpoint = 700;
-          final bool isWide = width >= breakpoint;
+            // 🟧 Máximo ancho para layout desktop/tablet
+            const double maxContentWidth = 600;
+            // 🟦 Calcula el ancho real a usar (nunca más de maxContentWidth)
+            final double contentWidth = width > maxContentWidth ? maxContentWidth : width;
 
-          // Padding y separación basados en el ancho disponible. Utilizamos
-          // un porcentaje para que los botones ocupen entre el 80% y 95%
-          // del ancho sin pegarse a los bordes.
-          final padding = EdgeInsets.symmetric(horizontal: width * 0.05);
-          final double gap = isWide ? 32 : 24;
+            // Paddings y separación proporcionales al tamaño
+            final padding = EdgeInsets.symmetric(horizontal: contentWidth * 0.05);
+            final double gap = contentWidth > 500 ? 32 : 24;
+            final double fontSize = contentWidth > 500 ? 28 : 20;
+            final double buttonHeight = contentWidth > 500 ? 100 : 60;
 
-          // Tamaño de fuente adaptativo para los botones principales
-          final double fontSize = isWide ? 28 : 24;
-
-          // Alto deseado para los botones. En orientación vertical se reduce
-          // para evitar que ocupen toda la pantalla.
-          final double buttonHeight = isWide ? 120 : 68;
-          final double buttonPadding = isWide ? 24 : 16;
-
-          // Estilo base para ambos botones. Las esquinas redondeadas y el
-          // padding se mantienen, pero la altura mínima se ajusta según la
-          // orientación para que en vertical se vean proporcionados.
-          final ButtonStyle baseStyle = kMowizFilledButtonStyle.copyWith(
-            minimumSize:
-                MaterialStatePropertyAll(Size.fromHeight(buttonHeight)),
-            padding: MaterialStatePropertyAll(
-              EdgeInsets.symmetric(vertical: buttonPadding),
-            ),
-            shape: const MaterialStatePropertyAll(
-              RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(30)),
-              ),
-            ),
-            textStyle: MaterialStatePropertyAll(
-              TextStyle(fontSize: fontSize),
-            ),
-          );
-
-          final payBtn = FilledButton(
-            onPressed: () {
-              SoundHelper.playTap();
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const MowizPayPage(),
+            // 🟨 Estilo base de los botones
+            final ButtonStyle baseStyle = kMowizFilledButtonStyle.copyWith(
+              minimumSize: MaterialStatePropertyAll(Size(double.infinity, buttonHeight)),
+              padding: const MaterialStatePropertyAll(EdgeInsets.symmetric(vertical: 0)),
+              shape: const MaterialStatePropertyAll(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(30)),
                 ),
-              );
-            },
-            style: baseStyle,
-            child: AutoSizeText(
-              t('payTicket'),
-              maxLines: 1,
-            ),
-          );
+              ),
+              textStyle: MaterialStatePropertyAll(
+                TextStyle(fontSize: fontSize),
+              ),
+            );
 
-          final cancelBtn = FilledButton(
-            onPressed: () {
-              SoundHelper.playTap();
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const MowizCancelPage(),
+            final payBtn = FilledButton(
+              onPressed: () {
+                SoundHelper.playTap();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const MowizPayPage(),
+                  ),
+                );
+              },
+              style: baseStyle,
+              child: AutoSizeText(
+                t('payTicket'),
+                maxLines: 1,
+                minFontSize: 14,
+              ),
+            );
+
+            final cancelBtn = FilledButton(
+              onPressed: () {
+                SoundHelper.playTap();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const MowizCancelPage(),
+                  ),
+                );
+              },
+              style: baseStyle.copyWith(
+                backgroundColor: MaterialStatePropertyAll(
+                  Theme.of(context).colorScheme.secondary,
                 ),
-              );
-            },
-            style: baseStyle.copyWith(
-              backgroundColor: MaterialStatePropertyAll(
-                Theme.of(context).colorScheme.secondary,
+                foregroundColor: MaterialStatePropertyAll(
+                  Theme.of(context).colorScheme.onSecondary,
+                ),
               ),
-              foregroundColor: MaterialStatePropertyAll(
-                Theme.of(context).colorScheme.onSecondary,
+              child: AutoSizeText(
+                t('cancelDenuncia'),
+                maxLines: 1,
+                minFontSize: 14,
               ),
-            ),
-            child: AutoSizeText(
-              t('cancelDenuncia'),
-              maxLines: 1,
-            ),
-          );
+            );
 
-          // En horizontal los botones se expanden para ocupar el ancho
-          // disponible. En vertical se muestran con su tamaño natural.
-          final rowChildren = <Widget>[
-            Expanded(child: payBtn),
-            SizedBox(width: gap),
-            Expanded(child: cancelBtn),
-          ];
-          final columnChildren = <Widget>[payBtn, SizedBox(height: gap), cancelBtn];
+            // 🟪 El layout se adapta: en desktop/tablet (ancho) usa Row, en móvil usa Column
+            Widget mainContent = contentWidth > 500
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Expanded(child: payBtn),
+                      SizedBox(width: gap),
+                      Expanded(child: cancelBtn),
+                    ],
+                  )
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      payBtn,
+                      SizedBox(height: gap),
+                      cancelBtn,
+                    ],
+                  );
 
-          return Center(
-            child: FractionallySizedBox(
-              widthFactor: isWide ? 1 : 0.9,
-              child: Padding(
-                padding: padding,
-                child: isWide
-                    ? Row(children: rowChildren)
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: columnChildren,
-                      ),
+            return Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: maxContentWidth,
+                  minWidth: 250,
+                  minHeight: height, // Siempre ocupa el alto disponible
+                ),
+                child: Padding(
+                  padding: padding,
+                  child: mainContent,
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

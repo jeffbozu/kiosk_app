@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:intl/intl.dart';
@@ -74,14 +73,13 @@ class _MowizTimePageState extends State<MowizTimePage> {
     }
   }
 
-  void _change(int minutos) {
-    if (!_tariffLoaded || !_stepsMap.containsKey(minutos.abs())) return;
+  void _add(int minutos) {
+    if (!_tariffLoaded || !_stepsMap.containsKey(minutos)) return;
 
-    final cents = _stepsMap[minutos.abs()]!;
+    final cents = _stepsMap[minutos]!;
     final nextSec = _totalSec + minutos * 60;
-    final nextCents = _totalCents + (minutos > 0 ? cents : -cents);
+    final nextCents = _totalCents + cents;
 
-    if (nextSec < 0 || nextCents < 0) return;
     if (_maxDuration != null && nextSec > _maxDuration!) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Duración máxima alcanzada')),
@@ -92,8 +90,15 @@ class _MowizTimePageState extends State<MowizTimePage> {
     setState(() {
       _totalSec = nextSec;
       _totalCents = nextCents;
-      _bloques[minutos.abs()] =
-          (_bloques[minutos.abs()] ?? 0) + (minutos > 0 ? 1 : -1);
+      _bloques[minutos] = (_bloques[minutos] ?? 0) + 1;
+    });
+  }
+
+  void _reset() {
+    setState(() {
+      _totalSec = 0;
+      _totalCents = 0;
+      _bloques = {for (final b in _blocks) b: 0};
     });
   }
 
@@ -113,6 +118,14 @@ class _MowizTimePageState extends State<MowizTimePage> {
     super.dispose();
   }
 
+  String _formatMin(int min) {
+    if (min % 60 == 0 && min >= 60) {
+      final h = min ~/ 60;
+      return "$h${h == 1 ? 'h' : 'h'}";
+    }
+    return "$min min";
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context).t;
@@ -127,19 +140,18 @@ class _MowizTimePageState extends State<MowizTimePage> {
     final priceStr =
         NumberFormat.currency(symbol: '€', locale: 'es_ES').format(_totalCents / 100);
 
-    Widget btn(String label, int min, double fontSize, double btnHeight) => Expanded(
-          child: SizedBox(
-            height: btnHeight,
-            child: ElevatedButton(
-              style: kMowizFilledButtonStyle.copyWith(
-                textStyle: MaterialStatePropertyAll(TextStyle(fontSize: fontSize)),
-              ),
-              onPressed: () {
-                SoundHelper.playTap();
-                _change(min);
-              },
-              child: AutoSizeText(label, maxLines: 1, minFontSize: 13),
+    Widget btn(String label, int min, double fontSize, double btnHeight) => SizedBox(
+          width: double.infinity,
+          height: btnHeight,
+          child: ElevatedButton(
+            style: kMowizFilledButtonStyle.copyWith(
+              textStyle: MaterialStatePropertyAll(TextStyle(fontSize: fontSize)),
             ),
+            onPressed: () {
+              SoundHelper.playTap();
+              _add(min);
+            },
+            child: AutoSizeText(label, maxLines: 1, minFontSize: 13),
           ),
         );
 
@@ -153,17 +165,13 @@ class _MowizTimePageState extends State<MowizTimePage> {
             const double maxContentWidth = 500;
             final double contentWidth = width > maxContentWidth ? maxContentWidth : width;
 
-            final bool isWide = contentWidth > 700;
-            final double gap = isWide ? 28 : 16;
-            final double fontSz = isWide ? 26 : 18;
-            final double labelSz = isWide ? 23 : 16;
-            final double mainValueSz = isWide ? 36 : 26;
-            final double btnHeight = isWide ? 58 : 46;
-            final int cols = _blocks.isEmpty ? 1 : _blocks.length.clamp(1, 3);
-            final double btnWidth =
-                (contentWidth - gap * (cols - 1)) / cols;
+            final double gap = 16;
+            final double fontSz = 18;
+            final double labelSz = 16;
+            final double mainValueSz = 26;
+            final double btnHeight = 46;
 
-            // 👇 Envolvemos TODO en SingleChildScrollView para evitar overflow SIEMPRE
+            // Centrar contenido siempre
             return Center(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
@@ -183,26 +191,40 @@ class _MowizTimePageState extends State<MowizTimePage> {
                       ),
                       SizedBox(height: gap),
                       if (_tariffLoaded) ...[
+                        // Botones de suma dinámicos
                         Wrap(
+                          alignment: WrapAlignment.center,
                           spacing: gap,
                           runSpacing: gap,
                           children: _blocks
                               .map((b) => SizedBox(
-                                    width: btnWidth,
-                                    child: btn('+$b', b, fontSz, btnHeight),
+                                    width: 120,
+                                    child: btn("+${_formatMin(b)}", b, fontSz, btnHeight),
                                   ))
                               .toList(),
                         ),
                         SizedBox(height: gap),
-                        Wrap(
-                          spacing: gap,
-                          runSpacing: gap,
-                          children: _blocks
-                              .map((b) => SizedBox(
-                                    width: btnWidth,
-                                    child: btn('-$b', -b, fontSz, btnHeight),
-                                  ))
-                              .toList(),
+                        // Botón borrar
+                        Center(
+                          child: SizedBox(
+                            width: 150,
+                            child: ElevatedButton.icon(
+                              icon: const Icon(Icons.delete_outline),
+                              label: AutoSizeText(
+                                t('clear') ?? 'Borrar',
+                                maxLines: 1,
+                                minFontSize: 13,
+                              ),
+                              style: kMowizFilledButtonStyle.copyWith(
+                                backgroundColor: MaterialStatePropertyAll(Colors.grey.shade400),
+                                textStyle: MaterialStatePropertyAll(TextStyle(fontSize: fontSz)),
+                              ),
+                              onPressed: _totalSec > 0 ? () {
+                                SoundHelper.playTap();
+                                _reset();
+                              } : null,
+                            ),
+                          ),
                         ),
                       ]
                       else
@@ -230,7 +252,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                       ),
                       SizedBox(height: 10),
                       if (_tariffLoaded)
-                        _TariffList(_stepsMap, fontSz)
+                        _TariffList(_stepsMap, fontSz, formatMin: _formatMin)
                       else
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 16),
@@ -289,10 +311,12 @@ class _MowizTimePageState extends State<MowizTimePage> {
   }
 }
 
+// Tarifa lista con formato en h/min
 class _TariffList extends StatelessWidget {
-  const _TariffList(this.map, this.fontSz);
+  const _TariffList(this.map, this.fontSz, {required this.formatMin});
   final Map<int, int> map;
   final double fontSz;
+  final String Function(int) formatMin;
 
   @override
   Widget build(BuildContext context) {
@@ -302,7 +326,7 @@ class _TariffList extends StatelessWidget {
           .map((e) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 2),
                 child: AutoSizeText(
-                  '${e.key} min - ${(e.value / 100).toStringAsFixed(2)} €',
+                  '${formatMin(e.key)} - ${(e.value / 100).toStringAsFixed(2)} €',
                   maxLines: 1,
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: fontSz - 3),

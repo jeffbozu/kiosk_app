@@ -83,7 +83,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
 
   void _add(int min) {
     if (!_steps.containsKey(min)) return;
-    final nextSec = _totalSec + min * 60;
+    final nextSec   = _totalSec   + min * 60;
     final nextCents = _totalCents + _steps[min]!;
 
     if (_maxDurationSec != null && nextSec > _maxDurationSec!) {
@@ -93,14 +93,12 @@ class _MowizTimePageState extends State<MowizTimePage> {
       return;
     }
     setState(() {
-      _totalSec = nextSec;
+      _totalSec   = nextSec;
       _totalCents = nextCents;
     });
   }
 
-  void _clear() => setState(() {
-        _totalSec = _totalCents = 0;
-      });
+  void _clear() => setState(() => _totalSec = _totalCents = 0);
 
   /* ───────────  LIFE-CYCLE  ─────────── */
 
@@ -108,8 +106,8 @@ class _MowizTimePageState extends State<MowizTimePage> {
   void initState() {
     super.initState();
     _now = DateTime.now();
-    _clock =
-        Timer.periodic(const Duration(seconds: 1), (_) => setState(() => _now = DateTime.now()));
+    _clock = Timer.periodic(const Duration(seconds: 1),
+        (_) => setState(() => _now = DateTime.now()));
     _load();
   }
 
@@ -134,6 +132,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
     /* ---- responsive columns ---- */
     int cols;
     switch (_blocks.length) {
+      case 0:
       case 1:
       case 2:
         cols = 2;
@@ -149,12 +148,12 @@ class _MowizTimePageState extends State<MowizTimePage> {
     }
 
     Widget timeButton(int m, double fs, double h, double w) => SizedBox(
-          width : w,
+          width: w,
           height: h,
           child: ElevatedButton(
             style: kMowizFilledButtonStyle.copyWith(
               minimumSize: const MaterialStatePropertyAll(Size(120, 56)),
-              textStyle : MaterialStatePropertyAll(TextStyle(fontSize: fs)),
+              textStyle  : MaterialStatePropertyAll(TextStyle(fontSize: fs)),
             ),
             onPressed: () {
               SoundHelper.playTap();
@@ -166,28 +165,34 @@ class _MowizTimePageState extends State<MowizTimePage> {
 
     return MowizScaffold(
       title: 'MeyPark - ${t('selectDuration')}',
-      body: LayoutBuilder(
+      body : LayoutBuilder(
         builder: (context, c) {
-          final width    = c.maxWidth;
-          final gap      = 18.0;
-          final fontSz   = width >= 600 ? 24.0 : 19.0;
-          final labelSz  = fontSz - 2;
-          final btnH     = 56.0;
-          final btnW     = math.max(120.0, (width - 48 - gap * (cols - 1)) / cols);
+          final width   = c.maxWidth;
+          const gap     = 18.0;
+          final fontSz  = width >= 600 ? 24.0 : 19.0;
+          final labelSz = fontSz - 2;
+          const btnH    = 56.0;
+          final btnW    = math.max(120.0,
+              (width - 48 - gap * (cols - 1)) / cols);
 
           return Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 550),
+              constraints:
+                  const BoxConstraints(maxWidth: 550),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     AutoSizeText(
-                      DateFormat('EEE, d MMM yyyy - HH:mm', locale).format(_now),
+                      DateFormat('EEE, d MMM yyyy - HH:mm', locale)
+                          .format(_now),
                       textAlign: TextAlign.center,
                       maxLines: 1,
-                      style: TextStyle(fontSize: labelSz, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          fontSize: labelSz,
+                          fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 22),
 
@@ -199,61 +204,71 @@ class _MowizTimePageState extends State<MowizTimePage> {
                         spacing: gap,
                         runSpacing: gap,
                         children: _blocks
-                            .map((m) => timeButton(m, fontSz, btnH, btnW))
+                            .map((m) => timeButton(
+                                m, fontSz, btnH, btnW))
                             .toList(),
                       ),
+
                     const SizedBox(height: 18),
                     ElevatedButton(
                       onPressed: _totalSec > 0 ? _clear : null,
                       style: kMowizFilledButtonStyle.copyWith(
                         backgroundColor: MaterialStatePropertyAll(
-                          Theme.of(context).colorScheme.secondary,
-                        ),
+                            Theme.of(context).colorScheme.secondary),
                         foregroundColor: MaterialStatePropertyAll(
-                          Theme.of(context).colorScheme.onSecondary,
-                        ),
-                        minimumSize: const MaterialStatePropertyAll(Size(150, 44)),
+                            Theme.of(context).colorScheme.onSecondary),
+                        minimumSize:
+                            const MaterialStatePropertyAll(Size(150, 44)),
                       ),
                       child: AutoSizeText(t('clear'), maxLines: 1),
                     ),
                     const SizedBox(height: 26),
 
-                    AutoSizeText(
-                      '${minutes ~/ 60}h ${minutes % 60}m',
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      style:
-                          TextStyle(fontSize: fontSz + 10, fontWeight: FontWeight.bold),
-                    ),
+                    AutoSizeText('${minutes ~/ 60}h ${minutes % 60}m',
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        style: TextStyle(
+                            fontSize: fontSz + 10,
+                            fontWeight: FontWeight.bold)),
                     const SizedBox(height: 6),
                     AutoSizeText('${t('price')}: $priceStr',
                         textAlign: TextAlign.center,
                         maxLines: 1,
-                        style: TextStyle(fontSize: labelSz, fontWeight: FontWeight.bold)),
+                        style: TextStyle(
+                            fontSize: labelSz,
+                            fontWeight: FontWeight.bold)),
                     const SizedBox(height: 6),
-                    AutoSizeText('${t('until')}: ${DateFormat('HH:mm', locale).format(finish)}',
+                    AutoSizeText(
+                        '${t('until')}: ${DateFormat('HH:mm', locale).format(finish)}',
                         textAlign: TextAlign.center,
                         maxLines: 1,
-                        style: TextStyle(fontSize: labelSz, fontWeight: FontWeight.bold)),
+                        style: TextStyle(
+                            fontSize: labelSz,
+                            fontWeight: FontWeight.bold)),
                     const SizedBox(height: 12),
 
-                    if (_loaded)
+                    if (_loaded) ...[
+                      const SizedBox(height: 4),
                       Column(
-                        children: _steps.entries
-                            .toList()
-                            ..sort((a, b) => a.key.compareTo(b.key))
-                            ..map((e) => Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 2),
-                                  child: AutoSizeText(
-                                    '${_fmtMin(e.key)} - ${(e.value / 100).toStringAsFixed(2)} €',
-                                    maxLines: 1,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: fontSz - 4),
-                                  ),
-                                ))
-                            .toList(),
+                        children: (() {
+                          final sorted = _steps.entries.toList()
+                            ..sort((a, b) => a.key.compareTo(b.key));
+                          return sorted
+                              .map((e) => Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 2),
+                                    child: AutoSizeText(
+                                      '${_fmtMin(e.key)} - ${(e.value / 100).toStringAsFixed(2)} €',
+                                      maxLines: 1,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          fontSize: fontSz - 4),
+                                    ),
+                                  ))
+                              .toList();
+                        })(),
                       ),
+                    ],
 
                     const SizedBox(height: 24),
                     FilledButton(
@@ -274,8 +289,10 @@ class _MowizTimePageState extends State<MowizTimePage> {
                             }
                           : null,
                       style: kMowizFilledButtonStyle.copyWith(
-                        minimumSize: const MaterialStatePropertyAll(Size(double.infinity, 50)),
-                        textStyle  : MaterialStatePropertyAll(TextStyle(fontSize: fontSz)),
+                        minimumSize: const MaterialStatePropertyAll(
+                            Size(double.infinity, 50)),
+                        textStyle:
+                            MaterialStatePropertyAll(TextStyle(fontSize: fontSz)),
                       ),
                       child: AutoSizeText(t('continue'), maxLines: 1),
                     ),
@@ -284,15 +301,16 @@ class _MowizTimePageState extends State<MowizTimePage> {
                       onPressed: () {
                         SoundHelper.playTap();
                         Navigator.of(context).pushAndRemoveUntil(
-                          MaterialPageRoute(builder: (_) => const MowizPayPage()),
+                          MaterialPageRoute(
+                              builder: (_) => const MowizPayPage()),
                           (_) => false,
                         );
                       },
                       style: kMowizFilledButtonStyle.copyWith(
-                        minimumSize: const MaterialStatePropertyAll(Size(double.infinity, 46)),
+                        minimumSize: const MaterialStatePropertyAll(
+                            Size(double.infinity, 46)),
                         backgroundColor: MaterialStatePropertyAll(
-                          Theme.of(context).colorScheme.secondary,
-                        ),
+                            Theme.of(context).colorScheme.secondary),
                       ),
                       child: AutoSizeText(t('back'), maxLines: 1),
                     ),

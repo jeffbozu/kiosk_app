@@ -33,6 +33,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
   int? _maxDuration;
   bool _tariffLoaded = false;
 
+  Map<int, int> _bloques = {};
   int _totalSec = 0;
   int _totalCents = 0;
 
@@ -41,6 +42,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
       _stepsMap.clear();
       _blocks = [];
       _maxDuration = null;
+      _bloques.clear();
       _totalSec = 0;
       _totalCents = 0;
       _tariffLoaded = false;
@@ -60,6 +62,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
               (s['timeInSeconds'] as int) ~/ 60: s['priceInCents'] as int
           };
           _blocks = _stepsMap.keys.toList()..sort();
+          _bloques = {for (final b in _blocks) b: 0};
           _maxDuration = rate['maxDurationSeconds'] as int?;
         }
         setState(() => _tariffLoaded = true);
@@ -71,17 +74,17 @@ class _MowizTimePageState extends State<MowizTimePage> {
     }
   }
 
-  void _add(int minutos) {
+  void _change(int minutos) {
     if (!_tariffLoaded || !_stepsMap.containsKey(minutos.abs())) return;
 
     final cents = _stepsMap[minutos.abs()]!;
     final nextSec = _totalSec + minutos * 60;
-    final nextCents = _totalCents + cents;
+    final nextCents = _totalCents + (minutos > 0 ? cents : -cents);
 
     if (nextSec < 0 || nextCents < 0) return;
     if (_maxDuration != null && nextSec > _maxDuration!) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).t('processingPayment'))),
+        SnackBar(content: Text(AppLocalizations.of(context).t('unexpectedError'))),
       );
       return;
     }
@@ -89,14 +92,33 @@ class _MowizTimePageState extends State<MowizTimePage> {
     setState(() {
       _totalSec = nextSec;
       _totalCents = nextCents;
+      _bloques[minutos.abs()] =
+          (_bloques[minutos.abs()] ?? 0) + (minutos > 0 ? 1 : -1);
     });
   }
 
-  void _reset() {
+  void _clear() {
     setState(() {
       _totalSec = 0;
       _totalCents = 0;
+      _bloques = {for (final b in _blocks) b: 0};
     });
+  }
+
+  String _minutesLabel(int min, BuildContext context) {
+    if (min >= 60) {
+      final hours = min ~/ 60;
+      final mins = min % 60;
+      if (mins == 0) {
+        // Ej: 1h, 2h
+        return '${hours}h';
+      } else {
+        // Ej: 1h 30 min, 1h 15 min
+        return '${hours}h ${mins} min';
+      }
+    } else {
+      return '$min min';
+    }
   }
 
   @override
@@ -115,56 +137,65 @@ class _MowizTimePageState extends State<MowizTimePage> {
     super.dispose();
   }
 
-  String _formatMin(int min) {
-    if (min % 60 == 0) {
-      final h = min ~/ 60;
-      return h == 1 ? '1h' : '${h}h';
-    } else {
-      return '$min min';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context).t;
-    final locale = Localizations.localeOf(context).toString();
+    final locale = Localizations.localeOf(context).languageCode;
+    final localeFmt = locale == 'es'
+        ? 'es_ES'
+        : locale == 'ca'
+            ? 'ca_ES'
+            : 'en_GB';
 
     final minutes = _totalSec ~/ 60;
     final finish = _now.add(Duration(seconds: _totalSec));
-    final priceStr = NumberFormat.currency(symbol: '€', locale: locale).format(_totalCents / 100);
+    final priceStr =
+        NumberFormat.currency(symbol: '€', locale: localeFmt).format(_totalCents / 100);
 
-    // Distribución dinámica (2x2 o 3xN según cuántos haya)
-    List<Widget> buildButtons(List<int> items) {
-      List<Widget> rows = [];
-      int n = items.length;
-      int cols = (n == 2 || n == 4) ? 2 : 3;
-      for (int i = 0; i < n; i += cols) {
-        rows.add(Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            for (int j = 0; j < cols && i + j < n; j++)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                child: SizedBox(
-                  width: 120,
-                  child: ElevatedButton(
-                    style: kMowizFilledButtonStyle,
-                    onPressed: () {
-                      SoundHelper.playTap();
-                      _add(items[i + j]);
-                    },
-                    child: AutoSizeText(
-                      "+${_formatMin(items[i + j])}",
-                      maxLines: 1,
-                      minFontSize: 13,
-                    ),
-                  ),
-                ),
+    Widget btn(String label, int min, double fontSize, double btnHeight) => Expanded(
+          child: SizedBox(
+            height: btnHeight,
+            child: ElevatedButton(
+              style: kMowizFilledButtonStyle.copyWith(
+                textStyle: MaterialStatePropertyAll(TextStyle(fontSize: fontSize)),
               ),
-          ],
-        ));
-      }
-      return rows;
+              onPressed: () {
+                SoundHelper.playTap();
+                _change(min);
+              },
+              child: AutoSizeText(label, maxLines: 1, minFontSize: 13),
+            ),
+          ),
+        );
+
+    // -- Botones solo +X (nada de negativos) --
+    List<Widget> timeButtons = [];
+    if (_tariffLoaded && _blocks.isNotEmpty) {
+      // 2 arriba 2 abajo, 3 arriba 3 abajo, etc.
+      final half = (_blocks.length / 2).ceil();
+      final upper = _blocks.sublist(0, half);
+      final lower = _blocks.sublist(half);
+      timeButtons = [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: upper
+              .map((b) => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: btn('+${_minutesLabel(b, context)}', b, 20, 50),
+                  ))
+              .toList(),
+        ),
+        if (lower.isNotEmpty)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: lower
+                .map((b) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: btn('+${_minutesLabel(b, context)}', b, 20, 50),
+                    ))
+                .toList(),
+          ),
+      ];
     }
 
     return MowizScaffold(
@@ -173,10 +204,11 @@ class _MowizTimePageState extends State<MowizTimePage> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final width = constraints.maxWidth;
+            final height = constraints.maxHeight;
             const double maxContentWidth = 500;
             final double contentWidth = width > maxContentWidth ? maxContentWidth : width;
-            final double gap = 16, fontSz = 18, labelSz = 16, mainValueSz = 26, btnHeight = 46;
 
+            // 👇 Centrado absoluto de todo el contenido
             return Center(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
@@ -189,63 +221,50 @@ class _MowizTimePageState extends State<MowizTimePage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       AutoSizeText(
-                        DateFormat('EEE, d MMM yyyy - HH:mm', locale).format(_now),
+                        DateFormat('EEE, d MMM yyyy - HH:mm', localeFmt).format(_now),
                         textAlign: TextAlign.center,
                         maxLines: 1,
-                        style: TextStyle(fontSize: labelSz, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                       ),
-                      SizedBox(height: gap),
-                      if (_tariffLoaded) ...[
-                        ...buildButtons(_blocks),
-                        SizedBox(height: gap),
-                        Center(
-                          child: SizedBox(
-                            width: 150,
-                            child: ElevatedButton.icon(
-                              icon: const Icon(Icons.delete_outline),
-                              label: AutoSizeText(
-                                t('clear') ?? 'Borrar',
-                                maxLines: 1,
-                                minFontSize: 13,
-                              ),
-                              style: kMowizFilledButtonStyle.copyWith(
-                                backgroundColor: MaterialStatePropertyAll(Colors.grey.shade400),
-                                textStyle: MaterialStatePropertyAll(TextStyle(fontSize: fontSz)),
-                              ),
-                              onPressed: _totalSec > 0 ? () {
-                                SoundHelper.playTap();
-                                _reset();
-                              } : null,
-                            ),
+                      SizedBox(height: 22),
+                      ...timeButtons,
+                      SizedBox(height: 10),
+                      Center(
+                        child: FilledButton(
+                          onPressed: _totalSec > 0 ? _clear : null,
+                          style: kMowizFilledButtonStyle.copyWith(
+                            backgroundColor: MaterialStatePropertyAll(Colors.grey.shade400),
+                          ),
+                          child: AutoSizeText(
+                            t('clear') == 'clear' ? 'clear' : t('clear'), // si no está, pone "clear"
+                            style: const TextStyle(letterSpacing: 0.5),
                           ),
                         ),
-                      ]
-                      else
-                        const Center(child: CircularProgressIndicator()),
-                      SizedBox(height: gap * 1.1),
+                      ),
+                      SizedBox(height: 22),
                       AutoSizeText(
                         '${minutes ~/ 60}h ${minutes % 60}m',
                         textAlign: TextAlign.center,
                         maxLines: 1,
-                        style: TextStyle(fontSize: mainValueSz, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: 6),
                       AutoSizeText(
                         '${t('price')}: $priceStr',
                         textAlign: TextAlign.center,
                         maxLines: 1,
-                        style: TextStyle(fontSize: labelSz, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: 6),
                       AutoSizeText(
-                        '${t('until')}: ${DateFormat('HH:mm', locale).format(finish)}',
+                        '${t('until')}: ${DateFormat('HH:mm', localeFmt).format(finish)}',
                         textAlign: TextAlign.center,
                         maxLines: 1,
-                        style: TextStyle(fontSize: labelSz, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: 10),
                       if (_tariffLoaded)
-                        _TariffList(_stepsMap, fontSz, formatMin: _formatMin)
+                        _TariffList(_stepsMap, _minutesLabel, context)
                       else
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 16),
@@ -270,8 +289,8 @@ class _MowizTimePageState extends State<MowizTimePage> {
                               }
                             : null,
                         style: kMowizFilledButtonStyle.copyWith(
-                          minimumSize: MaterialStatePropertyAll(Size(double.infinity, btnHeight + 10)),
-                          textStyle: MaterialStatePropertyAll(TextStyle(fontSize: fontSz)),
+                          minimumSize: MaterialStatePropertyAll(Size(double.infinity, 56)),
+                          textStyle: MaterialStatePropertyAll(TextStyle(fontSize: 20)),
                         ),
                         child: AutoSizeText(t('continue'), maxLines: 1, minFontSize: 14),
                       ),
@@ -285,7 +304,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                           );
                         },
                         style: kMowizFilledButtonStyle.copyWith(
-                          minimumSize: MaterialStatePropertyAll(Size(double.infinity, btnHeight + 4)),
+                          minimumSize: MaterialStatePropertyAll(Size(double.infinity, 48)),
                           backgroundColor: MaterialStatePropertyAll(
                             Theme.of(context).colorScheme.secondary,
                           ),
@@ -304,11 +323,12 @@ class _MowizTimePageState extends State<MowizTimePage> {
   }
 }
 
+// --- Tarifa con labels bien formateados ---
 class _TariffList extends StatelessWidget {
-  const _TariffList(this.map, this.fontSz, {required this.formatMin});
   final Map<int, int> map;
-  final double fontSz;
-  final String Function(int) formatMin;
+  final String Function(int, BuildContext) minutesLabelBuilder;
+  final BuildContext parentCtx;
+  const _TariffList(this.map, this.minutesLabelBuilder, this.parentCtx);
 
   @override
   Widget build(BuildContext context) {
@@ -318,10 +338,10 @@ class _TariffList extends StatelessWidget {
           .map((e) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 2),
                 child: AutoSizeText(
-                  '${formatMin(e.key)} - ${(e.value / 100).toStringAsFixed(2)} €',
+                  '${minutesLabelBuilder(e.key, parentCtx)} - ${(e.value / 100).toStringAsFixed(2)} €',
                   maxLines: 1,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: fontSz - 3),
+                  style: TextStyle(fontSize: 16),
                 ),
               ))
           .toList(),

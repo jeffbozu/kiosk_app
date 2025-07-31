@@ -63,7 +63,6 @@ class AppLocalizations {
       'digitalTicket': 'Su ticket es digital.',
       'scanQr': 'Escanee el QR para tener el ticket en su móvil.',
       'paymentError': 'Error al procesar el pago',
-      // Actualizado: antes "Volver a la pantalla principal"
       'goHome': 'Cerrar',
       'home': 'Inicio',
       'back': 'Atrás',
@@ -72,7 +71,6 @@ class AppLocalizations {
       'emergencyActiveLabel': 'Emergencia: {reason}',
       'mowizTitle': 'Simulador MOWIZ',
       'payTicket': 'Pagar ticket',
-      // Actualizado: corrección ortográfica
       'cancelDenuncia': 'Anular denuncia',
       'cancelFine': 'Anular multa',
       'selectZone': 'Selecciona zona',
@@ -100,6 +98,8 @@ class AppLocalizations {
       'paymentMethod': 'Método de pago',
       'ticketSummary': 'Resumen del ticket',
       'printTicket': 'Imprimir ticket',
+      // NUEVO: traducción de "clear" (botón para borrar tiempo)
+      'clear': 'Borrar',
     },
     'ca': {
       'welcome': 'Benvingut a Meypar Optima App',
@@ -149,7 +149,6 @@ class AppLocalizations {
       'digitalTicket': 'El tiquet és digital.',
       'scanQr': 'Escaneja el QR per tenir el tiquet al mòbil.',
       'paymentError': 'Error en processar el pagament',
-      // Actualitzat: abans "Tornar a l'inici"
       'goHome': 'Tancar',
       'home': 'Inici',
       'back': 'Enrere',
@@ -158,7 +157,6 @@ class AppLocalizations {
       'emergencyActiveLabel': 'Emergència: {reason}',
       'mowizTitle': 'Simulador MOWIZ',
       'payTicket': 'Pagar tiquet',
-      // Actualitzat: forma correcta en català
       'cancelDenuncia': 'Anul·lar denúncia',
       'cancelFine': 'Anul·lar multa',
       'selectZone': 'Selecciona zona',
@@ -186,6 +184,8 @@ class AppLocalizations {
       'paymentMethod': 'Mètode de pagament',
       'ticketSummary': 'Resum del tiquet',
       'printTicket': 'Imprimir tiquet',
+      // NUEVO: traducción de "clear" (botón para borrar tiempo)
+      'clear': 'Esborrar',
     },
     'en': {
       'welcome': 'Welcome to Meypar Optima App',
@@ -235,7 +235,6 @@ class AppLocalizations {
       'digitalTicket': 'Your ticket is digital.',
       'scanQr': 'Scan the QR to save the ticket on your phone.',
       'paymentError': 'Payment error',
-      // Updated from "Return to main screen"
       'goHome': 'Close',
       'home': 'Home',
       'back': 'Back',
@@ -244,7 +243,6 @@ class AppLocalizations {
       'emergencyActiveLabel': 'Emergency: {reason}',
       'mowizTitle': 'MOWIZ simulator',
       'payTicket': 'Pay ticket',
-      // Fixed translation
       'cancelDenuncia': 'Cancel a complaint',
       'cancelFine': 'Cancel fine',
       'selectZone': 'Select zone',
@@ -272,6 +270,8 @@ class AppLocalizations {
       'paymentMethod': 'Payment method',
       'ticketSummary': 'Ticket summary',
       'printTicket': 'Print ticket',
+      // NEW: translation of "clear" (button to clear time)
+      'clear': 'Clear',
     },
   };
 

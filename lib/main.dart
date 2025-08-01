@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'firebase_options.dart';
 import 'home_page.dart';
+import 'config_service.dart';
 import 'l10n/app_localizations.dart';
 import 'locale_provider.dart';
 import 'theme_provider.dart';
@@ -16,6 +17,8 @@ Future<void> main() async {
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
+
+  await ConfigService.init();
 
   try {
     await Firebase.initializeApp(

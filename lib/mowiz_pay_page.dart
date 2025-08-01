@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:http/http.dart' as http;
 
-import 'api_config.dart';
+import 'config_service.dart';
 import 'l10n/app_localizations.dart';
 import 'mowiz_time_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
@@ -47,7 +47,7 @@ class _MowizPayPageState extends State<MowizPayPage> {
     });
     try {
       final res = await http.get(
-        Uri.parse('$apiBaseUrl/v1/onstreet-service/zones'),
+        Uri.parse('${ConfigService.apiBaseUrl}/v1/onstreet-service/zones'),
       );
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as List;

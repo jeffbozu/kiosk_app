@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
-import 'api_config.dart';
+import 'config_service.dart';
 import 'dart:convert';
 
 import 'l10n/app_localizations.dart';
@@ -40,7 +40,7 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
     final plate = widget.plate.toUpperCase();
     try {
       final res = await http.post(
-        Uri.parse('$apiBaseUrl/v1/onstreet-service/pay-ticket'),
+        Uri.parse('${ConfigService.apiBaseUrl}/v1/onstreet-service/pay-ticket'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'plate': plate}),
       );

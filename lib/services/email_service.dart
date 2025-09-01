@@ -52,7 +52,7 @@ class EmailService {
       
       // Preparar datos del email
       final emailData = {
-        'Source': 'noreply@kioskapp.com', // Cambiar por tu dominio verificado
+        'Source': 'jbolanos.meypar@gmail.com', // Email verificado en AWS SES
         'Destination': {
           'ToAddresses': [recipientEmail],
         },

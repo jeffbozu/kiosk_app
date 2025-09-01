@@ -22,23 +22,22 @@ Region: eu-west-3
    - Si está en "Sandbox": Solo puedes enviar a emails verificados
    - Si está en "Production": Puedes enviar a cualquier email
 
-### **2. Verificar Dominio de Email**
+### **2. Verificar Email Individual ✅ COMPLETADO**
 
-Para enviar desde `noreply@kioskapp.com`:
+Tu email ya está verificado en AWS SES:
+
+- **Email verificado**: `jbolanos.meypar@gmail.com`
+- **Estado**: ✅ Verificado y listo para usar
+- **Región**: `eu-west-3` (París)
+
+### **3. Verificar Dominio de Email (Opcional)**
+
+Si quieres enviar desde un dominio personalizado:
 
 1. **En SES Console** → **Verified identities**
 2. **Create identity** → **Domain**
-3. **Ingresar dominio**: `kioskapp.com`
+3. **Ingresar dominio**: `meypar.com` (o tu dominio)
 4. **Seguir instrucciones de verificación DNS**
-
-### **3. Verificar Email Individual (Alternativa)**
-
-Si no tienes dominio:
-
-1. **Create identity** → **Email address**
-2. **Ingresar email**: `noreply@kioskapp.com`
-3. **Verificar email** (revisar bandeja de entrada)
-4. **Hacer clic en el enlace de verificación**
 
 ### **4. Configurar Políticas de Envío**
 
@@ -63,13 +62,15 @@ Si no tienes dominio:
 
 ## 🔧 **Configuración en el Código**
 
-### **1. Cambiar Dominio de Email:**
+### **1. Email de Origen Configurado ✅**
 
-En `lib/services/email_service.dart`:
+Tu email ya está configurado en `lib/services/email_service.dart`:
 
 ```dart
-'Source': 'noreply@kioskapp.com', // Cambiar por tu dominio verificado
+'Source': 'jbolanos.meypar@gmail.com', // Email verificado en AWS SES
 ```
+
+**¡No necesitas cambiar nada más!**
 
 ### **2. Personalizar Plantilla:**
 

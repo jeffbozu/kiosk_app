@@ -15,6 +15,7 @@ import 'mowiz/mowiz_scaffold.dart';
 import 'styles/mowiz_buttons.dart';
 import 'sound_helper.dart';
 import 'services/unified_service.dart';
+import 'services/email_service.dart';
 
 class MowizSuccessPage extends StatefulWidget {
   final String plate;
@@ -157,13 +158,80 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
     );
     if (!mounted) return;
     if (email != null) {
-      // TODO: Lógica real de envío de email
-      await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => _EmailSentDialog(onClose: _startTimer),
-      );
+      // Enviar email usando el servicio
+      await _sendTicketEmail(email);
     } else {
+      _startTimer();
+    }
+  }
+  
+  /// Envía el ticket por email
+  Future<void> _sendTicketEmail(String email) async {
+    try {
+      // Mostrar indicador de envío
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enviando ticket por email...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      
+      // Calcular fecha de fin
+      final endTime = widget.start.add(Duration(minutes: widget.minutes));
+      
+      // Generar datos QR para el ticket
+      final qrData = jsonEncode({
+        'plate': widget.plate,
+        'zone': widget.zone,
+        'start': widget.start.toIso8601String(),
+        'end': endTime.toIso8601String(),
+        'price': widget.price,
+        'method': widget.method,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+      
+      // Enviar email
+      final success = await EmailService.sendTicketEmail(
+        recipientEmail: email,
+        plate: widget.plate,
+        zone: widget.zone,
+        start: widget.start,
+        end: endTime,
+        price: widget.price,
+        method: widget.method,
+        qrData: qrData,
+        customSubject: 'Tu Ticket de Estacionamiento - ${widget.plate}',
+        customMessage: 'Hemos procesado tu pago exitosamente. Adjunto encontrarás tu ticket de estacionamiento.',
+      );
+      
+      if (success) {
+        // Email enviado exitosamente
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => _EmailSentDialog(onClose: _startTimer),
+        );
+      } else {
+        // Error al enviar email
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('❌ Error al enviar el email'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+        _startTimer();
+      }
+      
+    } catch (e) {
+      // Error inesperado
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ Error: $e'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
       _startTimer();
     }
   }

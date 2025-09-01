@@ -11,6 +11,7 @@ import 'l10n/app_localizations.dart';
 import 'locale_provider.dart';
 import 'theme_provider.dart';
 import 'theme_mode_button.dart';
+import 'services/unified_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +29,9 @@ Future<void> main() async {
     debugPrint('❌ Error inicializando Firebase: $e');
     debugPrint('$st');
   }
+
+  // Inicializar servicios unificados
+  await UnifiedService.initialize();
 
   runApp(const MyApp());
 }

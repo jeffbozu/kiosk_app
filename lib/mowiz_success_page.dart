@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
@@ -13,6 +14,7 @@ import 'mowiz/mowiz_scaffold.dart';
 // Estilo de botones grandes reutilizable para toda la app
 import 'styles/mowiz_buttons.dart';
 import 'sound_helper.dart';
+import 'services/unified_service.dart';
 
 class MowizSuccessPage extends StatefulWidget {
   final String plate;
@@ -70,6 +72,80 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
       MaterialPageRoute(builder: (_) => const MowizPage()),
       (route) => false,
     );
+  }
+
+  /// Imprime el ticket usando la impresora térmica conectada
+  Future<void> _printTicket() async {
+    try {
+      // Pausar el temporizador mientras se imprime
+      _pauseTimer();
+      
+      // Mostrar indicador de impresión
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Imprimiendo ticket...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      
+      // Calcular fecha de fin basada en los minutos
+      final endTime = widget.start.add(Duration(minutes: widget.minutes));
+      
+      // Generar datos QR para el ticket
+      final qrData = jsonEncode({
+        'plate': widget.plate,
+        'zone': widget.zone,
+        'start': widget.start.toIso8601String(),
+        'end': endTime.toIso8601String(),
+        'price': widget.price,
+        'method': widget.method,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+      
+      // Imprimir ticket usando el servicio unificado
+      final success = await UnifiedService.printTicket(
+        plate: widget.plate,
+        zone: widget.zone,
+        start: widget.start,
+        end: endTime,
+        price: widget.price,
+        method: widget.method,
+        qrData: qrData,
+      );
+      
+      if (success) {
+        // Ticket impreso exitosamente
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Ticket impreso correctamente'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      } else {
+        // Error al imprimir
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('❌ Error al imprimir el ticket'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+      
+    } catch (e) {
+      // Error inesperado
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ Error: $e'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      // Reanudar el temporizador
+      _startTimer();
+    }
   }
 
   Future<void> _showEmailDialog() async {
@@ -256,8 +332,9 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                   SizedBox(
                     width: (safeWidth - gap * 1.5) / 2,
                     child: FilledButton(
-                      onPressed: () {
+                      onPressed: () async {
                         SoundHelper.playTap();
+                        await _printTicket();
                       },
                       style: kMowizFilledButtonStyle.copyWith(
                         textStyle: MaterialStatePropertyAll(

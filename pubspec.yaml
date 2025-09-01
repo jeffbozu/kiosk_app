@@ -32,6 +32,10 @@ dependencies:
   auto_size_text: ^3.0.0     # Texto escalable automaticamente
   audioplayers: ^6.5.0       # Reproducción de efectos de sonido
   http: ^1.1.0               # Peticiones HTTP
+  
+  # Dependencias para web (PDF y funcionalidades web)
+  pdf: ^3.10.7               # Generación de PDFs
+  universal_html: ^2.2.4     # Compatibilidad HTML universal
 
 dev_dependencies:
   flutter_test:

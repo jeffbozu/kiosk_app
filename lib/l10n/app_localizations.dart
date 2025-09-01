@@ -100,6 +100,7 @@ class AppLocalizations {
       'printTicket': 'Imprimir ticket',
       // NUEVO: traducción de "clear" (botón para borrar tiempo)
       'clear': 'Borrar',
+      'scanQrButton': 'Escanear QR',
     },
     'ca': {
       'welcome': 'Benvingut a Meypar Optima App',
@@ -186,6 +187,7 @@ class AppLocalizations {
       'printTicket': 'Imprimir tiquet',
       // NUEVO: traducción de "clear" (botón para borrar tiempo)
       'clear': 'Esborrar',
+      'scanQrButton': 'Escanejar QR',
     },
     'en': {
       'welcome': 'Welcome to Meypar Optima App',
@@ -272,6 +274,7 @@ class AppLocalizations {
       'printTicket': 'Print ticket',
       // NEW: translation of "clear" (button to clear time)
       'clear': 'Clear',
+      'scanQrButton': 'Scan QR',
     },
   };
 

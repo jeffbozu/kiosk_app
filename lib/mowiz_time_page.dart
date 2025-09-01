@@ -15,6 +15,7 @@ import 'mowiz_summary_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
 import 'styles/mowiz_buttons.dart';
 import 'sound_helper.dart';
+import 'services/unified_service.dart';
 
 class MowizTimePage extends StatefulWidget {
   final String zone;
@@ -313,6 +314,89 @@ class _MowizTimePageState extends State<MowizTimePage> {
                             Theme.of(context).colorScheme.secondary),
                       ),
                       child: AutoSizeText(t('back'), maxLines: 1),
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      onPressed: () async {
+                        SoundHelper.playTap();
+                        
+                        try {
+                          // Verificar si el escáner está conectado
+                          final isConnected = await UnifiedService.isScannerConnected();
+                          
+                          if (!isConnected) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Escáner QR no disponible'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+                          
+                          // Mostrar indicador de escaneo
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Escaneando código QR...'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                          
+                          // Escanear código QR
+                          final discount = await UnifiedService.scanQrCode(timeout: 30);
+                          
+                          if (discount != null) {
+                            // Aplicar descuento al precio total
+                            final newTotal = (_totalCents / 100) + discount;
+                            final newTotalCents = (newTotal * 100).round();
+                            
+                            // Asegurar que el precio no sea negativo
+                            if (newTotalCents < 0) {
+                              setState(() {
+                                _totalCents = 0;
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Descuento aplicado: ${discount.toStringAsFixed(2)}€ - Precio final: 0.00€'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            } else {
+                              setState(() {
+                                _totalCents = newTotalCents;
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Descuento aplicado: ${discount.toStringAsFixed(2)}€ - Precio final: ${(newTotalCents / 100).toStringAsFixed(2)}€'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('No se escaneó ningún código QR válido'),
+                                backgroundColor: Colors.orange,
+                              ),
+                            );
+                          }
+                          
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error al escanear: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      style: kMowizFilledButtonStyle.copyWith(
+                        minimumSize: const MaterialStatePropertyAll(
+                            Size(double.infinity, 46)),
+                        backgroundColor: MaterialStatePropertyAll(
+                            Theme.of(context).colorScheme.secondary),
+                      ),
+                      child: AutoSizeText(t('scanQrButton'), maxLines: 1),
                     ),
                   ],
                 ),

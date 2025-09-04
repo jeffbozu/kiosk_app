@@ -36,6 +36,7 @@ dependencies:
   # Dependencias para web (PDF y funcionalidades web)
   pdf: ^3.10.7               # Generación de PDFs
   universal_html: ^2.2.4     # Compatibilidad HTML universal
+  barcode: ^2.2.6            # Generación de códigos de barras/QR en PDF
 
 dev_dependencies:
   flutter_test:

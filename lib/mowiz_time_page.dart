@@ -39,6 +39,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
 
   int _totalSec = 0;
   int _totalCents = 0;
+  double _discountEurosApplied = 0.0;
 
   /* ───────────────  HELPERS  ─────────────── */
 
@@ -99,7 +100,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
     });
   }
 
-  void _clear() => setState(() => _totalSec = _totalCents = 0);
+  void _clear() => setState(() { _totalSec = 0; _totalCents = 0; _discountEurosApplied = 0.0; });
 
   /* ───────────  LIFE-CYCLE  ─────────── */
 
@@ -127,8 +128,9 @@ class _MowizTimePageState extends State<MowizTimePage> {
 
     final minutes  = _totalSec ~/ 60;
     final finish   = _now.add(Duration(seconds: _totalSec));
+    final effectivePrice = ((_totalCents / 100) + _discountEurosApplied).clamp(0, double.infinity);
     final priceStr = NumberFormat.currency(symbol: '€', locale: locale)
-        .format(_totalCents / 100);
+        .format(effectivePrice);
 
     /* ---- responsive columns ---- */
     int cols;
@@ -354,6 +356,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                             if (newTotalCents < 0) {
                               setState(() {
                                 _totalCents = 0;
+                                _discountEurosApplied = discount;
                               });
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(

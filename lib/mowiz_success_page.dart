@@ -24,6 +24,7 @@ class MowizSuccessPage extends StatefulWidget {
   final int minutes;
   final double price;
   final String method;
+  final double? discount;
 
   const MowizSuccessPage({
     super.key,
@@ -33,6 +34,7 @@ class MowizSuccessPage extends StatefulWidget {
     required this.minutes,
     required this.price,
     required this.method,
+    this.discount,
   });
 
   @override
@@ -100,6 +102,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         'end': endTime.toIso8601String(),
         'price': widget.price,
         'method': widget.method,
+        if (widget.discount != null && widget.discount != 0) 'discount': widget.discount,
         'timestamp': DateTime.now().toIso8601String(),
       });
       
@@ -112,6 +115,8 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         price: widget.price,
         method: widget.method,
         qrData: qrData,
+        discount: widget.discount,
+        locale: AppLocalizations.of(context).locale.languageCode,
       );
       
       if (success) {
@@ -187,6 +192,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         'end': endTime.toIso8601String(),
         'price': widget.price,
         'method': widget.method,
+        if (widget.discount != null && widget.discount != 0) 'discount': widget.discount,
         'timestamp': DateTime.now().toIso8601String(),
       });
       
@@ -289,7 +295,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
       'bizum': 'Bizum',
     };
     final ticketJson =
-        'ticket|plate:${widget.plate}|zone:${widget.zone}|start:${widget.start.toIso8601String()}|end:${finish.toIso8601String()}|price:${widget.price}'; // TODO lógica real
+        'ticket|plate:${widget.plate}|zone:${widget.zone}|start:${widget.start.toIso8601String()}|end:${finish.toIso8601String()}|price:${widget.price}${widget.discount != null && widget.discount != 0 ? '|discount:${widget.discount}' : ''}';
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Contenido principal, centralizado y con ancho máx fijo
@@ -381,6 +387,13 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      if ((widget.discount ?? 0) != 0) ...[
+                        AutoSizeText(
+                          "${t('discount')}: ${currencyFormat.format(widget.discount!)}",
+                          maxLines: 1,
+                          style: TextStyle(fontSize: subFont - 3, color: Colors.green),
+                        ),
+                      ],
                       AutoSizeText(
                         "${t('paymentMethod')}: ${methodMap[widget.method] ?? widget.method}",
                         maxLines: 1,

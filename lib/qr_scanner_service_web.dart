@@ -208,27 +208,42 @@ class QrScannerServiceWeb {
       // Eventos de botones
       scanButton.onClick.listen((_) async {
         try {
-          // Capturar frame del video
           final context = canvasElement.getContext('2d');
-          if (context != null) {
-            try {
-              // Cast del contexto a CanvasRenderingContext2D
-              final ctx = context as dynamic;
-              ctx.drawImage(videoElement, 0, 0);
-            } catch (e) {
-              print('Error capturando frame: $e');
-            }
+          if (context == null) {
+            complete(null);
+            return;
           }
-          
-          // En modo web, simulamos el escaneo
-          // En producción real, usarías una librería JS de detección de QR
-          await Future.delayed(const Duration(seconds: 2));
-          
-          // Simular código QR escaneado (para demostración)
-          final simulatedQr = "-20"; // Descuento de 20€
-          complete(simulatedQr);
-          
+          final ctx = context as dynamic; // CanvasRenderingContext2D
+          // Bucle de lectura hasta timeout o detección
+          final startedAt = DateTime.now();
+          while (!isCompleted) {
+            // timeout manual
+            if (DateTime.now().difference(startedAt).inSeconds >= timeout) {
+              complete(null);
+              break;
+            }
+            // Dibujar frame actual
+            try {
+              ctx.drawImage(videoElement, 0, 0);
+            } catch (_) {}
+            // Obtener píxeles
+            final imageData = (ctx.getImageData(0, 0, canvasElement.width!, canvasElement.height!));
+            // Llamar a jsQR (expuesta en window.jsQR)
+            final qr = (html.window as dynamic).jsQR?.call(
+              imageData.data,
+              canvasElement.width,
+              canvasElement.height,
+              {'inversionAttempts': 'dontInvert'},
+            );
+            if (qr != null && qr.data != null) {
+              complete(qr.data as String);
+              break;
+            }
+            // Pequeña espera para no bloquear UI
+            await Future.delayed(const Duration(milliseconds: 120));
+          }
         } catch (e) {
+          print('Error capturando/decodificando QR: $e');
           complete(null);
         }
       });
@@ -249,13 +264,16 @@ class QrScannerServiceWeb {
   /// Verifica si el código QR es un descuento válido
   static bool _isValidDiscount(String qrCode) {
     try {
-      // Patrón: -X o -X.XX donde X son números
-      // Ejemplos: -1, -0.90, -5.50
+      // Patrón: -X o -X.XX donde X son números (por ejemplo: -1, -0.90, -5.50)
       final discountPattern = RegExp(r'^-(\d+(?:\.\d{1,2})?)$');
       if (discountPattern.hasMatch(qrCode)) {
-        // Verificar que el descuento sea razonable (no más de 100€)
         final amount = double.parse(qrCode);
-        return amount < 0 && amount > -100;
+        return amount < 0 && amount > -10000; // aceptamos descuentos grandes; la UI trunca a 0
+      }
+      // Códigos VIP/FREE que anulan el total
+      final normalized = qrCode.trim().toUpperCase();
+      if (normalized == 'FREE' || normalized == 'VIP' || normalized == 'VIP-ALL' || normalized == '-ALL' || normalized == '-100%') {
+        return true;
       }
       return false;
     } catch (e) {

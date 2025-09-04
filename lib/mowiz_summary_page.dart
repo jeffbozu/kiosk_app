@@ -19,6 +19,7 @@ class MowizSummaryPage extends StatefulWidget {
   final DateTime start;
   final int minutes;
   final double price;
+  final double? discount;
   const MowizSummaryPage({
     super.key,
     required this.plate,
@@ -26,6 +27,7 @@ class MowizSummaryPage extends StatefulWidget {
     required this.start,
     required this.minutes,
     required this.price,
+    this.discount,
   });
 
   @override

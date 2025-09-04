@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!-- Base href para despliegues en subcarpetas -->
-  <base href="/kiosk_app/">
+  <!-- Base href para despliegues en subcarpetas (Flutter reemplaza esta variable en build) -->
+  <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
@@ -19,6 +19,9 @@
 
   <title>Meypar Optima App</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- jsQR para decodificar QR desde la cámara en web -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 
   <!-- Firebase JS SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>

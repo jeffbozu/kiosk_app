@@ -20,6 +20,8 @@ class UnifiedService {
     required double price,
     required String method,
     String? qrData,
+    double? discount,
+    String? locale,
   }) async {
     if (_isWeb) {
       // En web: generar y descargar PDF
@@ -31,6 +33,8 @@ class UnifiedService {
         price: price,
         method: method,
         qrData: qrData,
+        discount: discount,
+        locale: locale,
       );
     } else if (_isDesktop) {
       // En desktop: usar impresora térmica
@@ -56,7 +60,13 @@ class UnifiedService {
       final result = await QrScannerServiceWeb.scanQrCode(timeout: timeout);
       if (result != null) {
         final parsed = double.tryParse(result);
-        return parsed;
+        if (parsed != null) return parsed;
+        // Soporte VIP/FREE: cualquier código reconocido como gratis
+        final normalized = result.trim().toUpperCase();
+        if (normalized == 'FREE' || normalized == 'VIP' || normalized == 'VIP-ALL' || normalized == '-ALL' || normalized == '-100%') {
+          // Usamos un valor muy negativo; la UI lo truncará a 0
+          return -9999.0;
+        }
       }
       return null;
     } else if (_isDesktop) {

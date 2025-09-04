@@ -16,6 +16,7 @@ import 'styles/mowiz_buttons.dart';
 import 'sound_helper.dart';
 import 'services/unified_service.dart';
 import 'services/email_service.dart';
+import 'services/whatsapp_service.dart';
 
 class MowizSuccessPage extends StatefulWidget {
   final String plate;
@@ -251,12 +252,55 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
     );
     if (!mounted) return;
     if (phone != null) {
-      // TODO: Lógica real de envío de SMS
-      await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => _SmsSentDialog(onClose: _startTimer),
-      );
+      try {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Enviando ticket por WhatsApp...'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        final endTime = widget.start.add(Duration(minutes: widget.minutes));
+        final success = await WhatsAppService.sendTicketWhatsApp(
+          phone: phone,
+          plate: widget.plate,
+          zone: widget.zone,
+          start: widget.start,
+          end: endTime,
+          price: widget.price,
+          method: widget.method,
+          discount: widget.discount,
+          qrData:
+              'ticket|plate:${widget.plate}|zone:${widget.zone}|start:${widget.start.toIso8601String()}|end:${endTime.toIso8601String()}|price:${widget.price}${widget.discount != null && widget.discount != 0 ? '|discount:${widget.discount}' : ''}',
+          localeCode: AppLocalizations.of(context).locale.toString(),
+        );
+
+        if (success) {
+          await showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => _SmsSentDialog(onClose: _startTimer),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('❌ Error al enviar por WhatsApp'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
+          _startTimer();
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        _startTimer();
+      }
     } else {
       _startTimer();
     }

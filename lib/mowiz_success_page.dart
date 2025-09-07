@@ -261,7 +261,9 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         );
 
         final endTime = widget.start.add(Duration(minutes: widget.minutes));
-        final success = await WhatsAppService.sendTicketWhatsApp(
+        
+        // Enviar solo usando el servicio API de WhatsApp
+        bool success = await WhatsAppService.sendTicketWhatsApp(
           phone: phone,
           plate: widget.plate,
           zone: widget.zone,
@@ -626,15 +628,53 @@ class _SmsDialog extends StatefulWidget {
 class _SmsDialogState extends State<_SmsDialog> {
   String _phone = '';
 
+  String _formatPhoneNumber(String phone) {
+    // Remover todos los caracteres no numéricos
+    String cleanPhone = phone.replaceAll(RegExp(r'[^\d]'), '');
+    
+    // Si empieza con 34 (España), mantenerlo
+    if (cleanPhone.startsWith('34')) {
+      return '+$cleanPhone';
+    }
+    // Si empieza con 6, 7, 8, 9 (móviles españoles), agregar +34
+    else if (cleanPhone.startsWith(RegExp(r'[6789]')) && cleanPhone.length == 9) {
+      return '+34$cleanPhone';
+    }
+    // Si tiene 9 dígitos y no empieza con 34, agregar +34
+    else if (cleanPhone.length == 9) {
+      return '+34$cleanPhone';
+    }
+    // Si ya tiene el formato correcto, devolverlo
+    else if (cleanPhone.startsWith('34') && cleanPhone.length == 11) {
+      return '+$cleanPhone';
+    }
+    // En otros casos, devolver tal como está
+    return cleanPhone;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     return AlertDialog(
       title: Text(l.t('enterPhone')),
-      content: TextField(
-        autofocus: true,
-        keyboardType: TextInputType.phone,
-        onChanged: (v) => _phone = v,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            autofocus: true,
+            keyboardType: TextInputType.phone,
+            onChanged: (v) => _phone = v,
+            decoration: const InputDecoration(
+              hintText: 'Ej: 612345678 o +34612345678',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Formato detectado: ${_formatPhoneNumber(_phone)}',
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        ],
       ),
       actions: [
         TextButton(
@@ -647,7 +687,9 @@ class _SmsDialogState extends State<_SmsDialog> {
         ElevatedButton(
           onPressed: () {
             SoundHelper.playTap();
-            Navigator.pop(context, _phone.trim());
+            final formattedPhone = _formatPhoneNumber(_phone.trim());
+            print('📱 Número formateado: $formattedPhone');
+            Navigator.pop(context, formattedPhone);
           },
           child: Text(l.t('send')),
         ),

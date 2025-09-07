@@ -20,33 +20,65 @@ class WhatsAppService {
     String? qrData,
     String? localeCode,
   }) async {
-    final l = localeCode ?? 'es_ES';
-    final dateFmt = DateFormat('dd/MM/yyyy HH:mm', l);
-    final duration = _formatDuration(start, end);
+    try {
+      final l = localeCode ?? 'es_ES';
+      final dateFmt = DateFormat('dd/MM/yyyy HH:mm', l);
+      final duration = _formatDuration(start, end);
 
-    final ticket = {
-      'plate': plate,
-      'zone': zone,
-      'start': dateFmt.format(start),
-      'end': dateFmt.format(end),
-      'duration': duration,
-      'price': price,
-      'discount': discount,
-      'method': method,
-      'qrData': qrData,
-    };
+      final ticket = {
+        'plate': plate,
+        'zone': zone,
+        'start': dateFmt.format(start),
+        'end': dateFmt.format(end),
+        'duration': duration,
+        'price': price,
+        'discount': discount,
+        'method': method,
+        'qrData': qrData,
+      };
 
-    final uri = Uri.parse('$baseUrl/whatsapp/send');
-    final res = await http.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'phone': phone, 'ticket': ticket}),
-    );
-    if (res.statusCode == 200) {
-      final data = jsonDecode(res.body) as Map<String, dynamic>;
-      return data['ok'] == true;
+      final payload = {'phone': phone, 'ticket': ticket};
+      final uri = Uri.parse('$baseUrl/whatsapp/send');
+      
+      print('📱 WhatsApp Service - Enviando mensaje:');
+      print('   URL: $uri');
+      print('   Teléfono: $phone');
+      print('   Payload: ${jsonEncode(payload)}');
+      
+      final res = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      ).timeout(const Duration(seconds: 30));
+      
+      print('📱 WhatsApp Service - Respuesta:');
+      print('   Status Code: ${res.statusCode}');
+      print('   Response Body: ${res.body}');
+      
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        print('📱 WhatsApp Service - Datos de respuesta: $data');
+        
+        // Verificar diferentes formatos de respuesta
+        final success = data['ok'] == true || 
+                       data['success'] == true || 
+                       data['status'] == 'queued' ||
+                       data['status'] == 'sent';
+        
+        print('📱 WhatsApp Service - Resultado: ${success ? "✅ ÉXITO" : "❌ FALLO"}');
+        print('📱 WhatsApp Service - SID: ${data['sid'] ?? 'N/A'}');
+        print('📱 WhatsApp Service - Status: ${data['status'] ?? 'N/A'}');
+        
+        return success;
+      } else {
+        print('📱 WhatsApp Service - Error HTTP: ${res.statusCode}');
+        print('📱 WhatsApp Service - Error Body: ${res.body}');
+        return false;
+      }
+    } catch (e) {
+      print('📱 WhatsApp Service - Excepción: $e');
+      return false;
     }
-    return false;
   }
 
   static String _formatDuration(DateTime start, DateTime end) {

@@ -1,0 +1,10 @@
+* [33m6bb7099[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32menviarmensaje[m[33m, [m[1;31morigin/enviarmensaje[m[33m)[m docs: publicar build web para GitHub Pages (enviarmensaje/docs)
+* [33m59ad4d2[m chore(i18n): cambiar etiquetas SMS a WhatsApp (ES/CA/EN)
+* [33mb96aaf0[m feat(whatsapp): enviar ticket por WhatsApp usando backend Render
+* [33m00ade19[m[33m ([m[1;31morigin/chore/qr-pdf-descount-locale[m[33m)[m Deploy web desde chore/qr-pdf-descount-locale
+* [33m51344b1[m[33m ([m[1;31morigin/feat/usb-button-v2[m[33m, [m[1;32mfeat/usb-button-v2[m[33m)[m feat: Configuración completa Linux - Printer Agent (puerto 9101) + QR Scanner Agent (puerto 9102) + Servicios unificados + Email AWS SES + Scripts de compilación
+* [33me784b63[m feat: Configurar email verificado jbolanos.meypar@gmail.com para AWS SES
+* [33ma092e1f[m feat: Implementar servicio de email con AWS SES - Plantillas personalizables para tickets
+* [33me53217e[m feat: Implementar funcionalidades web completas - Impresión PDF + Escáner QR + Servicios unificados
+* [33m66ef925[m[33m ([m[1;31morigin/finalisima[m[33m, [m[1;31morigin/cursorai[m[33m, [m[1;31morigin/cursor[m[33m, [m[1;32mfinalisima[m[33m, [m[1;32mcursorai[m[33m, [m[1;32mcursor[m[33m)[m Subir minSdkVersion a 23 para compatibilidad con Firebase Auth
+* [33mcbc54b4[m Guardar cambios antes de cambiar a gh-pages

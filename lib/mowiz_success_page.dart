@@ -207,6 +207,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         price: widget.price,
         method: widget.method,
         qrData: qrData,
+        locale: Localizations.localeOf(context).languageCode,
         customSubject: 'Tu Ticket de Estacionamiento - ${widget.plate}',
         customMessage: 'Hemos procesado tu pago exitosamente. Adjunto encontrarás tu ticket de estacionamiento.',
       );

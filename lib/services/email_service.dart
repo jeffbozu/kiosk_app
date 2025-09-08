@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 /// Servicio de envío de emails usando servidor proxy
 class EmailService {
   // Configuración del servidor proxy
-  static const String _baseUrl = 'http://localhost:4000'; // Para desarrollo local
+  static const String _baseUrl = 'https://render-mail-2bzn.onrender.com'; // Servidor en Render
   // static const String _serverUrl = 'https://tu-servidor.render.com'; // Para producción
   
   // Endpoint del servidor proxy

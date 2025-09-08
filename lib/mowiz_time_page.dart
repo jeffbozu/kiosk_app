@@ -37,6 +37,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
   int? _maxDurationSec;
   bool _loaded = false;
 
+  int _currentTimeIndex = 0;
   int _totalSec = 0;
   int _totalCents = 0;
   double _discountEurosApplied = 0.0;
@@ -55,6 +56,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
     setState(() {
       _steps.clear();
       _blocks.clear();
+      _currentTimeIndex = 0;
       _totalSec = _totalCents = 0;
       _loaded = false;
     });
@@ -73,6 +75,13 @@ class _MowizTimePageState extends State<MowizTimePage> {
           }
           _blocks = _steps.keys.toList()..sort();
           _maxDurationSec = rate['maxDurationSeconds'] as int?;
+          
+          // Inicializar con el tiempo mínimo del servidor
+          if (_blocks.isNotEmpty) {
+            _currentTimeIndex = 0;
+            _totalSec = _blocks[0] * 60;
+            _totalCents = _steps[_blocks[0]]!;
+          }
         }
       }
     } catch (e) {
@@ -81,26 +90,36 @@ class _MowizTimePageState extends State<MowizTimePage> {
     setState(() => _loaded = true);
   }
 
-  /* ───────────────  ADD TIME  ────────────── */
+  /* ───────────────  TIME NAVIGATION  ────────────── */
 
-  void _add(int min) {
-    if (!_steps.containsKey(min)) return;
-    final nextSec   = _totalSec   + min * 60;
-    final nextCents = _totalCents + _steps[min]!;
-
-    if (_maxDurationSec != null && nextSec > _maxDurationSec!) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Duración máxima alcanzada')),
-      );
-      return;
+  void _incrementTime() {
+    if (_currentTimeIndex < _blocks.length - 1) {
+      setState(() {
+        _currentTimeIndex++;
+        _totalSec = _blocks[_currentTimeIndex] * 60;
+        _totalCents = _steps[_blocks[_currentTimeIndex]]!;
+      });
     }
-    setState(() {
-      _totalSec   = nextSec;
-      _totalCents = nextCents;
-    });
   }
 
-  void _clear() => setState(() { _totalSec = 0; _totalCents = 0; _discountEurosApplied = 0.0; });
+  void _decrementTime() {
+    if (_currentTimeIndex > 0) {
+      setState(() {
+        _currentTimeIndex--;
+        _totalSec = _blocks[_currentTimeIndex] * 60;
+        _totalCents = _steps[_blocks[_currentTimeIndex]]!;
+      });
+    }
+  }
+
+  void _clear() => setState(() { 
+    if (_blocks.isNotEmpty) {
+      _currentTimeIndex = 0;
+      _totalSec = _blocks[0] * 60;
+      _totalCents = _steps[_blocks[0]]!;
+    }
+    _discountEurosApplied = 0.0; 
+  });
 
   /* ───────────  LIFE-CYCLE  ─────────── */
 
@@ -132,37 +151,21 @@ class _MowizTimePageState extends State<MowizTimePage> {
     final priceStr = NumberFormat.currency(symbol: '€', locale: locale)
         .format(effectivePrice);
 
-    /* ---- responsive columns ---- */
-    int cols;
-    switch (_blocks.length) {
-      case 0:
-      case 1:
-      case 2:
-        cols = 2;
-        break;
-      case 3:
-        cols = 3;
-        break;
-      case 4:
-        cols = 2;
-        break;
-      default:
-        cols = 3;
-    }
-
-    Widget timeButton(int m, double fs, double h, double w) => SizedBox(
-          width: w,
-          height: h,
+    /* ---- time navigation buttons ---- */
+    
+    Widget timeNavigationButton(String text, VoidCallback? onPressed, double fs) => SizedBox(
+          width: 80,
+          height: 60,
           child: ElevatedButton(
             style: kMowizFilledButtonStyle.copyWith(
-              minimumSize: const MaterialStatePropertyAll(Size(120, 56)),
-              textStyle  : MaterialStatePropertyAll(TextStyle(fontSize: fs)),
+              minimumSize: const MaterialStatePropertyAll(Size(80, 60)),
+              textStyle  : MaterialStatePropertyAll(TextStyle(fontSize: fs + 4)),
             ),
-            onPressed: () {
+            onPressed: onPressed != null ? () {
               SoundHelper.playTap();
-              _add(m);
-            },
-            child: AutoSizeText('+${_fmtMin(m)}', maxLines: 1),
+              onPressed();
+            } : null,
+            child: AutoSizeText(text, maxLines: 1),
           ),
         );
 
@@ -174,9 +177,6 @@ class _MowizTimePageState extends State<MowizTimePage> {
           const gap     = 18.0;
           final fontSz  = width >= 600 ? 24.0 : 19.0;
           final labelSz = fontSz - 2;
-          const btnH    = 56.0;
-          final btnW    = math.max(120.0,
-              (width - 48 - gap * (cols - 1)) / cols);
 
           return Center(
             child: ConstrainedBox(
@@ -202,19 +202,42 @@ class _MowizTimePageState extends State<MowizTimePage> {
                     if (!_loaded)
                       const Center(child: CircularProgressIndicator())
                     else
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: gap,
-                        runSpacing: gap,
-                        children: _blocks
-                            .map((m) => timeButton(
-                                m, fontSz, btnH, btnW))
-                            .toList(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          timeNavigationButton(
+                            '-',
+                            _currentTimeIndex > 0 ? _decrementTime : null,
+                            fontSz,
+                          ),
+                          const SizedBox(width: 20),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Theme.of(context).colorScheme.outline),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: AutoSizeText(
+                              _blocks.isNotEmpty ? _fmtMin(_blocks[_currentTimeIndex]) : '0 min',
+                              style: TextStyle(
+                                fontSize: fontSz + 2,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                            ),
+                          ),
+                          const SizedBox(width: 20),
+                          timeNavigationButton(
+                            '+',
+                            _currentTimeIndex < _blocks.length - 1 ? _incrementTime : null,
+                            fontSz,
+                          ),
+                        ],
                       ),
 
                     const SizedBox(height: 18),
                     ElevatedButton(
-                      onPressed: _totalSec > 0 ? _clear : null,
+                      onPressed: _blocks.isNotEmpty ? _clear : null,
                       style: kMowizFilledButtonStyle.copyWith(
                         backgroundColor: MaterialStatePropertyAll(
                             Theme.of(context).colorScheme.secondary),

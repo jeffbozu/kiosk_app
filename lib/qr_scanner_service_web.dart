@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/services.dart';
 import 'package:universal_html/html.dart' as html;
 
 /// Servicio de escáner QR para web que usa la cámara del dispositivo

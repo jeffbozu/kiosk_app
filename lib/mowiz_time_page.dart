@@ -413,6 +413,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                                     backgroundColor: Colors.green,
                                   ),
                               );
+                              }
                             }
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(

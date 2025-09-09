@@ -150,13 +150,15 @@ class QrScannerServiceWeb {
         ..style.color = isDarkMode ? '#b0b0b0' : '#666666'
         ..style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       
-      // Contenedor de video con diseño mejorado
+      // Contenedor de video con diseño mejorado (más pequeño para evitar solaparse con barras del móvil)
       final videoContainer = html.DivElement()
-        ..style.marginBottom = '20px'
+        ..style.marginBottom = '16px'
         ..style.borderRadius = '16px'
         ..style.overflow = 'hidden'
         ..style.border = isDarkMode ? '2px solid #333' : '2px solid #e0e0e0'
-        ..style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.15)';
+        ..style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.15)'
+        ..style.maxHeight = '360px'
+        ..style.height = 'min(60vh, 360px)';
       
       // Indicador de estado
       final statusIndicator = html.DivElement()
@@ -171,14 +173,15 @@ class QrScannerServiceWeb {
         ..style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
         ..text = '🔍 Iniciando cámara...';
       
-      // Contenedor de botones
+      // Contenedor de botones (con safe-area inferior)
       final buttonContainer = html.DivElement()
         ..style.display = 'flex'
         ..style.gap = '12px'
         ..style.justifyContent = 'center'
-        ..style.marginTop = '24px';
+        ..style.marginTop = '16px'
+        ..style.paddingBottom = 'calc(env(safe-area-inset-bottom, 0px) + 12px)';
       
-      // Botón cerrar (único botón) con estilo tipo app
+      // Botón cerrar con estilo tipo app
       final cancelButton = html.ButtonElement()
         ..text = '✕ Cerrar'
         ..style.padding = '18px 36px'
@@ -193,6 +196,21 @@ class QrScannerServiceWeb {
         ..style.transition = 'all 0.2s ease'
         ..style.minWidth = '200px'
         ..style.boxShadow = '0 6px 18px rgba(26, 115, 232, 0.35)';
+
+      // Botón para cambiar de cámara
+      final switchCamButton = html.ButtonElement()
+        ..text = '🔁 Cambiar cámara'
+        ..style.padding = '16px 24px'
+        ..style.backgroundColor = isDarkMode ? '#2d2d2d' : '#eeeeee'
+        ..style.color = isDarkMode ? '#ffffff' : '#333333'
+        ..style.border = isDarkMode ? '1px solid #555' : '1px solid #ddd'
+        ..style.borderRadius = '12px'
+        ..style.cursor = 'pointer'
+        ..style.fontSize = '16px'
+        ..style.fontWeight = '600'
+        ..style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        ..style.transition = 'all 0.2s ease'
+        ..style.minWidth = '160px';
       
       // Efectos hover para el botón
       cancelButton.onMouseEnter.listen((_) {
@@ -206,6 +224,7 @@ class QrScannerServiceWeb {
       
       // Agregar elementos
       videoContainer.append(videoElement);
+      buttonContainer.append(switchCamButton);
       buttonContainer.append(cancelButton);
       
       content.append(title);
@@ -218,16 +237,37 @@ class QrScannerServiceWeb {
       // Agregar al DOM
       html.document.body!.append(dialog);
       
-      // Iniciar cámara
-      // Mejorar constraints de video para mayor nitidez
-      final stream = await html.window.navigator.mediaDevices!.getUserMedia({
-        'video': {
-          'facingMode': {'ideal': 'environment'},
-          'width': {'ideal': 1280, 'min': 640},
-          'height': {'ideal': 720, 'min': 480}
-        }
-      });
-      
+      // Iniciar cámara con control de dispositivos
+      List<html.MediaDeviceInfo> videoInputs = [];
+      int currentDeviceIndex = 0;
+
+      Future<html.MediaStream> startStream({String? deviceId}) async {
+        final constraints = {
+          'video': deviceId != null
+              ? {
+                  'deviceId': {'exact': deviceId},
+                  'width': {'ideal': 1280, 'min': 640},
+                  'height': {'ideal': 720, 'min': 480}
+                }
+              : {
+                  'facingMode': {'ideal': 'environment'},
+                  'width': {'ideal': 1280, 'min': 640},
+                  'height': {'ideal': 720, 'min': 480}
+                }
+        };
+        return await html.window.navigator.mediaDevices!.getUserMedia(constraints);
+      }
+
+      try {
+        final devices = await html.window.navigator.mediaDevices!.enumerateDevices();
+        videoInputs = devices.where((d) => d.kind == 'videoinput').toList();
+      } catch (e) {
+        print('No se pudieron enumerar dispositivos: $e');
+      }
+
+      var stream = await startStream(
+        deviceId: videoInputs.isNotEmpty ? videoInputs[currentDeviceIndex].deviceId : null,
+      );
       videoElement.srcObject = stream;
       videoElement.setAttribute('playsinline', 'true');
       
@@ -279,17 +319,14 @@ class QrScannerServiceWeb {
         }
         final ctx = context as dynamic;
 
-        // Ajustar el canvas al tamaño real del video para mayor calidad
-        final vw = videoElement.videoWidth;
-        final vh = videoElement.videoHeight;
-        if (vw != null && vh != null && vw > 0 && vh > 0) {
-          canvasElement.width = vw;
-          canvasElement.height = vh;
-        }
+        // Fijar canvas de procesamiento a 640x480 para mejorar estabilidad de jsQR
+        canvasElement.width = 640;
+        canvasElement.height = 480;
 
         _isScanning = true;
         final startedAt = DateTime.now();
 
+        int frameCounter = 0;
         Future<void> scanFrame(num _) async {
           if (!_isScanning || isCompleted) return;
 
@@ -304,38 +341,42 @@ class QrScannerServiceWeb {
 
           try {
             if (videoElement.readyState >= 2) {
+              // Escalar el frame del video al canvas 640x480
               ctx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
               final imageData = ctx.getImageData(0, 0, canvasElement.width, canvasElement.height);
 
-              // Intento principal sin invertir (más estable en QR impresos)
-              dynamic qr = (html.window as dynamic).jsQR?.call(
-                imageData.data,
-                canvasElement.width,
-                canvasElement.height,
-                {'inversionAttempts': 'dontInvert'},
-              );
-
-              // Si no detecta, segundo intento más permisivo
-              if ((qr == null || qr.data == null)) {
-                qr = (html.window as dynamic).jsQR?.call(
+              // Decodificar 1 de cada 2 frames para estabilidad
+              frameCounter = (frameCounter + 1) & 0x7fffffff;
+              if (frameCounter % 2 == 0) {
+                // Intento más permisivo primero
+                dynamic qr = (html.window as dynamic).jsQR?.call(
                   imageData.data,
                   canvasElement.width,
                   canvasElement.height,
                   {'inversionAttempts': 'attemptBoth'},
                 );
-              }
+                // Fallback sin invertir
+                if ((qr == null || qr.data == null)) {
+                  qr = (html.window as dynamic).jsQR?.call(
+                    imageData.data,
+                    canvasElement.width,
+                    canvasElement.height,
+                    {'inversionAttempts': 'dontInvert'},
+                  );
+                }
 
-              if (qr != null && qr.data != null) {
-                final qrData = qr.data as String;
-                print('QR detectado: "$qrData"');
-                if (_isValidDiscount(qrData)) {
-                  updateStatus('✅ Código válido', 'success');
-                  _isScanning = false;
-                  await Future.delayed(const Duration(milliseconds: 400));
-                  complete(qrData);
-                  return;
-                } else {
-                  // Mantener el escaneo, no saturar con mensajes
+                if (qr != null && qr.data != null) {
+                  final qrData = qr.data as String;
+                  print('QR detectado: "$qrData"');
+                  if (_isValidDiscount(qrData)) {
+                    updateStatus('✅ Código válido', 'success');
+                    _isScanning = false;
+                    await Future.delayed(const Duration(milliseconds: 400));
+                    complete(qrData);
+                    return;
+                  } else {
+                    // Mantener el escaneo, no saturar con mensajes
+                  }
                 }
               }
             }

@@ -172,10 +172,25 @@ class QrScannerServiceWeb {
         ..style.justifyContent = 'center'
         ..style.marginTop = '24px';
       
-      // Solo botón cancelar (escaneo automático)
+      // Botón de escaneo manual
+      final scanButton = html.ButtonElement()
+        ..text = '🔍 Escanear QR'
+        ..style.padding = '16px 32px'
+        ..style.backgroundColor = isDarkMode ? '#1a73e8' : '#1a73e8'
+        ..style.color = '#ffffff'
+        ..style.border = 'none'
+        ..style.borderRadius = '12px'
+        ..style.cursor = 'pointer'
+        ..style.fontSize = '16px'
+        ..style.fontWeight = '600'
+        ..style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        ..style.transition = 'all 0.2s ease'
+        ..style.minWidth = '180px';
+      
+      // Botón cancelar
       final cancelButton = html.ButtonElement()
         ..text = '✕ Cerrar'
-        ..style.padding = '16px 32px'
+        ..style.padding = '16px 24px'
         ..style.backgroundColor = isDarkMode ? '#333333' : '#f5f5f5'
         ..style.color = isDarkMode ? '#ffffff' : '#333333'
         ..style.border = isDarkMode ? '1px solid #555' : '1px solid #ddd'
@@ -200,6 +215,7 @@ class QrScannerServiceWeb {
       
       // Agregar elementos
       videoContainer.append(videoElement);
+      buttonContainer.append(scanButton);
       buttonContainer.append(cancelButton);
       
       content.append(title);
@@ -258,9 +274,9 @@ class QrScannerServiceWeb {
                                      color == 'warning' ? '#ef6c00' : '#1976d2';
       }
 
-      // Iniciar escaneo automático después de que el video esté listo
+      // Inicializar el canvas cuando el video esté listo
       videoElement.onLoadedMetadata.listen((_) async {
-        updateStatus('📷 Cámara lista - Escaneando automáticamente...', 'info');
+        updateStatus('📷 Cámara lista - Presiona "Escanear QR" para comenzar', 'info');
         
         final context = canvasElement.getContext('2d');
         if (context == null) {
@@ -271,25 +287,28 @@ class QrScannerServiceWeb {
         }
         final ctx = context as dynamic; // CanvasRenderingContext2D
         
-        // Bucle de lectura automático hasta timeout o detección de QR VÁLIDO
-        final startedAt = DateTime.now();
+        // Variable para controlar el escaneo
+        bool isScanning = false;
+        DateTime? scanStartTime;
         
-        void scanLoop() async {
-          if (isCompleted) return;
+        // Función para realizar un solo escaneo
+        Future<void> performScan() async {
+          if (isCompleted || !isScanning) return;
           
           try {
             // Verificar timeout
-            if (DateTime.now().difference(startedAt).inSeconds >= timeout) {
+            if (scanStartTime != null && 
+                DateTime.now().difference(scanStartTime!).inSeconds >= timeout) {
               updateStatus('⏱️ Tiempo agotado - No se detectó código QR válido', 'error');
-              await Future.delayed(const Duration(milliseconds: 2000));
-              complete(null);
+              isScanning = false;
+              scanButton.text = '🔁 Reintentar';
               return;
             }
             
             // Verificar que el video esté listo
             if (videoElement.readyState < 2) {
-              // Video no está listo, esperar un poco más
-              Timer(const Duration(milliseconds: 100), scanLoop);
+              await Future.delayed(const Duration(milliseconds: 100));
+              performScan();
               return;
             }
             
@@ -299,13 +318,13 @@ class QrScannerServiceWeb {
             // Obtener píxeles
             final imageData = ctx.getImageData(0, 0, canvasElement.width, canvasElement.height);
             
-            // Llamar a jsQR (expuesta en window.jsQR)
+            // Llamar a jsQR (expuesta en window.jsQR) con configuración más permisiva
             final qr = (html.window as dynamic).jsQR?.call(
               imageData.data,
               canvasElement.width,
               canvasElement.height,
               {
-                'inversionAttempts': 'attemptBoth',
+                'inversionAttempts': 'dontInvert', // Usar 'dontInvert' para mejor rendimiento
               },
             );
             
@@ -316,38 +335,68 @@ class QrScannerServiceWeb {
               // Validar si el QR es válido
               if (_isValidDiscount(qrData)) {
                 updateStatus('✅ ¡Código QR válido detectado!', 'success');
+                isScanning = false;
                 await Future.delayed(const Duration(milliseconds: 800));
                 complete(qrData);
                 return;
               } else {
-                // QR detectado pero no válido - mostrar mensaje y continuar escaneando
-                updateStatus('⚠️ QR "$qrData" no válido - Sigue escaneando...', 'warning');
-                await Future.delayed(const Duration(milliseconds: 1500));
-                updateStatus('🔍 Buscando código QR válido...', 'info');
+                // QR detectado pero no válido
+                updateStatus('⚠️ Código no válido - Intenta con otro', 'error');
+                isScanning = false;
+                scanButton.text = '🔁 Reintentar';
+                return;
               }
             }
             
-            // Continuar escaneando
-            Timer(const Duration(milliseconds: 200), scanLoop);
+            // Continuar escaneando si aún está activo
+            if (isScanning) {
+              html.window.requestAnimationFrame((_) => performScan());
+            }
             
           } catch (e) {
-            print('Error en scanLoop: $e');
-            // No mostrar error inmediatamente, solo continuar
-            Timer(const Duration(milliseconds: 300), scanLoop);
+            print('Error en performScan: $e');
+            // Reintentar después de un error
+            if (isScanning) {
+              await Future.delayed(const Duration(milliseconds: 300));
+              performScan();
+            }
           }
         }
         
-        // Esperar un poco antes de empezar a escanear para que el video se estabilice
-        Timer(const Duration(milliseconds: 500), scanLoop);
+        // Manejador del botón de escaneo
+        scanButton.onClick.listen((_) async {
+          if (!isScanning) {
+            // Iniciar escaneo
+            isScanning = true;
+            scanStartTime = DateTime.now();
+            scanButton.text = '🔄 Escaneando...';
+            scanButton.style.backgroundColor = isDarkMode ? '#0d47a1' : '#0d47a1';
+            updateStatus('🔍 Escaneando código QR...', 'info');
+            performScan();
+          } else {
+            // Detener escaneo
+            isScanning = false;
+            scanButton.text = '🔍 Escanear QR';
+            scanButton.style.backgroundColor = isDarkMode ? '#1a73e8' : '#1a73e8';
+            updateStatus('⏹️ Escaneo detenido', 'info');
+          }
+        });
       });
       
-      cancelButton.onClick.listen((_) => complete(null));
+      cancelButton.onClick.listen((_) {
+        isScanning = false;
+        complete(null);
+      });
       
-      // Timeout global como respaldo
-      Timer(Duration(seconds: timeout + 5), () {
+      // Timeout global como respaldo (solo para cierre inactivo)
+      Timer(Duration(seconds: timeout * 2), () {
         if (!isCompleted) {
-          updateStatus('⏱️ Tiempo agotado', 'error');
-          complete(null);
+          updateStatus('⚠️ Inactividad - La ventana se cerrará pronto', 'warning');
+          Timer(const Duration(seconds: 5), () {
+            if (!isCompleted) {
+              complete(null);
+            }
+          });
         }
       });
       

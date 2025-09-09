@@ -363,29 +363,49 @@ class QrScannerServiceWeb {
   static bool _isValidDiscount(String qrCode) {
     try {
       final trimmed = qrCode.trim();
-      print('Validando QR: "$trimmed"'); // Debug
+      print('🔍 QR detectado: "$trimmed" (longitud: ${trimmed.length})'); // Debug detallado
       
-      // Patrón: -X o -X.XX donde X son números (por ejemplo: -1, -0.90, -5.50)
-      final discountPattern = RegExp(r'^-\d+(?:\.\d{1,2})?$');
+      // Mostrar cada carácter para debug
+      for (int i = 0; i < trimmed.length; i++) {
+        print('  Carácter $i: "${trimmed[i]}" (código: ${trimmed.codeUnitAt(i)})');
+      }
+      
+      // Patrón más permisivo: -X o -X.XX donde X son números
+      final discountPattern = RegExp(r'^-\d+(?:\.\d+)?$');
       if (discountPattern.hasMatch(trimmed)) {
         final amount = double.tryParse(trimmed);
         if (amount != null && amount < 0 && amount >= -10000) {
-          print('QR válido como descuento: $amount'); // Debug
+          print('✅ QR válido como descuento: $amount'); // Debug
           return true;
+        } else {
+          print('❌ Número fuera de rango: $amount');
         }
+      } else {
+        print('❌ No coincide con patrón de descuento: $discountPattern');
       }
       
       // Códigos VIP/FREE que anulan el total
       final normalized = trimmed.toUpperCase();
       if (normalized == 'FREE' || normalized == 'VIP' || normalized == 'VIP-ALL' || normalized == '-ALL' || normalized == '-100%') {
-        print('QR válido como FREE/VIP: $normalized'); // Debug
+        print('✅ QR válido como FREE/VIP: $normalized'); // Debug
         return true;
       }
       
-      print('QR no válido: "$trimmed"'); // Debug
+      // Intentar validar cualquier contenido que empiece con -
+      if (trimmed.startsWith('-')) {
+        print('🔄 Contenido empieza con -, intentando validar...');
+        final numberPart = trimmed.substring(1);
+        final number = double.tryParse(numberPart);
+        if (number != null && number >= 0) {
+          print('✅ QR válido (formato alternativo): -$number');
+          return true;
+        }
+      }
+      
+      print('❌ QR no válido: "$trimmed"'); // Debug
       return false;
     } catch (e) {
-      print('Error validando QR: $e'); // Debug
+      print('💥 Error validando QR: $e'); // Debug
       return false;
     }
   }

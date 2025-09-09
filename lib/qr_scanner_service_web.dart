@@ -238,7 +238,7 @@ class QrScannerServiceWeb {
       html.document.body!.append(dialog);
       
       // Iniciar cámara con control de dispositivos
-      List<html.MediaDeviceInfo> videoInputs = [];
+      List<dynamic> videoInputs = [];
       int currentDeviceIndex = 0;
 
       Future<html.MediaStream> startStream({String? deviceId}) async {
@@ -260,16 +260,32 @@ class QrScannerServiceWeb {
 
       try {
         final devices = await html.window.navigator.mediaDevices!.enumerateDevices();
-        videoInputs = devices.where((d) => d.kind == 'videoinput').toList();
+        videoInputs = devices.where((d) => (d as dynamic).kind == 'videoinput').toList();
       } catch (e) {
         print('No se pudieron enumerar dispositivos: $e');
       }
 
       var stream = await startStream(
-        deviceId: videoInputs.isNotEmpty ? videoInputs[currentDeviceIndex].deviceId : null,
+        deviceId: videoInputs.isNotEmpty ? (videoInputs[currentDeviceIndex] as dynamic).deviceId as String? : null,
       );
       videoElement.srcObject = stream;
       videoElement.setAttribute('playsinline', 'true');
+      
+      // Alternar cámara
+      switchCamButton.onClick.listen((_) async {
+        try {
+          if (videoInputs.isEmpty) return;
+          currentDeviceIndex = (currentDeviceIndex + 1) % videoInputs.length;
+          // Detener stream actual
+          stream.getTracks().forEach((t) => t.stop());
+          // Iniciar nuevo stream con el siguiente deviceId
+          final nextId = (videoInputs[currentDeviceIndex] as dynamic).deviceId as String?;
+          stream = await startStream(deviceId: nextId);
+          videoElement.srcObject = stream;
+        } catch (e) {
+          print('Error cambiando de cámara: $e');
+        }
+      });
       
       // Completer para el resultado
       final completer = Completer<String?>();

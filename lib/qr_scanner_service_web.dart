@@ -262,76 +262,89 @@ class QrScannerServiceWeb {
       videoElement.onLoadedMetadata.listen((_) async {
         updateStatus('📷 Cámara lista - Escaneando automáticamente...', 'info');
         
-        try {
-          final context = canvasElement.getContext('2d');
-          if (context == null) {
-            updateStatus('❌ Error: No se pudo inicializar el canvas', 'error');
-            complete(null);
-            return;
-          }
-          final ctx = context as dynamic; // CanvasRenderingContext2D
+        final context = canvasElement.getContext('2d');
+        if (context == null) {
+          updateStatus('❌ Error: No se pudo inicializar el canvas', 'error');
+          await Future.delayed(const Duration(milliseconds: 2000));
+          complete(null);
+          return;
+        }
+        final ctx = context as dynamic; // CanvasRenderingContext2D
+        
+        // Bucle de lectura automático hasta timeout o detección de QR VÁLIDO
+        final startedAt = DateTime.now();
+        
+        void scanLoop() async {
+          if (isCompleted) return;
           
-          // Bucle de lectura automático hasta timeout o detección de QR VÁLIDO
-          final startedAt = DateTime.now();
-          while (!isCompleted) {
-            // timeout manual
+          try {
+            // Verificar timeout
             if (DateTime.now().difference(startedAt).inSeconds >= timeout) {
               updateStatus('⏱️ Tiempo agotado - No se detectó código QR válido', 'error');
               await Future.delayed(const Duration(milliseconds: 2000));
               complete(null);
-              break;
+              return;
+            }
+            
+            // Verificar que el video esté listo
+            if (videoElement.readyState < 2) {
+              // Video no está listo, esperar un poco más
+              Timer(const Duration(milliseconds: 100), scanLoop);
+              return;
             }
             
             // Dibujar frame actual
-            try {
-              ctx.drawImage(videoElement, 0, 0);
-            } catch (_) {
-              // Continuar si hay error dibujando
-            }
+            ctx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
             
             // Obtener píxeles
-            final imageData = (ctx.getImageData(0, 0, canvasElement.width!, canvasElement.height!));
+            final imageData = ctx.getImageData(0, 0, canvasElement.width, canvasElement.height);
             
             // Llamar a jsQR (expuesta en window.jsQR)
             final qr = (html.window as dynamic).jsQR?.call(
               imageData.data,
               canvasElement.width,
               canvasElement.height,
-              {'inversionAttempts': 'dontInvert'},
+              {
+                'inversionAttempts': 'attemptBoth',
+              },
             );
             
             if (qr != null && qr.data != null) {
               final qrData = qr.data as String;
+              print('QR detectado: "$qrData"'); // Debug
               
               // Validar si el QR es válido
               if (_isValidDiscount(qrData)) {
                 updateStatus('✅ ¡Código QR válido detectado!', 'success');
-                await Future.delayed(const Duration(milliseconds: 800)); // Mostrar éxito brevemente
+                await Future.delayed(const Duration(milliseconds: 800));
                 complete(qrData);
-                break;
+                return;
               } else {
                 // QR detectado pero no válido - mostrar mensaje y continuar escaneando
-                updateStatus('⚠️ QR no soportado o no válido - Sigue escaneando...', 'warning');
-                await Future.delayed(const Duration(milliseconds: 1500)); // Mostrar mensaje un poco más
+                updateStatus('⚠️ QR "$qrData" no válido - Sigue escaneando...', 'warning');
+                await Future.delayed(const Duration(milliseconds: 1500));
                 updateStatus('🔍 Buscando código QR válido...', 'info');
               }
             }
             
-            // Pequeña espera para no bloquear UI
-            await Future.delayed(const Duration(milliseconds: 150));
+            // Continuar escaneando
+            Timer(const Duration(milliseconds: 200), scanLoop);
+            
+          } catch (e) {
+            print('Error en scanLoop: $e');
+            // No mostrar error inmediatamente, solo continuar
+            Timer(const Duration(milliseconds: 300), scanLoop);
           }
-        } catch (e) {
-          print('Error capturando/decodificando QR: $e');
-          updateStatus('❌ Error en el escaneo', 'error');
-          await Future.delayed(const Duration(milliseconds: 2000));
-          complete(null);
         }
+        
+        // Esperar un poco antes de empezar a escanear para que el video se estabilice
+        Timer(const Duration(milliseconds: 500), scanLoop);
       });
       
       cancelButton.onClick.listen((_) => complete(null));
       
-      // Timeout global
-      Timer(Duration(seconds: timeout), () {
+      // Timeout global como respaldo
+      Timer(Duration(seconds: timeout + 5), () {
         if (!isCompleted) {
           updateStatus('⏱️ Tiempo agotado', 'error');
           complete(null);
@@ -349,19 +362,30 @@ class QrScannerServiceWeb {
   /// Verifica si el código QR es un descuento válido
   static bool _isValidDiscount(String qrCode) {
     try {
+      final trimmed = qrCode.trim();
+      print('Validando QR: "$trimmed"'); // Debug
+      
       // Patrón: -X o -X.XX donde X son números (por ejemplo: -1, -0.90, -5.50)
-      final discountPattern = RegExp(r'^-(\d+(?:\.\d{1,2})?)$');
-      if (discountPattern.hasMatch(qrCode)) {
-        final amount = double.parse(qrCode);
-        return amount < 0 && amount > -10000; // aceptamos descuentos grandes; la UI trunca a 0
+      final discountPattern = RegExp(r'^-\d+(?:\.\d{1,2})?$');
+      if (discountPattern.hasMatch(trimmed)) {
+        final amount = double.tryParse(trimmed);
+        if (amount != null && amount < 0 && amount >= -10000) {
+          print('QR válido como descuento: $amount'); // Debug
+          return true;
+        }
       }
+      
       // Códigos VIP/FREE que anulan el total
-      final normalized = qrCode.trim().toUpperCase();
+      final normalized = trimmed.toUpperCase();
       if (normalized == 'FREE' || normalized == 'VIP' || normalized == 'VIP-ALL' || normalized == '-ALL' || normalized == '-100%') {
+        print('QR válido como FREE/VIP: $normalized'); // Debug
         return true;
       }
+      
+      print('QR no válido: "$trimmed"'); // Debug
       return false;
     } catch (e) {
+      print('Error validando QR: $e'); // Debug
       return false;
     }
   }

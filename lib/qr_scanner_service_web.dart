@@ -178,50 +178,34 @@ class QrScannerServiceWeb {
         ..style.justifyContent = 'center'
         ..style.marginTop = '24px';
       
-      // Botón de escaneo manual
-      final scanButton = html.ButtonElement()
-        ..text = '🔍 Escanear QR'
-        ..style.padding = '16px 32px'
-        ..style.backgroundColor = isDarkMode ? '#1a73e8' : '#1a73e8'
-        ..style.color = '#ffffff'
-        ..style.border = 'none'
-        ..style.borderRadius = '12px'
-        ..style.cursor = 'pointer'
-        ..style.fontSize = '16px'
-        ..style.fontWeight = '600'
-        ..style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-        ..style.transition = 'all 0.2s ease'
-        ..style.minWidth = '180px';
-      
-      // Botón cancelar
+      // Botón cerrar (único botón) con estilo tipo app
       final cancelButton = html.ButtonElement()
         ..text = '✕ Cerrar'
-        ..style.padding = '16px 24px'
-        ..style.backgroundColor = isDarkMode ? '#333333' : '#f5f5f5'
-        ..style.color = isDarkMode ? '#ffffff' : '#333333'
-        ..style.border = isDarkMode ? '1px solid #555' : '1px solid #ddd'
-        ..style.borderRadius = '12px'
+        ..style.padding = '18px 36px'
+        ..style.backgroundColor = isDarkMode ? '#0d47a1' : '#1a73e8'
+        ..style.color = '#ffffff'
+        ..style.border = 'none'
+        ..style.borderRadius = '14px'
         ..style.cursor = 'pointer'
-        ..style.fontSize = '16px'
-        ..style.fontWeight = '600'
+        ..style.fontSize = '18px'
+        ..style.fontWeight = '700'
         ..style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
         ..style.transition = 'all 0.2s ease'
-        ..style.minWidth = '120px';
+        ..style.minWidth = '200px'
+        ..style.boxShadow = '0 6px 18px rgba(26, 115, 232, 0.35)';
       
       // Efectos hover para el botón
       cancelButton.onMouseEnter.listen((_) {
-        cancelButton.style.backgroundColor = isDarkMode ? '#444444' : '#e0e0e0';
         cancelButton.style.transform = 'translateY(-1px)';
+        cancelButton.style.boxShadow = '0 10px 24px rgba(26, 115, 232, 0.45)';
       });
-      
       cancelButton.onMouseLeave.listen((_) {
-        cancelButton.style.backgroundColor = isDarkMode ? '#333333' : '#f5f5f5';
         cancelButton.style.transform = 'translateY(0)';
+        cancelButton.style.boxShadow = '0 6px 18px rgba(26, 115, 232, 0.35)';
       });
       
       // Agregar elementos
       videoContainer.append(videoElement);
-      buttonContainer.append(scanButton);
       buttonContainer.append(cancelButton);
       
       content.append(title);
@@ -235,15 +219,17 @@ class QrScannerServiceWeb {
       html.document.body!.append(dialog);
       
       // Iniciar cámara
+      // Mejorar constraints de video para mayor nitidez
       final stream = await html.window.navigator.mediaDevices!.getUserMedia({
         'video': {
-          'facingMode': 'environment', // Cámara trasera si está disponible
-          'width': {'ideal': 640},
-          'height': {'ideal': 480}
+          'facingMode': {'ideal': 'environment'},
+          'width': {'ideal': 1280, 'min': 640},
+          'height': {'ideal': 720, 'min': 480}
         }
       });
       
       videoElement.srcObject = stream;
+      videoElement.setAttribute('playsinline', 'true');
       
       // Completer para el resultado
       final completer = Completer<String?>();
@@ -280,112 +266,87 @@ class QrScannerServiceWeb {
                                      color == 'warning' ? '#ef6c00' : '#1976d2';
       }
 
-      // Inicializar el canvas cuando el video esté listo
+      // Inicializar el canvas cuando el video esté listo y comenzar escaneo automático
       videoElement.onLoadedMetadata.listen((_) async {
-        updateStatus('📷 Cámara lista - Presiona "Escanear QR" para comenzar', 'info');
-        
+        updateStatus('📷 Cámara lista - Escaneando...', 'info');
+
         final context = canvasElement.getContext('2d');
         if (context == null) {
           updateStatus('❌ Error: No se pudo inicializar el canvas', 'error');
-          await Future.delayed(const Duration(milliseconds: 2000));
+          await Future.delayed(const Duration(milliseconds: 1600));
           complete(null);
           return;
         }
-        final ctx = context as dynamic; // CanvasRenderingContext2D
-        
-        // Usar la variable de clase _isScanning
-        DateTime? scanStartTime;
-        
-        // Función para realizar un solo escaneo
-        Future<void> performScan() async {
-          if (isCompleted || !_isScanning) return;
-          
+        final ctx = context as dynamic;
+
+        // Ajustar el canvas al tamaño real del video para mayor calidad
+        final vw = videoElement.videoWidth;
+        final vh = videoElement.videoHeight;
+        if (vw != null && vh != null && vw > 0 && vh > 0) {
+          canvasElement.width = vw;
+          canvasElement.height = vh;
+        }
+
+        _isScanning = true;
+        final startedAt = DateTime.now();
+
+        Future<void> scanFrame(num _) async {
+          if (!_isScanning || isCompleted) return;
+
+          // Timeout
+          if (DateTime.now().difference(startedAt).inSeconds >= timeout) {
+            updateStatus('⏱️ Tiempo agotado - No se detectó QR', 'error');
+            _isScanning = false;
+            await Future.delayed(const Duration(milliseconds: 800));
+            complete(null);
+            return;
+          }
+
           try {
-            // Verificar timeout
-            if (scanStartTime != null && 
-                DateTime.now().difference(scanStartTime!).inSeconds >= timeout) {
-              updateStatus('⏱️ Tiempo agotado - No se detectó código QR válido', 'error');
-              _isScanning = false;
-              scanButton.text = '🔁 Reintentar';
-              return;
-            }
-            
-            // Verificar que el video esté listo
-            if (videoElement.readyState < 2) {
-              await Future.delayed(const Duration(milliseconds: 100));
-              performScan();
-              return;
-            }
-            
-            // Dibujar frame actual
-            ctx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-            
-            // Obtener píxeles
-            final imageData = ctx.getImageData(0, 0, canvasElement.width, canvasElement.height);
-            
-            // Llamar a jsQR (expuesta en window.jsQR) con configuración más permisiva
-            final qr = (html.window as dynamic).jsQR?.call(
-              imageData.data,
-              canvasElement.width,
-              canvasElement.height,
-              {
-                'inversionAttempts': 'dontInvert', // Usar 'dontInvert' para mejor rendimiento
-              },
-            );
-            
-            if (qr != null && qr.data != null) {
-              final qrData = qr.data as String;
-              print('QR detectado: "$qrData"'); // Debug
-              
-              // Validar si el QR es válido
-              if (_isValidDiscount(qrData)) {
-                updateStatus('✅ ¡Código QR válido detectado!', 'success');
-                _isScanning = false;
-                await Future.delayed(const Duration(milliseconds: 800));
-                complete(qrData);
-                return;
-              } else {
-                // QR detectado pero no válido
-                updateStatus('⚠️ Código no válido - Intenta con otro', 'error');
-                _isScanning = false;
-                scanButton.text = '🔁 Reintentar';
-                return;
+            if (videoElement.readyState >= 2) {
+              ctx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+              final imageData = ctx.getImageData(0, 0, canvasElement.width, canvasElement.height);
+
+              // Intento principal sin invertir (más estable en QR impresos)
+              dynamic qr = (html.window as dynamic).jsQR?.call(
+                imageData.data,
+                canvasElement.width,
+                canvasElement.height,
+                {'inversionAttempts': 'dontInvert'},
+              );
+
+              // Si no detecta, segundo intento más permisivo
+              if ((qr == null || qr.data == null)) {
+                qr = (html.window as dynamic).jsQR?.call(
+                  imageData.data,
+                  canvasElement.width,
+                  canvasElement.height,
+                  {'inversionAttempts': 'attemptBoth'},
+                );
+              }
+
+              if (qr != null && qr.data != null) {
+                final qrData = qr.data as String;
+                print('QR detectado: "$qrData"');
+                if (_isValidDiscount(qrData)) {
+                  updateStatus('✅ Código válido', 'success');
+                  _isScanning = false;
+                  await Future.delayed(const Duration(milliseconds: 400));
+                  complete(qrData);
+                  return;
+                } else {
+                  // Mantener el escaneo, no saturar con mensajes
+                }
               }
             }
-            
-            // Continuar escaneando si aún está activo
-            if (_isScanning) {
-              html.window.requestAnimationFrame((_) => performScan());
-            }
-            
           } catch (e) {
-            print('Error en performScan: $e');
-            // Reintentar después de un error
-            if (_isScanning) {
-              await Future.delayed(const Duration(milliseconds: 300));
-              performScan();
-            }
+            print('Error en scanFrame: $e');
           }
+
+          if (_isScanning) html.window.requestAnimationFrame(scanFrame);
         }
-        
-        // Manejador del botón de escaneo
-        scanButton.onClick.listen((_) async {
-          if (!_isScanning) {
-            // Iniciar escaneo
-            _isScanning = true;
-            scanStartTime = DateTime.now();
-            scanButton.text = '🔄 Escaneando...';
-            scanButton.style.backgroundColor = isDarkMode ? '#0d47a1' : '#0d47a1';
-            updateStatus('🔍 Escaneando código QR...', 'info');
-            performScan();
-          } else {
-            // Detener escaneo
-            _isScanning = false;
-            scanButton.text = '🔍 Escanear QR';
-            scanButton.style.backgroundColor = isDarkMode ? '#1a73e8' : '#1a73e8';
-            updateStatus('⏹️ Escaneo detenido', 'info');
-          }
-        });
+
+        html.window.requestAnimationFrame(scanFrame);
       });
       
       cancelButton.onClick.listen((_) {

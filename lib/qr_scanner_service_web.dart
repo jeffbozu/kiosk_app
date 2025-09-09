@@ -83,8 +83,14 @@ class QrScannerServiceWeb {
   }
   
   /// Muestra el escáner de cámara
+  // Variable de control de escaneo a nivel de clase
+  static bool _isScanning = false;
+  
   static Future<String?> _showCameraScanner(int timeout) async {
     try {
+      // Resetear el estado de escaneo
+      _isScanning = false;
+      
       // Crear elemento de video para la cámara
       final videoElement = html.VideoElement()
         ..autoplay = true
@@ -287,20 +293,19 @@ class QrScannerServiceWeb {
         }
         final ctx = context as dynamic; // CanvasRenderingContext2D
         
-        // Variable para controlar el escaneo
-        bool isScanning = false;
+        // Usar la variable de clase _isScanning
         DateTime? scanStartTime;
         
         // Función para realizar un solo escaneo
         Future<void> performScan() async {
-          if (isCompleted || !isScanning) return;
+          if (isCompleted || !_isScanning) return;
           
           try {
             // Verificar timeout
             if (scanStartTime != null && 
                 DateTime.now().difference(scanStartTime!).inSeconds >= timeout) {
               updateStatus('⏱️ Tiempo agotado - No se detectó código QR válido', 'error');
-              isScanning = false;
+              _isScanning = false;
               scanButton.text = '🔁 Reintentar';
               return;
             }
@@ -335,28 +340,28 @@ class QrScannerServiceWeb {
               // Validar si el QR es válido
               if (_isValidDiscount(qrData)) {
                 updateStatus('✅ ¡Código QR válido detectado!', 'success');
-                isScanning = false;
+                _isScanning = false;
                 await Future.delayed(const Duration(milliseconds: 800));
                 complete(qrData);
                 return;
               } else {
                 // QR detectado pero no válido
                 updateStatus('⚠️ Código no válido - Intenta con otro', 'error');
-                isScanning = false;
+                _isScanning = false;
                 scanButton.text = '🔁 Reintentar';
                 return;
               }
             }
             
             // Continuar escaneando si aún está activo
-            if (isScanning) {
+            if (_isScanning) {
               html.window.requestAnimationFrame((_) => performScan());
             }
             
           } catch (e) {
             print('Error en performScan: $e');
             // Reintentar después de un error
-            if (isScanning) {
+            if (_isScanning) {
               await Future.delayed(const Duration(milliseconds: 300));
               performScan();
             }
@@ -365,9 +370,9 @@ class QrScannerServiceWeb {
         
         // Manejador del botón de escaneo
         scanButton.onClick.listen((_) async {
-          if (!isScanning) {
+          if (!_isScanning) {
             // Iniciar escaneo
-            isScanning = true;
+            _isScanning = true;
             scanStartTime = DateTime.now();
             scanButton.text = '🔄 Escaneando...';
             scanButton.style.backgroundColor = isDarkMode ? '#0d47a1' : '#0d47a1';
@@ -375,7 +380,7 @@ class QrScannerServiceWeb {
             performScan();
           } else {
             // Detener escaneo
-            isScanning = false;
+            _isScanning = false;
             scanButton.text = '🔍 Escanear QR';
             scanButton.style.backgroundColor = isDarkMode ? '#1a73e8' : '#1a73e8';
             updateStatus('⏹️ Escaneo detenido', 'info');
@@ -384,7 +389,7 @@ class QrScannerServiceWeb {
       });
       
       cancelButton.onClick.listen((_) {
-        isScanning = false;
+        _isScanning = false;
         complete(null);
       });
       

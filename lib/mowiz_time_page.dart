@@ -371,31 +371,47 @@ class _MowizTimePageState extends State<MowizTimePage> {
                           final discount = await UnifiedService.scanQrCode(timeout: 30);
                           
                           if (discount != null) {
-                            // Aplicar descuento al precio total
-                            final newTotal = (_totalCents / 100) + discount;
-                            final newTotalCents = (newTotal * 100).round();
-                            
-                            // Asegurar que el precio no sea negativo
-                            if (newTotalCents < 0) {
+                            // Verificar si es un QR FREE (descuento total)
+                            if (discount <= -99999.0) {
+                              // QR FREE: precio final 0.00€
+                              final originalPrice = _totalCents / 100;
                               setState(() {
                                 _totalCents = 0;
-                                _discountEurosApplied = discount;
+                                _discountEurosApplied = originalPrice;
                               });
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Descuento aplicado: ${discount.toStringAsFixed(2)}€ - Precio final: 0.00€'),
+                                  content: Text('Descuento FREE aplicado: ${originalPrice.toStringAsFixed(2)}€ - Precio final: 0.00€'),
                                   backgroundColor: Colors.green,
                                 ),
                               );
                             } else {
-                              setState(() {
-                                _totalCents = newTotalCents;
-                              });
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Descuento aplicado: ${discount.toStringAsFixed(2)}€ - Precio final: ${(newTotalCents / 100).toStringAsFixed(2)}€'),
-                                  backgroundColor: Colors.green,
-                                ),
+                              // Descuento normal
+                              final newTotal = (_totalCents / 100) + discount;
+                              final newTotalCents = (newTotal * 100).round();
+                              
+                              // Asegurar que el precio no sea negativo
+                              if (newTotalCents < 0) {
+                                setState(() {
+                                  _totalCents = 0;
+                                  _discountEurosApplied = discount;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Descuento aplicado: ${discount.toStringAsFixed(2)}€ - Precio final: 0.00€'),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              } else {
+                                setState(() {
+                                  _totalCents = newTotalCents;
+                                  _discountEurosApplied = discount;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Descuento aplicado: ${discount.toStringAsFixed(2)}€ - Precio final: ${(newTotalCents / 100).toStringAsFixed(2)}€'),
+                                    backgroundColor: Colors.green,
+                                  ),
                               );
                             }
                           } else {

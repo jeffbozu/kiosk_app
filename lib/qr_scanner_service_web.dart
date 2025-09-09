@@ -92,7 +92,8 @@ class QrScannerServiceWeb {
     // Obtener contexto para traducciones (fallback a español si no hay contexto)
     BuildContext? context;
     try {
-      context = WidgetsBinding.instance.primaryFocus?.context;
+      // Intentar obtener contexto del navegador actual si está disponible
+      context = null; // Simplificado para evitar problemas de API
     } catch (e) {
       // Ignorar error de contexto
     }

@@ -89,35 +89,70 @@ class QrScannerServiceWeb {
   static bool _isScanning = false;
 
   static Future<String?> _showCameraScanner(int timeout) async {
-    // Obtener contexto para traducciones (fallback a español si no hay contexto)
-    BuildContext? context;
+    // Obtener idioma actual desde el DOM (data-locale) que refleja la configuración de la app
+    String currentLocale = 'es';
     try {
-      // Intentar obtener contexto del navegador actual si está disponible
-      context = null; // Simplificado para evitar problemas de API
+      // Buscar el idioma en el elemento html o body
+      final htmlElement = html.document.documentElement;
+      final bodyElement = html.document.body;
+      
+      String? locale = htmlElement?.getAttribute('lang') ?? 
+                      bodyElement?.getAttribute('data-locale') ??
+                      htmlElement?.getAttribute('data-locale');
+      
+      if (locale != null && ['es', 'ca', 'en'].contains(locale.toLowerCase())) {
+        currentLocale = locale.toLowerCase();
+      } else {
+        // Fallback: buscar en localStorage si existe
+        try {
+          final stored = html.window.localStorage['flutter.locale'];
+          if (stored != null && ['es', 'ca', 'en'].contains(stored)) {
+            currentLocale = stored;
+          }
+        } catch (_) {}
+      }
+      
+      print('🌍 Idioma detectado para QR scanner: $currentLocale');
     } catch (e) {
-      // Ignorar error de contexto
+      print('Error obteniendo idioma: $e');
     }
     
     String t(String key) {
-      if (context != null) {
-        try {
-          return AppLocalizations.of(context).t(key);
-        } catch (e) {
-          // Fallback a español
-        }
-      }
-      // Traducciones fallback en español
-      final fallbacks = {
-        'qrScanTitle': 'Escanear Código QR',
-        'qrScanSubtitle': 'Apunta la cámara hacia el código QR de descuento',
-        'qrScanClose': 'Cerrar',
-        'qrScanSwitchCamera': 'Cambiar cámara',
-        'qrScanInitializing': 'Iniciando cámara...',
-        'qrScanReady': 'Cámara lista - Escaneando...',
-        'qrScanValid': 'Código válido',
-        'qrScanTimeout': 'Tiempo agotado - No se detectó QR',
+      // Traducciones completas para todos los idiomas
+      final translations = {
+        'es': {
+          'qrScanTitle': 'Escanear Código QR',
+          'qrScanSubtitle': 'Apunta la cámara hacia el código QR de descuento',
+          'qrScanClose': 'Cerrar',
+          'qrScanSwitchCamera': 'Cambiar cámara',
+          'qrScanInitializing': 'Iniciando cámara...',
+          'qrScanReady': 'Cámara lista - Escaneando...',
+          'qrScanValid': 'Código válido',
+          'qrScanTimeout': 'Tiempo agotado - No se detectó QR',
+        },
+        'ca': {
+          'qrScanTitle': 'Escanejar Codi QR',
+          'qrScanSubtitle': 'Apunta la càmera cap al codi QR de descompte',
+          'qrScanClose': 'Tancar',
+          'qrScanSwitchCamera': 'Canviar càmera',
+          'qrScanInitializing': 'Iniciant càmera...',
+          'qrScanReady': 'Càmera llesta - Escanejant...',
+          'qrScanValid': 'Codi vàlid',
+          'qrScanTimeout': 'Temps esgotat - No s\'ha detectat QR',
+        },
+        'en': {
+          'qrScanTitle': 'Scan QR Code',
+          'qrScanSubtitle': 'Point the camera at the discount QR code',
+          'qrScanClose': 'Close',
+          'qrScanSwitchCamera': 'Switch camera',
+          'qrScanInitializing': 'Starting camera...',
+          'qrScanReady': 'Camera ready - Scanning...',
+          'qrScanValid': 'Valid code',
+          'qrScanTimeout': 'Timeout - No QR detected',
+        },
       };
-      return fallbacks[key] ?? key;
+      
+      return translations[currentLocale]?[key] ?? translations['es']![key] ?? key;
     }
     try {
       // Resetear el estado de escaneo
@@ -282,7 +317,7 @@ class QrScannerServiceWeb {
                   'height': {'ideal': 720, 'min': 480}
                 }
               : {
-                  'facingMode': {'ideal': 'environment'},
+                  'facingMode': {'exact': 'environment'}, // Forzar cámara trasera
                   'width': {'ideal': 1280, 'min': 640},
                   'height': {'ideal': 720, 'min': 480}
                 }
@@ -406,20 +441,34 @@ class QrScannerServiceWeb {
               // Decodificar 1 de cada 2 frames para estabilidad
               frameCounter = (frameCounter + 1) & 0x7fffffff;
               if (frameCounter % 2 == 0) {
-                // Intento más permisivo primero
-                dynamic qr = (html.window as dynamic).jsQR?.call(
+                // Múltiples intentos de decodificación para mejorar detección
+                dynamic qr;
+                
+                // Intento 1: attemptBoth (más permisivo)
+                qr = (html.window as dynamic).jsQR?.call(
                   imageData.data,
                   canvasElement.width,
                   canvasElement.height,
                   {'inversionAttempts': 'attemptBoth'},
                 );
-                // Fallback sin invertir
+                
+                // Intento 2: dontInvert si no funciona el primero
                 if ((qr == null || qr.data == null)) {
                   qr = (html.window as dynamic).jsQR?.call(
                     imageData.data,
                     canvasElement.width,
                     canvasElement.height,
                     {'inversionAttempts': 'dontInvert'},
+                  );
+                }
+                
+                // Intento 3: onlyInvert como último recurso
+                if ((qr == null || qr.data == null)) {
+                  qr = (html.window as dynamic).jsQR?.call(
+                    imageData.data,
+                    canvasElement.width,
+                    canvasElement.height,
+                    {'inversionAttempts': 'onlyInvert'},
                   );
                 }
 

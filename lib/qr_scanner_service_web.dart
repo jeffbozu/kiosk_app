@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:universal_html/html.dart' as html;
+import 'l10n/app_localizations.dart';
+import 'package:flutter/material.dart';
 
 /// Servicio de escáner QR para web que usa la cámara del dispositivo
 class QrScannerServiceWeb {
@@ -85,8 +87,37 @@ class QrScannerServiceWeb {
   /// Muestra el escáner de cámara
   // Variable de control de escaneo a nivel de clase
   static bool _isScanning = false;
-  
+
   static Future<String?> _showCameraScanner(int timeout) async {
+    // Obtener contexto para traducciones (fallback a español si no hay contexto)
+    BuildContext? context;
+    try {
+      context = WidgetsBinding.instance.primaryFocus?.context;
+    } catch (e) {
+      // Ignorar error de contexto
+    }
+    
+    String t(String key) {
+      if (context != null) {
+        try {
+          return AppLocalizations.of(context).t(key);
+        } catch (e) {
+          // Fallback a español
+        }
+      }
+      // Traducciones fallback en español
+      final fallbacks = {
+        'qrScanTitle': 'Escanear Código QR',
+        'qrScanSubtitle': 'Apunta la cámara hacia el código QR de descuento',
+        'qrScanClose': 'Cerrar',
+        'qrScanSwitchCamera': 'Cambiar cámara',
+        'qrScanInitializing': 'Iniciando cámara...',
+        'qrScanReady': 'Cámara lista - Escaneando...',
+        'qrScanValid': 'Código válido',
+        'qrScanTimeout': 'Tiempo agotado - No se detectó QR',
+      };
+      return fallbacks[key] ?? key;
+    }
     try {
       // Resetear el estado de escaneo
       _isScanning = false;
@@ -134,7 +165,7 @@ class QrScannerServiceWeb {
       
       // Título con diseño mejorado
       final title = html.HeadingElement.h2()
-        ..text = '📱 Escanear Código QR'
+        ..text = '📱 ${t('qrScanTitle')}'
         ..style.marginBottom = '16px'
         ..style.marginTop = '0'
         ..style.fontSize = '24px'
@@ -144,7 +175,7 @@ class QrScannerServiceWeb {
       
       // Subtítulo informativo
       final subtitle = html.ParagraphElement()
-        ..text = 'Apunta la cámara hacia el código QR de descuento'
+        ..text = t('qrScanSubtitle')
         ..style.marginBottom = '20px'
         ..style.fontSize = '14px'
         ..style.color = isDarkMode ? '#b0b0b0' : '#666666'
@@ -171,7 +202,7 @@ class QrScannerServiceWeb {
         ..style.color = '#1976d2'
         ..style.fontWeight = '500'
         ..style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-        ..text = '🔍 Iniciando cámara...';
+        ..text = '🔍 ${t('qrScanInitializing')}...';
       
       // Contenedor de botones (con safe-area inferior)
       final buttonContainer = html.DivElement()
@@ -183,7 +214,7 @@ class QrScannerServiceWeb {
       
       // Botón cerrar con estilo tipo app
       final cancelButton = html.ButtonElement()
-        ..text = '✕ Cerrar'
+        ..text = '✕ ${t('qrScanClose')}'
         ..style.padding = '18px 36px'
         ..style.backgroundColor = isDarkMode ? '#0d47a1' : '#1a73e8'
         ..style.color = '#ffffff'
@@ -199,7 +230,7 @@ class QrScannerServiceWeb {
 
       // Botón para cambiar de cámara
       final switchCamButton = html.ButtonElement()
-        ..text = '🔁 Cambiar cámara'
+        ..text = '🔁 ${t('qrScanSwitchCamera')}'
         ..style.padding = '16px 24px'
         ..style.backgroundColor = isDarkMode ? '#2d2d2d' : '#eeeeee'
         ..style.color = isDarkMode ? '#ffffff' : '#333333'
@@ -324,7 +355,17 @@ class QrScannerServiceWeb {
 
       // Inicializar el canvas cuando el video esté listo y comenzar escaneo automático
       videoElement.onLoadedMetadata.listen((_) async {
-        updateStatus('📷 Cámara lista - Escaneando...', 'info');
+        updateStatus('📷 ${t('qrScanReady')}', 'info');
+        
+        // Verificar si jsQR está disponible
+        final jsQRAvailable = (html.window as dynamic).jsQR != null;
+        print('🔍 jsQR disponible: $jsQRAvailable');
+        if (!jsQRAvailable) {
+          updateStatus('❌ Error: jsQR no está cargado', 'error');
+          await Future.delayed(const Duration(milliseconds: 2000));
+          complete(null);
+          return;
+        }
 
         final context = canvasElement.getContext('2d');
         if (context == null) {
@@ -348,7 +389,7 @@ class QrScannerServiceWeb {
 
           // Timeout
           if (DateTime.now().difference(startedAt).inSeconds >= timeout) {
-            updateStatus('⏱️ Tiempo agotado - No se detectó QR', 'error');
+            updateStatus('⏱️ ${t('qrScanTimeout')}', 'error');
             _isScanning = false;
             await Future.delayed(const Duration(milliseconds: 800));
             complete(null);
@@ -383,9 +424,9 @@ class QrScannerServiceWeb {
 
                 if (qr != null && qr.data != null) {
                   final qrData = qr.data as String;
-                  print('QR detectado: "$qrData"');
+                  print('🔍 QR detectado: "$qrData"');
                   if (_isValidDiscount(qrData)) {
-                    updateStatus('✅ Código válido', 'success');
+                    updateStatus('✅ ${t('qrScanValid')}', 'success');
                     _isScanning = false;
                     await Future.delayed(const Duration(milliseconds: 400));
                     complete(qrData);
@@ -434,50 +475,63 @@ class QrScannerServiceWeb {
   /// Verifica si el código QR es un descuento válido
   static bool _isValidDiscount(String qrCode) {
     try {
-      final trimmed = qrCode.trim();
-      print('🔍 QR detectado: "$trimmed" (longitud: ${trimmed.length})'); // Debug detallado
+      // Limpiar el código: trim + eliminar caracteres invisibles comunes
+      final cleaned = qrCode.trim().replaceAll(RegExp(r'[\x00-\x1F\x7F-\x9F]'), '');
+      print('🔍 QR original: "$qrCode" → limpio: "$cleaned" (longitud: ${cleaned.length})');
       
       // Mostrar cada carácter para debug
-      for (int i = 0; i < trimmed.length; i++) {
-        print('  Carácter $i: "${trimmed[i]}" (código: ${trimmed.codeUnitAt(i)})');
+      for (int i = 0; i < cleaned.length && i < 10; i++) {
+        print('  Carácter $i: "${cleaned[i]}" (código: ${cleaned.codeUnitAt(i)})');
       }
       
-      // Patrón más permisivo: -X o -X.XX donde X son números
-      final discountPattern = RegExp(r'^-\d+(?:\.\d+)?$');
-      if (discountPattern.hasMatch(trimmed)) {
-        final amount = double.tryParse(trimmed);
-        if (amount != null && amount < 0 && amount >= -10000) {
-          print('✅ QR válido como descuento: $amount'); // Debug
-          return true;
-        } else {
-          print('❌ Número fuera de rango: $amount');
-        }
-      } else {
-        print('❌ No coincide con patrón de descuento: $discountPattern');
-      }
-      
-      // Códigos VIP/FREE que anulan el total
-      final normalized = trimmed.toUpperCase();
+      // 1. Códigos VIP/FREE que anulan el total (verificar primero)
+      final normalized = cleaned.toUpperCase();
       if (normalized == 'FREE' || normalized == 'VIP' || normalized == 'VIP-ALL' || normalized == '-ALL' || normalized == '-100%') {
-        print('✅ QR válido como FREE/VIP: $normalized'); // Debug
+        print('✅ QR válido como FREE/VIP: $normalized');
         return true;
       }
       
-      // Intentar validar cualquier contenido que empiece con -
-      if (trimmed.startsWith('-')) {
-        print('🔄 Contenido empieza con -, intentando validar...');
-        final numberPart = trimmed.substring(1);
+      // 2. Patrón de descuento más permisivo: cualquier cosa que empiece con - seguido de números
+      if (cleaned.startsWith('-')) {
+        // Extraer la parte numérica después del -
+        final numberPart = cleaned.substring(1).replaceAll(RegExp(r'[^0-9.]'), '');
+        print('🔄 Extrayendo número de "$cleaned" → "$numberPart"');
+        
         final number = double.tryParse(numberPart);
-        if (number != null && number >= 0) {
-          print('✅ QR válido (formato alternativo): -$number');
+        if (number != null && number > 0 && number <= 10000) {
+          print('✅ QR válido como descuento: -$number');
+          return true;
+        } else {
+          print('❌ Número no válido o fuera de rango: $number');
+        }
+      }
+      
+      // 3. Patrón estricto como fallback: -X o -X.XX donde X son números
+      final discountPattern = RegExp(r'^-\d+(?:\.\d+)?$');
+      if (discountPattern.hasMatch(cleaned)) {
+        final amount = double.tryParse(cleaned);
+        if (amount != null && amount < 0 && amount >= -10000) {
+          print('✅ QR válido (patrón estricto): $amount');
           return true;
         }
       }
       
-      print('❌ QR no válido: "$trimmed"'); // Debug
+      // 4. Intentar extraer cualquier número precedido por -
+      final flexiblePattern = RegExp(r'-\s*(\d+(?:\.\d+)?)');
+      final match = flexiblePattern.firstMatch(cleaned);
+      if (match != null) {
+        final numberStr = match.group(1);
+        final number = double.tryParse(numberStr ?? '');
+        if (number != null && number > 0 && number <= 10000) {
+          print('✅ QR válido (patrón flexible): -$number');
+          return true;
+        }
+      }
+      
+      print('❌ QR no válido: "$cleaned"');
       return false;
     } catch (e) {
-      print('💥 Error validando QR: $e'); // Debug
+      print('💥 Error validando QR: $e');
       return false;
     }
   }

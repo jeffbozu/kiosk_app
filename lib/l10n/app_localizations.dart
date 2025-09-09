@@ -101,6 +101,14 @@ class AppLocalizations {
       // NUEVO: traducción de "clear" (botón para borrar tiempo)
       'clear': 'Borrar',
       'scanQrButton': 'Escanear QR',
+      'qrScanTitle': 'Escanear Código QR',
+      'qrScanSubtitle': 'Apunta la cámara hacia el código QR de descuento',
+      'qrScanClose': 'Cerrar',
+      'qrScanSwitchCamera': 'Cambiar cámara',
+      'qrScanInitializing': 'Iniciando cámara...',
+      'qrScanReady': 'Cámara lista - Escaneando...',
+      'qrScanValid': 'Código válido',
+      'qrScanTimeout': 'Tiempo agotado - No se detectó QR',
     },
     'ca': {
       'welcome': 'Benvingut a Meypar Optima App',
@@ -188,6 +196,14 @@ class AppLocalizations {
       // NUEVO: traducción de "clear" (botón para borrar tiempo)
       'clear': 'Esborrar',
       'scanQrButton': 'Escanejar QR',
+      'qrScanTitle': 'Escanejar Codi QR',
+      'qrScanSubtitle': 'Apunta la càmera cap al codi QR de descompte',
+      'qrScanClose': 'Tancar',
+      'qrScanSwitchCamera': 'Canviar càmera',
+      'qrScanInitializing': 'Iniciant càmera...',
+      'qrScanReady': 'Càmera llesta - Escanejant...',
+      'qrScanValid': 'Codi vàlid',
+      'qrScanTimeout': 'Temps esgotat - No s\'ha detectat QR',
     },
     'en': {
       'welcome': 'Welcome to Meypar Optima App',
@@ -275,6 +291,14 @@ class AppLocalizations {
       // NEW: translation of "clear" (button to clear time)
       'clear': 'Clear',
       'scanQrButton': 'Scan QR',
+      'qrScanTitle': 'Scan QR Code',
+      'qrScanSubtitle': 'Point the camera at the discount QR code',
+      'qrScanClose': 'Close',
+      'qrScanSwitchCamera': 'Switch camera',
+      'qrScanInitializing': 'Starting camera...',
+      'qrScanReady': 'Camera ready - Scanning...',
+      'qrScanValid': 'Valid code',
+      'qrScanTimeout': 'Timeout - No QR detected',
     },
   };
 

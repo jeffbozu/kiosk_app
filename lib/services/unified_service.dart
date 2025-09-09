@@ -64,8 +64,8 @@ class UnifiedService {
         // Soporte VIP/FREE: cualquier código reconocido como gratis
         final normalized = result.trim().toUpperCase();
         if (normalized == 'FREE' || normalized == 'VIP' || normalized == 'VIP-ALL' || normalized == '-ALL' || normalized == '-100%') {
-          // Usamos un valor muy negativo; la UI lo truncará a 0
-          return -9999.0;
+          // Retornar valor especial que indica descuento total
+          return -99999.0;
         }
       }
       return null;

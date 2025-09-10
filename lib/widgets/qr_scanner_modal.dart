@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:universal_html/html.dart' as html;
 import 'l10n/app_localizations.dart';
 
-/// Widget modal para escaneo de códigos QR con vista previa de cámara
+/// Widget modal para escaneo de códigos QR REALES con vista previa de cámara
 class QrScannerModal extends StatefulWidget {
   final Function(double?) onQrScanned;
   final int timeoutSeconds;
@@ -36,10 +36,15 @@ class _QrScannerModalState extends State<QrScannerModal>
   html.CanvasRenderingContext2D? _canvasContext;
   StreamSubscription<dynamic>? _qrSubscription;
   Timer? _timeoutTimer;
+  Timer? _detectionTimer;
   bool _isScanning = false;
   bool _isCameraActive = false;
   String _statusMessage = 'Iniciando cámara...';
   String? _lastScannedCode;
+  List<MediaDeviceInfo> _cameras = [];
+  String? _currentCameraId;
+  int _currentCameraIndex = 0;
+  final TextEditingController _manualCodeController = TextEditingController();
 
   @override
   void initState() {
@@ -81,8 +86,56 @@ class _QrScannerModalState extends State<QrScannerModal>
   Future<void> _initializeCamera() async {
     try {
       setState(() {
-        _statusMessage = 'Solicitando acceso a la cámara...';
+        _statusMessage = 'Obteniendo cámaras disponibles...';
       });
+
+      // Obtener lista de cámaras
+      final devices = await html.window.navigator.mediaDevices!.enumerateDevices();
+      _cameras = devices.where((device) => device.kind == 'videoinput').toList();
+      
+      if (_cameras.isEmpty) {
+        setState(() {
+          _statusMessage = 'No se encontraron cámaras disponibles';
+          _isScanning = false;
+        });
+        return;
+      }
+
+      // Buscar cámara trasera (environment) por defecto
+      int preferredCameraIndex = 0;
+      for (int i = 0; i < _cameras.length; i++) {
+        final device = _cameras[i];
+        if (device.label.toLowerCase().contains('back') || 
+            device.label.toLowerCase().contains('rear') ||
+            device.label.toLowerCase().contains('environment')) {
+          preferredCameraIndex = i;
+          break;
+        }
+      }
+
+      _currentCameraIndex = preferredCameraIndex;
+      _currentCameraId = _cameras[preferredCameraIndex].deviceId;
+
+      setState(() {
+        _statusMessage = 'Iniciando cámara trasera...';
+      });
+
+      await _startCameraWithId(_currentCameraId!);
+
+    } catch (e) {
+      setState(() {
+        _statusMessage = 'Error al acceder a la cámara: $e';
+        _isScanning = false;
+      });
+    }
+  }
+
+  Future<void> _startCameraWithId(String deviceId) async {
+    try {
+      // Detener cámara anterior si existe
+      if (_videoElement != null) {
+        _videoElement!.srcObject?.getTracks().forEach((track) => track.stop());
+      }
 
       // Crear elementos HTML para la cámara
       _videoElement = html.VideoElement()
@@ -99,9 +152,10 @@ class _QrScannerModalState extends State<QrScannerModal>
 
       _canvasContext = _canvasElement!.getContext('2d') as html.CanvasRenderingContext2D;
 
-      // Solicitar acceso a la cámara
+      // Solicitar acceso a la cámara específica
       final stream = await html.window.navigator.mediaDevices!.getUserMedia({
         'video': {
+          'deviceId': {'exact': deviceId},
           'facingMode': 'environment', // Cámara trasera por defecto
           'width': {'ideal': 640},
           'height': {'ideal': 480},
@@ -117,8 +171,8 @@ class _QrScannerModalState extends State<QrScannerModal>
         _isScanning = true;
       });
 
-      // Iniciar detección de QR
-      _startQrDetection();
+      // Iniciar detección de QR REAL
+      _startRealQrDetection();
 
       // Configurar timeout
       _timeoutTimer = Timer(Duration(seconds: widget.timeoutSeconds), () {
@@ -130,25 +184,25 @@ class _QrScannerModalState extends State<QrScannerModal>
 
     } catch (e) {
       setState(() {
-        _statusMessage = 'Error al acceder a la cámara: $e';
+        _statusMessage = 'Error al iniciar cámara: $e';
         _isScanning = false;
       });
     }
   }
 
-  void _startQrDetection() {
-    // Detección de QR cada 50ms para mayor rapidez
-    Timer.periodic(const Duration(milliseconds: 50), (timer) {
+  void _startRealQrDetection() {
+    // Detección de QR REAL cada 100ms
+    _detectionTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       if (!_isScanning || !mounted) {
         timer.cancel();
         return;
       }
 
-      _detectQrCode();
+      _detectRealQrCode();
     });
   }
 
-  void _detectQrCode() {
+  void _detectRealQrCode() {
     if (_videoElement == null || _canvasElement == null || _canvasContext == null) return;
 
     try {
@@ -169,29 +223,45 @@ class _QrScannerModalState extends State<QrScannerModal>
         _canvasElement!.height!,
       );
 
-      // Simular detección de QR (en una implementación real usarías jsQR)
-      final qrCode = _simulateQrDetection(imageData);
+      // Usar jsQR REAL para detectar códigos QR
+      final qrCode = _detectQrWithJsQR(imageData);
       
       if (qrCode != null && qrCode != _lastScannedCode) {
         _lastScannedCode = qrCode;
         _processQrCode(qrCode);
       }
     } catch (e) {
-      print('Error detectando QR: $e');
+      print('Error detectando QR real: $e');
     }
   }
 
-  String? _simulateQrDetection(html.ImageData imageData) {
-    // Simulación de detección QR más realista
-    // En una implementación real, usarías la librería jsQR
-    final random = DateTime.now().millisecondsSinceEpoch % 200;
-    
-    // Simular códigos QR de prueba con mayor frecuencia
-    if (random < 15) {
-      final codes = ['FREE', 'VIP', '5.00', '10.00', '0.00', 'GRATIS', '15.00', '20.00'];
-      return codes[random % codes.length];
+  String? _detectQrWithJsQR(html.ImageData imageData) {
+    try {
+      // Usar jsQR real para detectar códigos QR
+      final jsQR = js.context['jsQR'];
+      if (jsQR == null) {
+        print('jsQR no está disponible');
+        return null;
+      }
+
+      final result = jsQR.callMethod('call', [
+        null, // this context
+        imageData.data, // image data
+        imageData.width, // width
+        imageData.height, // height
+        js.JsObject.jsify({
+          'inversionAttempts': 'dontInvert',
+        })
+      ]);
+
+      if (result != null && result['data'] != null) {
+        final qrData = result['data'] as String;
+        print('QR detectado: $qrData');
+        return qrData;
+      }
+    } catch (e) {
+      print('Error en detección jsQR: $e');
     }
-    
     return null;
   }
 
@@ -235,6 +305,19 @@ class _QrScannerModalState extends State<QrScannerModal>
     return null;
   }
 
+  void _switchCamera() {
+    if (_cameras.length <= 1) return;
+    
+    _currentCameraIndex = (_currentCameraIndex + 1) % _cameras.length;
+    _currentCameraId = _cameras[_currentCameraIndex].deviceId;
+    
+    setState(() {
+      _statusMessage = 'Cambiando a cámara ${_currentCameraIndex + 1}...';
+    });
+    
+    _startCameraWithId(_currentCameraId!);
+  }
+
   void _stopScanning() {
     setState(() {
       _isScanning = false;
@@ -242,6 +325,7 @@ class _QrScannerModalState extends State<QrScannerModal>
     });
 
     _timeoutTimer?.cancel();
+    _detectionTimer?.cancel();
     _qrSubscription?.cancel();
     
     if (_videoElement != null) {
@@ -249,10 +333,29 @@ class _QrScannerModalState extends State<QrScannerModal>
     }
   }
 
+  void _submitManualCode() {
+    final code = _manualCodeController.text.trim();
+    if (code.isNotEmpty) {
+      final discount = _parseQrCode(code);
+      if (discount != null) {
+        _stopScanning();
+        widget.onQrScanned(discount);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Código no válido'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _scanAnimationController.dispose();
     _pulseAnimationController.dispose();
+    _manualCodeController.dispose();
     _stopScanning();
     super.dispose();
   }
@@ -262,8 +365,8 @@ class _QrScannerModalState extends State<QrScannerModal>
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
-        height: MediaQuery.of(context).size.height * 0.8,
+        width: MediaQuery.of(context).size.width * 0.95,
+        height: MediaQuery.of(context).size.height * 0.9,
         decoration: BoxDecoration(
           color: Colors.black,
           borderRadius: BorderRadius.circular(16),
@@ -311,6 +414,13 @@ class _QrScannerModalState extends State<QrScannerModal>
                       ],
                     ),
                   ),
+                  // Botón cambiar cámara
+                  if (_cameras.length > 1)
+                    IconButton(
+                      onPressed: _switchCamera,
+                      icon: const Icon(Icons.switch_camera, color: Colors.white),
+                      tooltip: 'Cambiar cámara',
+                    ),
                   IconButton(
                     onPressed: () {
                       _stopScanning();
@@ -369,20 +479,88 @@ class _QrScannerModalState extends State<QrScannerModal>
                             color: Colors.black87,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                        child: Text(
-                          'Apunta la cámara al código QR\nLa detección es automática',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                          child: Text(
+                            'Apunta la cámara al código QR\nDetección automática en tiempo real',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
                         ),
                       ),
                     ],
                   ),
                 ),
+              ),
+            ),
+            
+            // Manual input section
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[900],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white24),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.keyboard, color: Colors.white70, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'O introduce el código manualmente:',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _manualCodeController,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            hintText: 'Ej: FREE, 5.00, VIP...',
+                            hintStyle: TextStyle(color: Colors.grey[400]),
+                            filled: true,
+                            fillColor: Colors.grey[800],
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: Colors.grey[600]!),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: Colors.grey[600]!),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Colors.blue),
+                            ),
+                          ),
+                          onSubmitted: (_) => _submitManualCode(),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      FilledButton(
+                        onPressed: _submitManualCode,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Aplicar'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
             

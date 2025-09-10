@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 
 import 'api_config.dart';
 
@@ -13,6 +14,12 @@ class ConfigService {
   /// object with the `apiBaseUrl` field, the value is stored and used by
   /// the app.
   static Future<void> init() async {
+    // En desarrollo web, no sobrescribir la URL del proxy local
+    if (kIsWeb && defaultApiBaseUrl.contains('localhost')) {
+      print('ConfigService: Modo desarrollo - manteniendo proxy local: $defaultApiBaseUrl');
+      return;
+    }
+    
     try {
       final uri = Uri.parse('${defaultApiBaseUrl}/v1/config');
       final res =
@@ -22,9 +29,11 @@ class ConfigService {
         final url = data['apiBaseUrl'];
         if (url is String && url.isNotEmpty) {
           apiBaseUrl = url;
+          print('ConfigService: URL actualizada desde servidor: $url');
         }
       }
-    } catch (_) {
+    } catch (e) {
+      print('ConfigService: Error cargando configuración: $e');
       // Ignore errors and keep the default base URL
     }
   }

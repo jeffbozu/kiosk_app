@@ -15,8 +15,10 @@ class ConfigService {
   /// the app.
   static Future<void> init() async {
     // En desarrollo web, no sobrescribir la URL del proxy local
-    if (kIsWeb && defaultApiBaseUrl.contains('localhost')) {
-      print('ConfigService: Modo desarrollo - manteniendo proxy local: $defaultApiBaseUrl');
+    if (kIsWeb) {
+      print('ConfigService: Modo web detectado - usando URL: $defaultApiBaseUrl');
+      // En web, siempre usar la URL configurada en api_config.dart
+      apiBaseUrl = defaultApiBaseUrl;
       return;
     }
     

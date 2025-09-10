@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+rimport 'package:flutter/material.dart';
 
 class AppLocalizations {
   final Locale locale;
@@ -51,6 +51,7 @@ class AppLocalizations {
       'sendByEmail': 'Enviar por Mail',
       'sendBySms': 'Enviar por WhatsApp',
       'emailSent': 'Ticket enviado correctamente por email.',
+      'whatsappSent': 'Ticket enviado correctamente por WhatsApp.',
       'smsSent': 'Ticket enviado correctamente por WhatsApp.',
       'close': 'Cerrar',
       'returningIn': 'Regresando en {seconds} s…',
@@ -76,6 +77,9 @@ class AppLocalizations {
       'selectZone': 'Selecciona zona',
       'zoneBlue': 'Zona azul',
       'zoneGreen': 'Zona verde',
+      'zonePlaya': 'Zona Coche',
+      'zoneCosta': 'Zona Moto',
+      'zoneParque': 'Zona Camión',
       'enterPlate': 'Inserte matrícula',
       'confirm': 'Confirmar',
       'validate': 'Validar',
@@ -101,6 +105,14 @@ class AppLocalizations {
       // NUEVO: traducción de "clear" (botón para borrar tiempo)
       'clear': 'Borrar',
       'scanQrButton': 'Escanear QR',
+      // NUEVAS TRADUCCIONES PARA DIÁLOGOS CON ESTADOS
+      'sendingEmail': 'Enviando email...',
+      'sendingWhatsApp': 'Enviando WhatsApp...',
+      'pleaseWait': 'Por favor espere...',
+      'sendingInProgress': 'Enviando en progreso',
+      'sendSuccess': '¡Enviado exitosamente!',
+      'sendError': 'Error al enviar',
+      'retry': 'Reintentar',
     },
     'ca': {
       'welcome': 'Benvingut a Meypar Optima App',
@@ -138,6 +150,7 @@ class AppLocalizations {
       'sendByEmail': 'Enviar per Mail',
       'sendBySms': 'Enviar per WhatsApp',
       'emailSent': 'Tiquet enviat correctament per email.',
+      'whatsappSent': 'Tiquet enviat correctament per WhatsApp.',
       'smsSent': 'Tiquet enviat correctament per WhatsApp.',
       'close': 'Tancar',
       'returningIn': 'Tornant en {seconds} s…',
@@ -163,6 +176,9 @@ class AppLocalizations {
       'selectZone': 'Selecciona zona',
       'zoneBlue': 'Zona blava',
       'zoneGreen': 'Zona verda',
+      'zonePlaya': 'Zona Cotxe',
+      'zoneCosta': 'Zona Moto',
+      'zoneParque': 'Zona Camió',
       'enterPlate': 'Introdueix matrícula',
       'confirm': 'Confirmar',
       'validate': 'Validar',
@@ -188,6 +204,14 @@ class AppLocalizations {
       // NUEVO: traducción de "clear" (botón para borrar tiempo)
       'clear': 'Esborrar',
       'scanQrButton': 'Escanejar QR',
+      // NUEVAS TRADUCCIONES PARA DIÁLOGOS CON ESTADOS
+      'sendingEmail': 'Enviant email...',
+      'sendingWhatsApp': 'Enviant WhatsApp...',
+      'pleaseWait': 'Si us plau, esperi...',
+      'sendingInProgress': 'Enviant en progrés',
+      'sendSuccess': 'Enviat amb èxit!',
+      'sendError': 'Error en enviar',
+      'retry': 'Tornar a intentar',
     },
     'en': {
       'welcome': 'Welcome to Meypar Optima App',
@@ -225,6 +249,7 @@ class AppLocalizations {
       'sendByEmail': 'Send by Mail',
       'sendBySms': 'Send by WhatsApp',
       'emailSent': 'Ticket sent successfully by email.',
+      'whatsappSent': 'Ticket sent successfully by WhatsApp.',
       'smsSent': 'Ticket sent successfully by WhatsApp.',
       'close': 'Close',
       'returningIn': 'Returning in {seconds}s…',
@@ -250,6 +275,9 @@ class AppLocalizations {
       'selectZone': 'Select zone',
       'zoneBlue': 'Blue zone',
       'zoneGreen': 'Green zone',
+      'zonePlaya': 'Car zone',
+      'zoneCosta': 'Motorcycle zone',
+      'zoneParque': 'Truck zone',
       'enterPlate': 'Enter plate',
       'confirm': 'Confirm',
       'validate': 'Validate',
@@ -275,6 +303,14 @@ class AppLocalizations {
       // NEW: translation of "clear" (button to clear time)
       'clear': 'Clear',
       'scanQrButton': 'Scan QR',
+      // NUEVAS TRADUCCIONES PARA DIÁLOGOS CON ESTADOS
+      'sendingEmail': 'Sending email...',
+      'sendingWhatsApp': 'Sending WhatsApp...',
+      'pleaseWait': 'Please wait...',
+      'sendingInProgress': 'Sending in progress',
+      'sendSuccess': 'Sent successfully!',
+      'sendError': 'Error sending',
+      'retry': 'Retry',
     },
   };
 

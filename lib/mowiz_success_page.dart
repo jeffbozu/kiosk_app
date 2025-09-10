@@ -55,6 +55,24 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
     _startTimer();
   }
 
+  /// Obtiene el nombre de la zona según el ID
+  String _getZoneName(String zoneId, Function t) {
+    switch (zoneId) {
+      case 'green':
+        return t('zoneGreen');
+      case 'blue':
+        return t('zoneBlue');
+      case 'playa':
+        return t('zonePlaya');
+      case 'costa':
+        return t('zoneCosta');
+      case 'parque':
+        return t('zoneParque');
+      default:
+        return zoneId; // Fallback al ID si no se reconoce
+    }
+  }
+
   void _startTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
@@ -160,7 +178,15 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
     final email = await showDialog<String>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const _EmailDialog(),
+      builder: (_) => _EmailDialogWithStates(
+        plate: widget.plate,
+        zone: widget.zone,
+        start: widget.start,
+        minutes: widget.minutes,
+        price: widget.price,
+        method: widget.method,
+        discount: widget.discount,
+      ),
     );
     if (!mounted) return;
     if (email != null) {
@@ -170,15 +196,34 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
       _startTimer();
     }
   }
+
+  /// Muestra el diálogo de WhatsApp con estados
+  void _showWhatsAppDialogWithStates() {
+    _pauseTimer();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _WhatsAppDialogWithStates(
+        plate: widget.plate,
+        zone: widget.zone,
+        start: widget.start,
+        minutes: widget.minutes,
+        price: widget.price,
+        method: widget.method,
+        discount: widget.discount,
+      ),
+    );
+  }
   
   /// Envía el ticket por email
   Future<void> _sendTicketEmail(String email) async {
     try {
-      // Mostrar indicador de envío
+      // Mostrar indicador de envío más rápido
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Enviando ticket por email...'),
-          duration: Duration(seconds: 2),
+          content: Text('📧 Enviando email...'),
+          duration: Duration(seconds: 1),
+          backgroundColor: Colors.blue,
         ),
       );
       
@@ -256,8 +301,9 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
       try {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Enviando ticket por WhatsApp...'),
-            duration: Duration(seconds: 2),
+            content: Text('📱 Enviando WhatsApp...'),
+            duration: Duration(seconds: 1),
+            backgroundColor: Colors.green,
           ),
         );
 
@@ -412,7 +458,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                         style: TextStyle(fontSize: subFont - 2),
                       ),
                       AutoSizeText(
-                        "${t('zone')}: ${widget.zone == 'green' ? t('zoneGreen') : t('zoneBlue')}",
+                        "${t('zone')}: ${_getZoneName(widget.zone, t)}",
                         maxLines: 1,
                         style: TextStyle(fontSize: subFont - 3),
                       ),
@@ -477,7 +523,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                     child: FilledButton(
                       onPressed: () {
                         SoundHelper.playTap();
-                        _showSmsDialog();
+                        _showWhatsAppDialogWithStates();
                       },
                       style: kMowizFilledButtonStyle.copyWith(
                         textStyle: MaterialStatePropertyAll(
@@ -577,44 +623,179 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
   }
 }
 
-// Diálogo para ingresar el email
-class _EmailDialog extends StatefulWidget {
-  const _EmailDialog();
+// NUEVOS DIÁLOGOS CON ESTADOS
+
+enum DialogState { input, sending, success, error }
+
+// Diálogo mejorado para email con estados
+class _EmailDialogWithStates extends StatefulWidget {
+  final String plate;
+  final String zone;
+  final DateTime start;
+  final int minutes;
+  final double price;
+  final String method;
+  final double? discount;
+  
+  const _EmailDialogWithStates({
+    required this.plate,
+    required this.zone,
+    required this.start,
+    required this.minutes,
+    required this.price,
+    required this.method,
+    this.discount,
+  });
 
   @override
-  State<_EmailDialog> createState() => _EmailDialogState();
+  State<_EmailDialogWithStates> createState() => _EmailDialogWithStatesState();
 }
 
-class _EmailDialogState extends State<_EmailDialog> {
+class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
+  DialogState _state = DialogState.input;
   String _email = '';
+  String? _errorMessage;
+
+  Future<void> _sendEmail() async {
+    setState(() => _state = DialogState.sending);
+    
+    try {
+      final endTime = widget.start.add(Duration(minutes: widget.minutes));
+      
+      bool success = await EmailService.sendTicketEmail(
+        recipientEmail: _email.trim(),
+        plate: widget.plate,
+        zone: widget.zone,
+        start: widget.start,
+        end: endTime,
+        price: widget.price,
+        method: widget.method,
+        qrData: 'ticket|plate:${widget.plate}|zone:${widget.zone}|start:${widget.start.toIso8601String()}|end:${endTime.toIso8601String()}|price:${widget.price}${widget.discount != null && widget.discount != 0 ? '|discount:${widget.discount}' : ''}',
+        locale: AppLocalizations.of(context).locale.languageCode,
+      );
+      
+      if (success) {
+        setState(() => _state = DialogState.success);
+      } else {
+        setState(() {
+          _state = DialogState.error;
+          _errorMessage = 'Error al enviar el email';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _state = DialogState.error;
+        _errorMessage = e.toString();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    
     return AlertDialog(
       title: Text(l.t('enterEmail')),
-      content: TextField(
-        autofocus: true,
-        keyboardType: TextInputType.emailAddress,
-        onChanged: (v) => _email = v,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            SoundHelper.playTap();
-            Navigator.pop(context);
-          },
-          child: Text(l.t('close')),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            SoundHelper.playTap();
-            Navigator.pop(context, _email.trim());
-          },
-          child: Text(l.t('send')),
-        ),
-      ],
+      content: _buildContent(l),
+      actions: _buildActions(l),
     );
+  }
+
+  Widget _buildContent(AppLocalizations l) {
+    switch (_state) {
+      case DialogState.input:
+        return TextField(
+          autofocus: true,
+          keyboardType: TextInputType.emailAddress,
+          onChanged: (v) => _email = v,
+          decoration: InputDecoration(
+            hintText: 'ejemplo@email.com',
+            border: OutlineInputBorder(),
+          ),
+        );
+        
+      case DialogState.sending:
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text(l.t('sendingEmail')),
+            SizedBox(height: 8),
+            Text(l.t('pleaseWait'), style: TextStyle(fontSize: 12, color: Colors.grey)),
+          ],
+        );
+        
+      case DialogState.success:
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check_circle, color: Colors.green, size: 48),
+            SizedBox(height: 16),
+            Text(l.t('sendSuccess')),
+            SizedBox(height: 8),
+            Text(l.t('emailSent')),
+          ],
+        );
+        
+      case DialogState.error:
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error, color: Colors.red, size: 48),
+            SizedBox(height: 16),
+            Text(l.t('sendError')),
+            SizedBox(height: 8),
+            Text(_errorMessage ?? 'Error desconocido', style: TextStyle(fontSize: 12)),
+          ],
+        );
+    }
+  }
+
+  List<Widget> _buildActions(AppLocalizations l) {
+    switch (_state) {
+      case DialogState.input:
+        return [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l.t('cancel')),
+          ),
+          ElevatedButton(
+            onPressed: _sendEmail, // ✅ CORREGIDO: Botón siempre habilitado
+            child: Text(l.t('send')),
+          ),
+        ];
+        
+      case DialogState.sending:
+        return [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l.t('cancel')),
+          ),
+        ];
+        
+      case DialogState.success:
+        return [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l.t('close')),
+          ),
+        ];
+        
+      case DialogState.error:
+        return [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l.t('cancel')),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() => _state = DialogState.input);
+            },
+            child: Text(l.t('retry')),
+          ),
+        ];
+    }
   }
 }
 
@@ -818,5 +999,177 @@ class _SmsSentDialogState extends State<_SmsSentDialog> {
         ),
       ],
     );
+  }
+}
+
+// Diálogo mejorado para WhatsApp con estados
+class _WhatsAppDialogWithStates extends StatefulWidget {
+  final String plate;
+  final String zone;
+  final DateTime start;
+  final int minutes;
+  final double price;
+  final String method;
+  final double? discount;
+  
+  const _WhatsAppDialogWithStates({
+    required this.plate,
+    required this.zone,
+    required this.start,
+    required this.minutes,
+    required this.price,
+    required this.method,
+    this.discount,
+  });
+
+  @override
+  State<_WhatsAppDialogWithStates> createState() => _WhatsAppDialogWithStatesState();
+}
+
+class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
+  DialogState _state = DialogState.input;
+  String _phone = '';
+  String? _errorMessage;
+
+  Future<void> _sendWhatsApp() async {
+    setState(() => _state = DialogState.sending);
+    
+    try {
+      final endTime = widget.start.add(Duration(minutes: widget.minutes));
+      
+      bool success = await WhatsAppService.sendTicketWhatsApp(
+        phone: _phone.trim(),
+        plate: widget.plate,
+        zone: widget.zone,
+        start: widget.start,
+        end: endTime,
+        price: widget.price,
+        method: widget.method,
+        discount: widget.discount,
+        localeCode: AppLocalizations.of(context).locale.toString(),
+      );
+      
+      if (success) {
+        setState(() => _state = DialogState.success);
+      } else {
+        setState(() {
+          _state = DialogState.error;
+          _errorMessage = 'Error al enviar el WhatsApp';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _state = DialogState.error;
+        _errorMessage = e.toString();
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    
+    return AlertDialog(
+      title: Text(l.t('sendTicketSms')),
+      content: _buildContent(l),
+      actions: _buildActions(l),
+    );
+  }
+
+  Widget _buildContent(AppLocalizations l) {
+    switch (_state) {
+      case DialogState.input:
+        return TextField(
+          autofocus: true,
+          keyboardType: TextInputType.phone,
+          onChanged: (v) => _phone = v,
+          decoration: InputDecoration(
+            hintText: '+34 123 456 789',
+            border: OutlineInputBorder(),
+          ),
+        );
+        
+      case DialogState.sending:
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text(l.t('sendingWhatsApp')),
+            SizedBox(height: 8),
+            Text(l.t('pleaseWait'), style: TextStyle(fontSize: 12, color: Colors.grey)),
+          ],
+        );
+        
+      case DialogState.success:
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check_circle, color: Colors.green, size: 48),
+            SizedBox(height: 16),
+            Text(l.t('sendSuccess')),
+            SizedBox(height: 8),
+            Text(l.t('whatsappSent')), // Traducción específica para WhatsApp
+          ],
+        );
+        
+      case DialogState.error:
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error, color: Colors.red, size: 48),
+            SizedBox(height: 16),
+            Text(l.t('sendError')),
+            SizedBox(height: 8),
+            Text(_errorMessage ?? 'Error desconocido', style: TextStyle(fontSize: 12)),
+          ],
+        );
+    }
+  }
+
+  List<Widget> _buildActions(AppLocalizations l) {
+    switch (_state) {
+      case DialogState.input:
+        return [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l.t('cancel')),
+          ),
+          ElevatedButton(
+            onPressed: _sendWhatsApp, // ✅ CORREGIDO: Botón siempre habilitado
+            child: Text(l.t('send')),
+          ),
+        ];
+        
+      case DialogState.sending:
+        return [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l.t('cancel')),
+          ),
+        ];
+        
+      case DialogState.success:
+        return [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l.t('close')),
+          ),
+        ];
+        
+      case DialogState.error:
+        return [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l.t('cancel')),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() => _state = DialogState.input);
+            },
+            child: Text(l.t('retry')),
+          ),
+        ];
+    }
   }
 }

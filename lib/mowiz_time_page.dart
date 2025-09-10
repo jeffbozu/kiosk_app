@@ -16,6 +16,7 @@ import 'mowiz/mowiz_scaffold.dart';
 import 'styles/mowiz_buttons.dart';
 import 'sound_helper.dart';
 import 'services/unified_service.dart';
+import 'widgets/qr_scanner_modal.dart';
 
 class MowizTimePage extends StatefulWidget {
   final String zone;
@@ -342,109 +343,9 @@ class _MowizTimePageState extends State<MowizTimePage> {
                     ),
                     const SizedBox(height: 12),
                     FilledButton(
-                      onPressed: () async {
+                      onPressed: () {
                         SoundHelper.playTap();
-                        
-                        try {
-                          // Verificar si el escáner está conectado
-                          final isConnected = await UnifiedService.isScannerConnected();
-                          
-                          if (!isConnected) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Escáner QR no disponible'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                            return;
-                          }
-                          
-                          // Mostrar indicador de escaneo
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Escaneando código QR...'),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                          
-                          // Escanear código QR
-                          final discount = await UnifiedService.scanQrCode(timeout: 30);
-                          
-                          if (discount != null) {
-                            // Verificar si es un QR FREE (descuento total)
-                            if (discount <= -99999.0) {
-                              // QR FREE: precio final 0.00€
-                              final originalPrice = _totalCents / 100;
-                              setState(() {
-                                _totalCents = 0;
-                                _discountEurosApplied = originalPrice;
-                              });
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Descuento FREE aplicado: ${originalPrice.toStringAsFixed(2)}€ - Precio final: 0.00€'),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
-                            } else if (discount == 0.0) {
-                              // QR con valor 0.00 (también es FREE)
-                              final originalPrice = _totalCents / 100;
-                              setState(() {
-                                _totalCents = 0;
-                                _discountEurosApplied = originalPrice;
-                              });
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Descuento FREE aplicado: ${originalPrice.toStringAsFixed(2)}€ - Precio final: 0.00€'),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
-                            } else {
-                              // Descuento normal
-                              final newTotal = (_totalCents / 100) + discount;
-                              final newTotalCents = (newTotal * 100).round();
-                              
-                              // Asegurar que el precio no sea negativo
-                              if (newTotalCents < 0) {
-                                setState(() {
-                                  _totalCents = 0;
-                                  _discountEurosApplied = discount;
-                                });
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Descuento aplicado: ${discount.toStringAsFixed(2)}€ - Precio final: 0.00€'),
-                                    backgroundColor: Colors.green,
-                                  ),
-                                );
-                              } else {
-                                setState(() {
-                                  _totalCents = newTotalCents;
-                                  _discountEurosApplied = discount;
-                                });
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Descuento aplicado: ${discount.toStringAsFixed(2)}€ - Precio final: ${(newTotalCents / 100).toStringAsFixed(2)}€'),
-                                    backgroundColor: Colors.green,
-                                  ),
-                                );
-                              }
-                            }
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('No se escaneó ningún código QR válido'),
-                                backgroundColor: Colors.orange,
-                              ),
-                            );
-                          }
-                          
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Error al escanear: $e'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
+                        _showQrScannerModal();
                       },
                       style: kMowizFilledButtonStyle.copyWith(
                         minimumSize: const MaterialStatePropertyAll(
@@ -462,5 +363,97 @@ class _MowizTimePageState extends State<MowizTimePage> {
         },
       ),
     );
+  }
+
+  /// Muestra el modal de escáner QR mejorado
+  void _showQrScannerModal() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => QrScannerModal(
+        title: 'Escanear Código QR',
+        instructions: 'Apunta la cámara al código QR para aplicar descuento',
+        timeoutSeconds: 30,
+        onQrScanned: (discount) {
+          Navigator.of(context).pop(); // Cerrar modal
+          
+          if (discount != null) {
+            _processQrDiscount(discount);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('No se escaneó ningún código QR válido'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  /// Procesa el descuento aplicado desde el código QR
+  void _processQrDiscount(double discount) {
+    // Verificar si es un QR FREE (descuento total)
+    if (discount <= -99999.0) {
+      // QR FREE: precio final 0.00€
+      final originalPrice = _totalCents / 100;
+      setState(() {
+        _totalCents = 0;
+        _discountEurosApplied = originalPrice;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Descuento FREE aplicado: ${originalPrice.toStringAsFixed(2)}€ - Precio final: 0.00€'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } else if (discount == 0.0) {
+      // QR con valor 0.00 (también es FREE)
+      final originalPrice = _totalCents / 100;
+      setState(() {
+        _totalCents = 0;
+        _discountEurosApplied = originalPrice;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Descuento FREE aplicado: ${originalPrice.toStringAsFixed(2)}€ - Precio final: 0.00€'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } else {
+      // Descuento normal
+      final newTotal = (_totalCents / 100) + discount;
+      final newTotalCents = (newTotal * 100).round();
+      
+      // Asegurar que el precio no sea negativo
+      if (newTotalCents < 0) {
+        setState(() {
+          _totalCents = 0;
+          _discountEurosApplied = discount;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Descuento aplicado: ${discount.toStringAsFixed(2)}€ - Precio final: 0.00€'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      } else {
+        setState(() {
+          _totalCents = newTotalCents;
+          _discountEurosApplied = discount;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Descuento aplicado: ${discount.toStringAsFixed(2)}€ - Precio final: ${(newTotalCents / 100).toStringAsFixed(2)}€'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 }

@@ -16,6 +16,7 @@ import 'mowiz/mowiz_scaffold.dart';
 import 'styles/mowiz_buttons.dart';
 import 'sound_helper.dart';
 import 'services/unified_service.dart';
+import 'widgets/qr_scanner_modal.dart';
 
 class MowizTimePage extends StatefulWidget {
   final String zone;
@@ -359,20 +360,12 @@ class _MowizTimePageState extends State<MowizTimePage> {
                             return;
                           }
                           
-                          // Mostrar indicador de escaneo
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Escaneando código QR...'),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                          
-                          // Escanear código QR
-                          final discount = await UnifiedService.scanQrCode(timeout: 30);
+                          // Mostrar modal de escáner QR con cámara
+                          final discount = await _showQrScannerModal();
                           
                           if (discount != null) {
                             // Verificar si es un QR FREE (descuento total)
-                            if (discount <= -99999.0) {
+                            if (discount == 0.0) {
                               // QR FREE: precio final 0.00€
                               final originalPrice = _totalCents / 100;
                               setState(() {
@@ -381,24 +374,11 @@ class _MowizTimePageState extends State<MowizTimePage> {
                               });
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Descuento FREE aplicado: ${originalPrice.toStringAsFixed(2)}€ - Precio final: 0.00€'),
+                                  content: Text('QR FREE aplicado! Precio: 0.00€'),
                                   backgroundColor: Colors.green,
                                 ),
                               );
-                            } else if (discount == 0.0) {
-                              // QR con valor 0.00 (también es FREE)
-                              final originalPrice = _totalCents / 100;
-                              setState(() {
-                                _totalCents = 0;
-                                _discountEurosApplied = originalPrice;
-                              });
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Descuento FREE aplicado: ${originalPrice.toStringAsFixed(2)}€ - Precio final: 0.00€'),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
-                            } else {
+                            } else if (discount < 0) {
                               // Descuento normal
                               final newTotal = (_totalCents / 100) + discount;
                               final newTotalCents = (newTotal * 100).round();
@@ -462,5 +442,24 @@ class _MowizTimePageState extends State<MowizTimePage> {
         },
       ),
     );
+  }
+
+  /// Muestra el modal de escáner QR con cámara real
+  Future<double?> _showQrScannerModal() async {
+    final completer = Completer<double?>();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => QrScannerModal(
+        onQrScanned: (discount) {
+          Navigator.of(context).pop();
+          completer.complete(discount);
+        },
+        timeoutSeconds: 30,
+      ),
+    );
+
+    return completer.future;
   }
 }

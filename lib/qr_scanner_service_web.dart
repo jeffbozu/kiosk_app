@@ -536,12 +536,25 @@ class QrScannerServiceWeb {
       
       // 1. Códigos VIP/FREE que anulan el total (verificar primero)
       final normalized = cleaned.toUpperCase();
-      if (normalized == 'FREE' || normalized == 'VIP' || normalized == 'VIP-ALL' || normalized == '-ALL' || normalized == '-100%') {
-        print('✅ QR válido como FREE/VIP: $normalized');
+      final freePatterns = [
+        'FREE', 'VIP', 'VIP-ALL', '-ALL', '-100%', '0.00', '0', 
+        'GRATIS', 'GRATUITO', 'SIN COSTE', 'NO COST', 'ZERO'
+      ];
+      
+      for (final pattern in freePatterns) {
+        if (normalized.contains(pattern) || cleaned.contains(pattern)) {
+          print('✅ QR válido como FREE/VIP: "$cleaned" contiene "$pattern"');
+          return true;
+        }
+      }
+      
+      // 2. Verificar si es exactamente 0.00 o -0.00
+      if (cleaned == '0.00' || cleaned == '-0.00' || cleaned == '0' || cleaned == '-0') {
+        print('✅ QR válido como FREE (0.00): $cleaned');
         return true;
       }
       
-      // 2. Patrón de descuento más permisivo: cualquier cosa que empiece con - seguido de números
+      // 3. Patrón de descuento más permisivo: cualquier cosa que empiece con - seguido de números
       if (cleaned.startsWith('-')) {
         // Extraer la parte numérica después del -
         final numberPart = cleaned.substring(1).replaceAll(RegExp(r'[^0-9.]'), '');
@@ -556,7 +569,7 @@ class QrScannerServiceWeb {
         }
       }
       
-      // 3. Patrón estricto como fallback: -X o -X.XX donde X son números
+      // 4. Patrón estricto como fallback: -X o -X.XX donde X son números
       final discountPattern = RegExp(r'^-\d+(?:\.\d+)?$');
       if (discountPattern.hasMatch(cleaned)) {
         final amount = double.tryParse(cleaned);
@@ -566,7 +579,7 @@ class QrScannerServiceWeb {
         }
       }
       
-      // 4. Intentar extraer cualquier número precedido por -
+      // 5. Intentar extraer cualquier número precedido por -
       final flexiblePattern = RegExp(r'-\s*(\d+(?:\.\d+)?)');
       final match = flexiblePattern.firstMatch(cleaned);
       if (match != null) {
@@ -574,6 +587,16 @@ class QrScannerServiceWeb {
         final number = double.tryParse(numberStr ?? '');
         if (number != null && number > 0 && number <= 10000) {
           print('✅ QR válido (patrón flexible): -$number');
+          return true;
+        }
+      }
+      
+      // 6. Verificar si contiene solo números (posible descuento sin signo)
+      final onlyNumbersPattern = RegExp(r'^\d+(?:\.\d+)?$');
+      if (onlyNumbersPattern.hasMatch(cleaned)) {
+        final number = double.tryParse(cleaned);
+        if (number != null && number >= 0 && number <= 10000) {
+          print('✅ QR válido (solo números): $number');
           return true;
         }
       }

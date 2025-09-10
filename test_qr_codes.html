@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Códigos QR de Prueba</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .qr-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .qr-code {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .qr-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .qr-value {
+            font-family: monospace;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .instructions {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Generador de Códigos QR de Prueba</h1>
+        
+        <div class="instructions">
+            <h3>📋 Instrucciones:</h3>
+            <ol>
+                <li>Genera los códigos QR haciendo clic en los botones</li>
+                <li>Abre la aplicación Flutter en <a href="http://localhost:8084" target="_blank">http://localhost:8084</a></li>
+                <li>Ve a la página de tiempo (Mowiz Time Page)</li>
+                <li>Haz clic en "Escanear QR"</li>
+                <li>Escanea los códigos QR generados aquí</li>
+            </ol>
+        </div>
+
+        <div class="qr-section">
+            <h3>🆓 Códigos QR FREE (Descuento Total)</h3>
+            <div id="free-qr-codes"></div>
+            <button onclick="generateFreeQRCodes()">Generar Códigos FREE</button>
+        </div>
+
+        <div class="qr-section">
+            <h3>💰 Códigos QR de Descuento</h3>
+            <div id="discount-qr-codes"></div>
+            <button onclick="generateDiscountQRCodes()">Generar Códigos de Descuento</button>
+        </div>
+
+        <div class="qr-section">
+            <h3>❌ Códigos QR Inválidos</h3>
+            <div id="invalid-qr-codes"></div>
+            <button onclick="generateInvalidQRCodes()">Generar Códigos Inválidos</button>
+        </div>
+    </div>
+
+    <script>
+        function generateQRCode(text, containerId) {
+            const container = document.getElementById(containerId);
+            const qrDiv = document.createElement('div');
+            qrDiv.className = 'qr-code';
+            
+            const label = document.createElement('div');
+            label.className = 'qr-label';
+            label.textContent = text;
+            
+            const value = document.createElement('div');
+            value.className = 'qr-value';
+            value.textContent = `Valor: "${text}"`;
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 200;
+            
+            qrDiv.appendChild(label);
+            qrDiv.appendChild(value);
+            qrDiv.appendChild(canvas);
+            container.appendChild(qrDiv);
+            
+            QRCode.toCanvas(canvas, text, {
+                width: 200,
+                height: 200,
+                margin: 2,
+                color: {
+                    dark: '#000000',
+                    light: '#FFFFFF'
+                }
+            }, function (error) {
+                if (error) console.error(error);
+            });
+        }
+
+        function generateFreeQRCodes() {
+            const container = document.getElementById('free-qr-codes');
+            container.innerHTML = '';
+            
+            const freeCodes = [
+                'FREE',
+                'VIP',
+                'VIP-ALL',
+                '-ALL',
+                '-100%',
+                '0.00',
+                '0',
+                'GRATIS',
+                'GRATUITO',
+                'SIN COSTE',
+                'NO COST',
+                'ZERO'
+            ];
+            
+            freeCodes.forEach(code => {
+                generateQRCode(code, 'free-qr-codes');
+            });
+        }
+
+        function generateDiscountQRCodes() {
+            const container = document.getElementById('discount-qr-codes');
+            container.innerHTML = '';
+            
+            const discountCodes = [
+                '-5.00',
+                '-10.50',
+                '-2.25',
+                '-15.75',
+                '-1.00',
+                '-0.50',
+                '-25.00',
+                '-100.00'
+            ];
+            
+            discountCodes.forEach(code => {
+                generateQRCode(code, 'discount-qr-codes');
+            });
+        }
+
+        function generateInvalidQRCodes() {
+            const container = document.getElementById('invalid-qr-codes');
+            container.innerHTML = '';
+            
+            const invalidCodes = [
+                'INVALID',
+                'TEST123',
+                'HELLO WORLD',
+                'ABC123',
+                'NO-DISCOUNT',
+                'INVALID-CODE'
+            ];
+            
+            invalidCodes.forEach(code => {
+                generateQRCode(code, 'invalid-qr-codes');
+            });
+        }
+
+        // Generar códigos automáticamente al cargar
+        window.onload = function() {
+            generateFreeQRCodes();
+            generateDiscountQRCodes();
+            generateInvalidQRCodes();
+        };
+    </script>
+</body>
+</html>

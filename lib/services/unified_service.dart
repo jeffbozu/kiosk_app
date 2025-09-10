@@ -59,14 +59,39 @@ class UnifiedService {
       // En web: usar cámara del dispositivo
       final result = await QrScannerServiceWeb.scanQrCode(timeout: timeout);
       if (result != null) {
-        final parsed = double.tryParse(result);
-        if (parsed != null) return parsed;
-        // Soporte VIP/FREE: cualquier código reconocido como gratis
-        final normalized = result.trim().toUpperCase();
-        if (normalized == 'FREE' || normalized == 'VIP' || normalized == 'VIP-ALL' || normalized == '-ALL' || normalized == '-100%') {
-          // Retornamos un valor especial para indicar descuento total
-          return -99999.0;
+        // Limpiar el resultado
+        final cleaned = result.trim();
+        
+        // Verificar si es un código FREE/VIP
+        final normalized = cleaned.toUpperCase();
+        final freePatterns = [
+          'FREE', 'VIP', 'VIP-ALL', '-ALL', '-100%', '0.00', '0', 
+          'GRATIS', 'GRATUITO', 'SIN COSTE', 'NO COST', 'ZERO'
+        ];
+        
+        for (final pattern in freePatterns) {
+          if (normalized.contains(pattern) || cleaned.contains(pattern)) {
+            print('✅ QR detectado como FREE: "$cleaned" contiene "$pattern"');
+            return -99999.0; // Valor especial para descuento total
+          }
         }
+        
+        // Verificar si es exactamente 0.00 o -0.00
+        if (cleaned == '0.00' || cleaned == '-0.00' || cleaned == '0' || cleaned == '-0') {
+          print('✅ QR detectado como FREE (0.00): $cleaned');
+          return 0.0; // Valor 0 para descuento total
+        }
+        
+        // Intentar parsear como número
+        final parsed = double.tryParse(cleaned);
+        if (parsed != null) {
+          print('✅ QR parseado como número: $parsed');
+          return parsed;
+        }
+        
+        // Si no se puede parsear, retornar null
+        print('❌ QR no reconocido: "$cleaned"');
+        return null;
       }
       return null;
     } else if (_isDesktop) {

@@ -385,6 +385,19 @@ class _MowizTimePageState extends State<MowizTimePage> {
                                   backgroundColor: Colors.green,
                                 ),
                               );
+                            } else if (discount == 0.0) {
+                              // QR con valor 0.00 (también es FREE)
+                              final originalPrice = _totalCents / 100;
+                              setState(() {
+                                _totalCents = 0;
+                                _discountEurosApplied = originalPrice;
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Descuento FREE aplicado: ${originalPrice.toStringAsFixed(2)}€ - Precio final: 0.00€'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
                             } else {
                               // Descuento normal
                               final newTotal = (_totalCents / 100) + discount;
@@ -412,7 +425,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                                     content: Text('Descuento aplicado: ${discount.toStringAsFixed(2)}€ - Precio final: ${(newTotalCents / 100).toStringAsFixed(2)}€'),
                                     backgroundColor: Colors.green,
                                   ),
-                              );
+                                );
                               }
                             }
                           } else {

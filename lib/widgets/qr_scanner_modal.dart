@@ -2,8 +2,6 @@ import 'dart:async';
 import 'dart:html' as html;
 import 'dart:js' as js;
 import 'package:flutter/material.dart';
-import 'package:universal_html/html.dart' as html;
-import 'l10n/app_localizations.dart';
 
 /// Widget modal para escaneo de códigos QR REALES con vista previa de cámara
 class QrScannerModal extends StatefulWidget {
@@ -41,7 +39,7 @@ class _QrScannerModalState extends State<QrScannerModal>
   bool _isCameraActive = false;
   String _statusMessage = 'Iniciando cámara...';
   String? _lastScannedCode;
-  List<MediaDeviceInfo> _cameras = [];
+  List<dynamic> _cameras = [];
   String? _currentCameraId;
   int _currentCameraIndex = 0;
   final TextEditingController _manualCodeController = TextEditingController();
@@ -141,7 +139,7 @@ class _QrScannerModalState extends State<QrScannerModal>
       _videoElement = html.VideoElement()
         ..autoplay = true
         ..muted = true
-        ..playsInline = true
+        ..setAttribute('playsinline', 'true')
         ..style.width = '100%'
         ..style.height = '100%'
         ..style.objectFit = 'cover';

@@ -1,12 +1,19 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:flutter/foundation.dart';
 
 class WhatsAppService {
-  static String baseUrl = const String.fromEnvironment(
-    'WHATSAPP_BASE_URL',
-    defaultValue: 'https://render-whatsapp-tih4.onrender.com',
-  );
+  static String get baseUrl {
+    if (kIsWeb) {
+      // En desarrollo web, usar proxy local
+      return 'http://localhost:3001/whatsapp';
+    }
+    return const String.fromEnvironment(
+      'WHATSAPP_BASE_URL',
+      defaultValue: 'https://render-whatsapp-tih4.onrender.com',
+    );
+  }
 
   static Future<bool> sendTicketWhatsApp({
     required String phone,

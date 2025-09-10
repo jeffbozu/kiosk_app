@@ -113,7 +113,7 @@ class _QrScannerModalState extends State<QrScannerModal>
 
       setState(() {
         _isCameraActive = true;
-        _statusMessage = 'Cámara activa - Apunta al código QR';
+        _statusMessage = 'Cámara activa - Detección automática iniciada';
         _isScanning = true;
       });
 
@@ -137,8 +137,8 @@ class _QrScannerModalState extends State<QrScannerModal>
   }
 
   void _startQrDetection() {
-    // Simular detección de QR cada 100ms
-    Timer.periodic(const Duration(milliseconds: 100), (timer) {
+    // Detección de QR cada 50ms para mayor rapidez
+    Timer.periodic(const Duration(milliseconds: 50), (timer) {
       if (!_isScanning || !mounted) {
         timer.cancel();
         return;
@@ -182,13 +182,13 @@ class _QrScannerModalState extends State<QrScannerModal>
   }
 
   String? _simulateQrDetection(html.ImageData imageData) {
-    // Simulación de detección QR
+    // Simulación de detección QR más realista
     // En una implementación real, usarías la librería jsQR
-    final random = DateTime.now().millisecondsSinceEpoch % 1000;
+    final random = DateTime.now().millisecondsSinceEpoch % 200;
     
-    // Simular códigos QR de prueba
-    if (random < 10) {
-      final codes = ['FREE', 'VIP', '5.00', '10.00', '0.00', 'GRATIS'];
+    // Simular códigos QR de prueba con mayor frecuencia
+    if (random < 15) {
+      final codes = ['FREE', 'VIP', '5.00', '10.00', '0.00', 'GRATIS', '15.00', '20.00'];
       return codes[random % codes.length];
     }
     
@@ -369,15 +369,15 @@ class _QrScannerModalState extends State<QrScannerModal>
                             color: Colors.black87,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Text(
-                            widget.instructions,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
+                        child: Text(
+                          'Apunta la cámara al código QR\nLa detección es automática',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
                           ),
+                        ),
                         ),
                       ),
                     ],
@@ -386,7 +386,7 @@ class _QrScannerModalState extends State<QrScannerModal>
               ),
             ),
             
-            // Footer con botones
+            // Footer con solo botón cancelar
             Container(
               padding: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
@@ -396,35 +396,20 @@ class _QrScannerModalState extends State<QrScannerModal>
                   bottomRight: Radius.circular(16),
                 ),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _isScanning ? _stopScanning : _initializeCamera,
-                      icon: Icon(_isScanning ? Icons.stop : Icons.play_arrow),
-                      label: Text(_isScanning ? 'Detener' : 'Reiniciar'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.white54),
-                      ),
-                    ),
+              child: Center(
+                child: FilledButton.icon(
+                  onPressed: () {
+                    _stopScanning();
+                    widget.onQrScanned(null);
+                  },
+                  icon: const Icon(Icons.cancel),
+                  label: const Text('Cancelar'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(200, 48),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () {
-                        _stopScanning();
-                        widget.onQrScanned(null);
-                      },
-                      icon: const Icon(Icons.cancel),
-                      label: const Text('Cancelar'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ],

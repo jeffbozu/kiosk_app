@@ -49,6 +49,24 @@ app.use('/whatsapp', createProxyMiddleware({
   }
 }));
 
+// Proxy para Email
+app.use('/email', createProxyMiddleware({
+  target: 'https://render-mail-2bzn.onrender.com',
+  changeOrigin: true,
+  pathRewrite: {
+    '^/email': '', // Remover /email del path
+  },
+  onProxyReq: (proxyReq, req, res) => {
+    console.log(`📧 Email Proxy: ${req.method} ${req.url} -> https://render-mail-2bzn.onrender.com${req.url.replace('/email', '')}`);
+  },
+  onProxyRes: (proxyRes, req, res) => {
+    console.log(`✅ Email Response: ${proxyRes.statusCode} ${req.url}`);
+  },
+  onError: (err, req, res) => {
+    console.log(`❌ Email Error: ${err.message}`);
+  }
+}));
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ 
@@ -56,7 +74,8 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     services: {
       api: 'https://mock-mowiz.onrender.com',
-      whatsapp: 'https://render-whatsapp-tih4.onrender.com'
+      whatsapp: 'https://render-whatsapp-tih4.onrender.com',
+      email: 'https://render-mail-2bzn.onrender.com'
     }
   });
 });
@@ -65,5 +84,6 @@ app.listen(PORT, () => {
   console.log(`🚀 CORS Proxy running on http://localhost:${PORT}`);
   console.log(`📡 API Proxy: http://localhost:${PORT}/api -> https://mock-mowiz.onrender.com`);
   console.log(`📱 WhatsApp Proxy: http://localhost:${PORT}/whatsapp -> https://render-whatsapp-tih4.onrender.com`);
+  console.log(`📧 Email Proxy: http://localhost:${PORT}/email -> https://render-mail-2bzn.onrender.com`);
   console.log(`❤️  Health Check: http://localhost:${PORT}/health`);
 });

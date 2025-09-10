@@ -1,12 +1,18 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:flutter/foundation.dart';
 
 /// Servicio de envío de emails usando servidor proxy
 class EmailService {
   // Configuración del servidor proxy
-  static const String _baseUrl = 'https://render-mail-2bzn.onrender.com'; // Servidor en Render
-  // static const String _serverUrl = 'https://tu-servidor.render.com'; // Para producción
+  static String get _baseUrl {
+    if (kIsWeb) {
+      // En desarrollo web, usar proxy local
+      return 'http://localhost:3001/email';
+    }
+    return 'https://render-mail-2bzn.onrender.com'; // Servidor en Render
+  }
   
   // Endpoint del servidor proxy
   static String get _emailEndpoint => '$_baseUrl/api/send-email';

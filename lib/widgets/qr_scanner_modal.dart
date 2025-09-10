@@ -3,7 +3,6 @@ import 'dart:html' as html;
 import 'dart:js' as js;
 import 'package:flutter/material.dart';
 import 'package:universal_html/html.dart' as html;
-import 'l10n/app_localizations.dart';
 
 /// Widget modal para escaneo de códigos QR REALES con vista previa de cámara
 class QrScannerModal extends StatefulWidget {
@@ -41,7 +40,7 @@ class _QrScannerModalState extends State<QrScannerModal>
   bool _isCameraActive = false;
   String _statusMessage = 'Iniciando cámara...';
   String? _lastScannedCode;
-  List<MediaDeviceInfo> _cameras = [];
+  List<dynamic> _cameras = [];
   String? _currentCameraId;
   int _currentCameraIndex = 0;
   final TextEditingController _manualCodeController = TextEditingController();
@@ -105,16 +104,17 @@ class _QrScannerModalState extends State<QrScannerModal>
       int preferredCameraIndex = 0;
       for (int i = 0; i < _cameras.length; i++) {
         final device = _cameras[i];
-        if (device.label.toLowerCase().contains('back') || 
-            device.label.toLowerCase().contains('rear') ||
-            device.label.toLowerCase().contains('environment')) {
+        final label = device['label']?.toString().toLowerCase() ?? '';
+        if (label.contains('back') || 
+            label.contains('rear') ||
+            label.contains('environment')) {
           preferredCameraIndex = i;
           break;
         }
       }
 
       _currentCameraIndex = preferredCameraIndex;
-      _currentCameraId = _cameras[preferredCameraIndex].deviceId;
+      _currentCameraId = _cameras[preferredCameraIndex]['deviceId']?.toString();
 
       setState(() {
         _statusMessage = 'Iniciando cámara trasera...';
@@ -141,7 +141,7 @@ class _QrScannerModalState extends State<QrScannerModal>
       _videoElement = html.VideoElement()
         ..autoplay = true
         ..muted = true
-        ..playsInline = true
+        ..setAttribute('playsinline', 'true')
         ..style.width = '100%'
         ..style.height = '100%'
         ..style.objectFit = 'cover';
@@ -309,7 +309,7 @@ class _QrScannerModalState extends State<QrScannerModal>
     if (_cameras.length <= 1) return;
     
     _currentCameraIndex = (_currentCameraIndex + 1) % _cameras.length;
-    _currentCameraId = _cameras[_currentCameraIndex].deviceId;
+    _currentCameraId = _cameras[_currentCameraIndex]['deviceId']?.toString();
     
     setState(() {
       _statusMessage = 'Cambiando a cámara ${_currentCameraIndex + 1}...';

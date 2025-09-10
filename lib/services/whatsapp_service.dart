@@ -37,7 +37,11 @@ class WhatsAppService {
         'qrData': qrData,
       };
 
-      final payload = {'phone': phone, 'ticket': ticket};
+      final payload = {
+        'phone': phone, 
+        'ticket': ticket,
+        'localeCode': localeCode ?? 'es_ES'
+      };
       final uri = Uri.parse('$baseUrl/whatsapp/send');
       
       print('📱 WhatsApp Service - Enviando mensaje:');
@@ -49,7 +53,7 @@ class WhatsAppService {
         uri,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(payload),
-      ).timeout(const Duration(seconds: 30));
+      ).timeout(const Duration(seconds: 15)); // Timeout reducido de 30s a 15s
       
       print('📱 WhatsApp Service - Respuesta:');
       print('   Status Code: ${res.statusCode}');

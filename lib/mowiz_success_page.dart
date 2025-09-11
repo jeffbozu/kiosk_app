@@ -18,6 +18,17 @@ import 'services/unified_service.dart';
 import 'services/email_service.dart';
 import 'services/whatsapp_service.dart';
 
+/// Helper function to format price with correct decimal separator based on locale
+String formatPrice(double price, String locale) {
+  if (locale.startsWith('es') || locale.startsWith('ca')) {
+    // Use comma as decimal separator for Spanish and Catalan
+    return '${price.toStringAsFixed(2).replaceAll('.', ',')} €';
+  } else {
+    // Use dot as decimal separator for English and others
+    return '${price.toStringAsFixed(2)} €';
+  }
+}
+
 class MowizSuccessPage extends StatefulWidget {
   final String plate;
   final String zone;
@@ -375,7 +386,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
     final timeFormat = l.locale.languageCode == 'en'
         ? DateFormat('MMM d, yyyy – HH:mm', localeCode)
         : DateFormat('d MMM yyyy – HH:mm', localeCode);
-    final currencyFormat = NumberFormat.currency(locale: localeCode, symbol: '€');
+    // Use our custom formatPrice function instead of NumberFormat
     final methodMap = {
       'card': t('card'),
       'qr': t('qrPay'),
@@ -473,7 +484,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                         style: TextStyle(fontSize: subFont - 4),
                       ),
                       AutoSizeText(
-                        "${t('totalPrice')}: ${currencyFormat.format(widget.price)}",
+                        "${t('totalPrice')}: ${formatPrice(widget.price, localeCode)}",
                         maxLines: 1,
                         style: TextStyle(
                           fontSize: subFont - 3,
@@ -482,7 +493,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                       ),
                       if ((widget.discount ?? 0) != 0) ...[
                         AutoSizeText(
-                          "${t('discount')}: ${currencyFormat.format(widget.discount!)}",
+                          "${t('discount')}: ${formatPrice(widget.discount!, localeCode)}",
                           maxLines: 1,
                           style: TextStyle(fontSize: subFont - 3, color: Colors.green),
                         ),

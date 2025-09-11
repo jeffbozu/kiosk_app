@@ -13,6 +13,17 @@ import 'mowiz/mowiz_scaffold.dart';
 import 'styles/mowiz_buttons.dart';
 import 'sound_helper.dart';
 
+/// Helper function to format price with correct decimal separator based on locale
+String formatPrice(double price, String locale) {
+  if (locale.startsWith('es') || locale.startsWith('ca')) {
+    // Use comma as decimal separator for Spanish and Catalan
+    return '${price.toStringAsFixed(2).replaceAll('.', ',')} €';
+  } else {
+    // Use dot as decimal separator for English and others
+    return '${price.toStringAsFixed(2)} €';
+  }
+}
+
 class MowizSummaryPage extends StatefulWidget {
   final String plate;
   final String zone;
@@ -155,7 +166,7 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
                   ),
                   SizedBox(height: 16),
                   AutoSizeText(
-                    "${t('totalPrice')}: ${widget.price.toStringAsFixed(2)} €",
+                    "${t('totalPrice')}: ${formatPrice(widget.price, Intl.getCurrentLocale())}",
                     maxLines: 1,
                     style: TextStyle(
                       fontSize: mainFont,

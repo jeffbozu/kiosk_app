@@ -17,6 +17,17 @@ import 'styles/mowiz_buttons.dart';
 import 'sound_helper.dart';
 import 'services/unified_service.dart';
 
+/// Helper function to format price with correct decimal separator based on locale
+String formatPrice(double price, String locale) {
+  if (locale.startsWith('es') || locale.startsWith('ca')) {
+    // Use comma as decimal separator for Spanish and Catalan
+    return '${price.toStringAsFixed(2).replaceAll('.', ',')} €';
+  } else {
+    // Use dot as decimal separator for English and others
+    return '${price.toStringAsFixed(2)} €';
+  }
+}
+
 class MowizTimePage extends StatefulWidget {
   final String zone;
   final String plate;
@@ -148,8 +159,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
     final minutes  = _totalSec ~/ 60;
     final finish   = _now.add(Duration(seconds: _totalSec));
     final effectivePrice = ((_totalCents / 100) + _discountEurosApplied).clamp(0, double.infinity);
-    final priceStr = NumberFormat.currency(symbol: '€', locale: locale)
-        .format(effectivePrice);
+    final priceStr = formatPrice(effectivePrice, locale);
 
     /* ---- time navigation buttons ---- */
     
@@ -284,7 +294,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                                     padding: const EdgeInsets.symmetric(
                                         vertical: 2),
                                     child: AutoSizeText(
-                                      '${_fmtMin(e.key)} - ${(e.value / 100).toStringAsFixed(2)} €',
+                                      '${_fmtMin(e.key)} - ${formatPrice(e.value / 100, locale)}',
                                       maxLines: 1,
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
@@ -381,7 +391,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                               });
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Descuento FREE aplicado: ${originalPrice.toStringAsFixed(2)}€ - Precio final: 0.00€'),
+                                  content: Text('Descuento FREE aplicado: ${formatPrice(originalPrice, locale)} - Precio final: ${formatPrice(0.0, locale)}'),
                                   backgroundColor: Colors.green,
                                 ),
                               );
@@ -398,7 +408,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                                 });
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Descuento aplicado: ${discount.toStringAsFixed(2)}€ - Precio final: 0.00€'),
+                                    content: Text('Descuento aplicado: ${formatPrice(discount, locale)} - Precio final: ${formatPrice(0.0, locale)}'),
                                     backgroundColor: Colors.green,
                                   ),
                                 );
@@ -409,7 +419,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                                 });
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Descuento aplicado: ${discount.toStringAsFixed(2)}€ - Precio final: ${(newTotalCents / 100).toStringAsFixed(2)}€'),
+                                    content: Text('Descuento aplicado: ${formatPrice(discount, locale)} - Precio final: ${formatPrice(newTotalCents / 100, locale)}'),
                                     backgroundColor: Colors.green,
                                   ),
                               );

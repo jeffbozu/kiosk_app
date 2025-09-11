@@ -2,6 +2,17 @@ import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 
+/// Helper function to format price with correct decimal separator based on locale
+String formatPrice(double price, String locale) {
+  if (locale.startsWith('es') || locale.startsWith('ca')) {
+    // Use comma as decimal separator for Spanish and Catalan
+    return '${price.toStringAsFixed(2).replaceAll('.', ',')} €';
+  } else {
+    // Use dot as decimal separator for English and others
+    return '${price.toStringAsFixed(2)} €';
+  }
+}
+
 /// Servicio alternativo que abre WhatsApp Web con el mensaje pre-escrito
 class WhatsAppWebService {
   /// Envía un ticket por WhatsApp Web
@@ -102,10 +113,10 @@ class WhatsAppWebService {
     buffer.writeln('💳 *Método:* $method');
     
     if (discount != null && discount > 0) {
-      buffer.writeln('💰 *Descuento:* ${discount.toStringAsFixed(2)}€');
+      buffer.writeln('💰 *Descuento:* ${formatPrice(discount, localeCode ?? 'es')}');
     }
     
-    buffer.writeln('💵 *Precio:* ${price.toStringAsFixed(2)}€');
+    buffer.writeln('💵 *Precio:* ${formatPrice(price, localeCode ?? 'es')}');
     buffer.writeln('');
     buffer.writeln('✅ *Pago procesado exitosamente*');
     buffer.writeln('');

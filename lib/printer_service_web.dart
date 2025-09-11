@@ -6,6 +6,17 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:barcode/barcode.dart';
 import 'package:universal_html/html.dart' as html;
 
+/// Helper function to format price with correct decimal separator based on locale
+String formatPrice(double price, String locale) {
+  if (locale.startsWith('es') || locale.startsWith('ca')) {
+    // Use comma as decimal separator for Spanish and Catalan
+    return '${price.toStringAsFixed(2).replaceAll('.', ',')} €';
+  } else {
+    // Use dot as decimal separator for English and others
+    return '${price.toStringAsFixed(2)} €';
+  }
+}
+
 /// Servicio de impresión web que genera y descarga tickets como PDF
 class PrinterServiceWeb {
   /// Genera y descarga un ticket como PDF
@@ -147,8 +158,8 @@ class PrinterServiceWeb {
               _buildInfoRow(t('duration'), _formatDuration(start, end, lang)),
               pw.Divider(),
               if ((discount ?? 0) != 0)
-                _buildInfoRow(t('discount'), '${(discount!).toStringAsFixed(2)} €'),
-              _buildInfoRow(t('total'), '${price.toStringAsFixed(2)} €', isBold: true),
+                _buildInfoRow(t('discount'), formatPrice(discount!, lang)),
+              _buildInfoRow(t('total'), formatPrice(price, lang), isBold: true),
               _buildInfoRow(t('method'), _getMethodName(method, lang)),
               
               pw.SizedBox(height: 30),

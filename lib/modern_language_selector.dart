@@ -1,65 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
+import 'locale_provider.dart';
 
+/// Selector de idiomas moderno y elegante
+/// Usa PopupMenuButton para evitar problemas de posicionamiento en AppBar
 class ModernLanguageSelector extends StatefulWidget {
-  const ModernLanguageSelector({Key? key}) : super(key: key);
+  const ModernLanguageSelector({super.key});
 
   @override
   State<ModernLanguageSelector> createState() => _ModernLanguageSelectorState();
 }
 
-class _ModernLanguageSelectorState extends State<ModernLanguageSelector>
-    with TickerProviderStateMixin {
-  bool _isOpen = false;
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
+class _ModernLanguageSelectorState extends State<ModernLanguageSelector> {
+  String _currentLanguage = 'ES';
+
+  final List<Map<String, String>> _languages = [
+    {'code': 'es', 'label': 'ES', 'name': 'Español'},
+    {'code': 'ca', 'label': 'CA', 'name': 'Català'},
+    {'code': 'en', 'label': 'EN', 'name': 'English'},
+  ];
 
   @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Detectar el idioma actual del provider
+    final prov = Provider.of<LocaleProvider>(context, listen: false);
+    final currentCode = prov.locale.languageCode;
+    final currentLang = _languages.firstWhere(
+      (lang) => lang['code'] == currentCode,
+      orElse: () => _languages.first,
     );
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
-    );
+    if (_currentLanguage != currentLang['label']) {
+      setState(() {
+        _currentLanguage = currentLang['label']!;
+      });
+    }
   }
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  void _toggleDropdown() {
+  void _selectLanguage(String code, String label) {
     setState(() {
-      _isOpen = !_isOpen;
-      if (_isOpen) {
-        _animationController.forward();
-      } else {
-        _animationController.reverse();
-      }
-    });
-  }
-
-  void _changeLanguage(String localeCode) {
-    setState(() {
-      _isOpen = false;
-      _animationController.reverse();
+      _currentLanguage = label;
     });
     
     // Cambiar idioma
-    final context = this.context;
-    if (context.mounted) {
-      // Aquí implementarías el cambio de idioma
-      // Por ahora solo cerramos el dropdown
-    }
+    final prov = Provider.of<LocaleProvider>(context, listen: false);
+    prov.setLocale(Locale(code));
   }
 
   @override
@@ -67,158 +52,140 @@ class _ModernLanguageSelectorState extends State<ModernLanguageSelector>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     
-    String currentLang = 'ES'; // Por defecto español
+    // Colores adaptados para modo claro y oscuro
+    final primaryColor = isDark ? const Color(0xFF424242) : const Color(0xFFE62144);
+    final textColor = Colors.white;
+    final borderColor = isDark ? const Color(0xFF616161) : const Color(0xFFD01E3A);
     
-    return Stack(
-      children: [
-        // Botón principal
-        GestureDetector(
-          onTap: _toggleDropdown,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.grey[800] : Colors.grey[100],
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: _isOpen ? theme.colorScheme.primary : Colors.transparent,
-                width: 2,
-              ),
-              boxShadow: _isOpen ? [
-                BoxShadow(
-                  color: theme.colorScheme.primary.withOpacity(0.2),
-                  blurRadius: 12,
-                  spreadRadius: 3,
-                ),
-              ] : null,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  currentLang,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                AnimatedRotation(
-                  turns: _isOpen ? 0.5 : 0.0,
-                  duration: const Duration(milliseconds: 200),
-                  child: Icon(
-                    Icons.keyboard_arrow_down,
-                    color: theme.colorScheme.primary,
-                    size: 24,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        
-        // Dropdown
-        if (_isOpen) _buildDropdown(),
-      ],
-    );
-  }
+    // Colores para el menú desplegable
+    final menuBackgroundColor = isDark ? const Color(0xFF303030) : Colors.white;
+    final selectedColor = isDark ? const Color(0xFF424242) : const Color(0xFFD01E3A);
+    final unselectedColor = isDark ? const Color(0xFF424242) : const Color(0xFFF8F9FA);
+    final selectedTextColor = Colors.white;
+    final unselectedTextColor = isDark ? Colors.white : const Color(0xFFE62144);
 
-  Widget _buildDropdown() {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    
-    return Positioned(
-      top: 60, // Ajusta según la altura de tu AppBar
-      right: 16,
-      child: Material(
-        color: Colors.transparent,
-        child: AnimatedBuilder(
-          animation: _animationController,
-          builder: (context, child) {
-            return Transform.scale(
-              scale: _scaleAnimation.value,
-              child: Opacity(
-                opacity: _fadeAnimation.value,
-                child: Container(
-                  width: 160,
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[800] : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildLanguageOption('es', 'ES', 'Español'),
-                      _buildDivider(),
-                      _buildLanguageOption('ca', 'CA', 'Català'),
-                      _buildDivider(),
-                      _buildLanguageOption('en', 'EN', 'English'),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
+    return PopupMenuButton<String>(
+      onSelected: (String code) {
+        final lang = _languages.firstWhere((l) => l['code'] == code);
+        _selectLanguage(code, lang['label']!);
+      },
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
       ),
-    );
-  }
-
-  Widget _buildLanguageOption(String localeCode, String short, String full) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    
-    return GestureDetector(
-      onTap: () => _changeLanguage(localeCode),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        child: Row(
-          children: [
-            Text(
-              short,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                full,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: theme.colorScheme.onSurface,
+      color: menuBackgroundColor,
+      elevation: 8,
+      itemBuilder: (BuildContext context) {
+        return _languages.map((lang) {
+          final isSelected = _currentLanguage == lang['label'];
+          return PopupMenuItem<String>(
+            value: lang['code']!,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isSelected ? selectedColor : unselectedColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected 
+                      ? selectedColor 
+                      : (isDark ? const Color(0xFF616161) : const Color(0xFFE0E0E0)),
+                  width: 1.5,
                 ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
+                boxShadow: isSelected ? [
+                  BoxShadow(
+                    color: selectedColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ] : null,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: isSelected ? Colors.white : selectedColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    lang['label']!,
+                    style: TextStyle(
+                      color: isSelected ? selectedTextColor : unselectedTextColor,
+                      fontSize: 16,
+                      fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    lang['name']!,
+                    style: TextStyle(
+                      color: isSelected 
+                          ? selectedTextColor.withOpacity(0.9)
+                          : unselectedTextColor.withOpacity(0.8),
+                      fontSize: 13,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
+          );
+        }).toList();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: primaryColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: borderColor,
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isDark 
+                  ? Colors.black.withOpacity(0.3)
+                  : primaryColor.withOpacity(0.3),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 6,
+              height: 6,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              _currentLanguage,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(width: 6),
             Icon(
-              Icons.check,
-              color: theme.colorScheme.primary,
-              size: 20,
+              Icons.keyboard_arrow_down_rounded,
+              color: textColor,
+              size: 18,
             ),
           ],
         ),
       ),
     );
   }
-
-  Widget _buildDivider() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12),
-      height: 1,
-      color: Colors.grey.withOpacity(0.4),
-    );
-  }
 }
-

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'language_selector.dart';
+import 'modern_language_selector.dart';
 import 'theme_mode_button.dart';
 import 'l10n/app_localizations.dart';
 import 'mowiz_pay_page.dart';
@@ -19,7 +19,7 @@ class MowizPage extends StatelessWidget {
     return MowizScaffold(
       title: 'MeyPark',
       actions: const [
-        LanguageSelector(),
+        ModernLanguageSelector(),
         SizedBox(width: 8),
         ThemeModeButton(),
       ],

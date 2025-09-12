@@ -6,7 +6,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'l10n/app_localizations.dart';
 import 'payment_method_page.dart';
-import 'language_selector.dart';
+import 'modern_language_selector.dart';
 import 'locale_provider.dart';
 import 'theme_mode_button.dart';
 import 'ticket_success_page.dart';
@@ -526,7 +526,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Kiosk App'),
         actions: const [
-          LanguageSelector(),
+          ModernLanguageSelector(),
           SizedBox(width: 8),
           ThemeModeButton(),
         ],

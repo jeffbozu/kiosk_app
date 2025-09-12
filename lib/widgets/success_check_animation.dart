@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
 /// Widget personalizado para mostrar una animación elegante de check de éxito
-/// Efecto moderno con shimmer, glow y animaciones suaves como en apps de pago
+/// Un solo check que aparece con efecto y se mantiene visible
 class SuccessCheckAnimation extends StatefulWidget {
   final double size;
   final Color? color;
@@ -13,7 +13,7 @@ class SuccessCheckAnimation extends StatefulWidget {
     super.key,
     this.size = 120.0,
     this.color,
-    this.animationDuration = const Duration(milliseconds: 2500),
+    this.animationDuration = const Duration(milliseconds: 3000),
     this.onAnimationComplete,
   });
 
@@ -23,89 +23,63 @@ class SuccessCheckAnimation extends StatefulWidget {
 
 class _SuccessCheckAnimationState extends State<SuccessCheckAnimation>
     with TickerProviderStateMixin {
-  late AnimationController _scaleController;
+  late AnimationController _tvController;
   late AnimationController _checkController;
-  late AnimationController _pulseController;
-  late AnimationController _shimmerController;
   late AnimationController _glowController;
+  late AnimationController _finalController;
   
-  late Animation<double> _scaleAnimation;
+  late Animation<double> _tvAnimation;
   late Animation<double> _checkAnimation;
-  late Animation<double> _pulseAnimation;
-  late Animation<double> _shimmerAnimation;
   late Animation<double> _glowAnimation;
+  late Animation<double> _finalAnimation;
 
   @override
   void initState() {
     super.initState();
     
-    // Controlador para la animación de escala del círculo
-    _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 600),
+    // Controlador para el efecto TV (encendido)
+    _tvController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
     
     // Controlador para la animación del check
     _checkController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    
-    // Controlador para la animación de pulso
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-
-    // Controlador para el efecto shimmer
-    _shimmerController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
-      vsync: this,
-    );
-
-    // Controlador para el efecto glow
-    _glowController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
+    
+    // Controlador para el efecto glow final
+    _glowController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
 
-    // Animación de escala con efecto de rebote suave
-    _scaleAnimation = Tween<double>(
+    // Controlador para el estado final (check permanente)
+    _finalController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    // Animación del efecto TV (como encender una pantalla)
+    _tvAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(
-      parent: _scaleController,
-      curve: Curves.elasticOut,
+      parent: _tvController,
+      curve: Curves.easeOutQuart,
     ));
 
-    // Animación del check con efecto de dibujo
+    // Animación del check (aparece después del efecto TV)
     _checkAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _checkController,
-      curve: Curves.easeInOut,
+      curve: Curves.elasticOut,
     ));
 
-    // Animación de pulso para el efecto de ondas
-    _pulseAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeOut,
-    ));
-
-    // Animación shimmer
-    _shimmerAnimation = Tween<double>(
-      begin: -1.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _shimmerController,
-      curve: Curves.easeInOut,
-    ));
-
-    // Animación glow
+    // Animación glow (resplandor final)
     _glowAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -114,48 +88,52 @@ class _SuccessCheckAnimationState extends State<SuccessCheckAnimation>
       curve: Curves.easeOut,
     ));
 
-    // Iniciar las animaciones en secuencia
+    // Animación final (check permanente con movimiento suave)
+    _finalAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _finalController,
+      curve: Curves.easeOutBack,
+    ));
+
+    // Iniciar la secuencia de animación
     _startAnimationSequence();
   }
 
   void _startAnimationSequence() async {
-    // Iniciar escala del círculo
-    _scaleController.forward();
+    // 1. Efecto TV (encendido)
+    _tvController.forward();
     
-    // Esperar un poco y luego iniciar el check
-    await Future.delayed(const Duration(milliseconds: 200));
+    // 2. Esperar un poco y mostrar el check
+    await Future.delayed(const Duration(milliseconds: 800));
     _checkController.forward();
     
-    // Iniciar el pulso después del check
-    await Future.delayed(const Duration(milliseconds: 300));
-    _pulseController.forward();
-    
-    // Iniciar shimmer
-    await Future.delayed(const Duration(milliseconds: 100));
-    _shimmerController.repeat();
-    
-    // Iniciar glow
-    await Future.delayed(const Duration(milliseconds: 200));
+    // 3. Efecto glow final
+    await Future.delayed(const Duration(milliseconds: 500));
     _glowController.forward();
     
-    // Llamar callback cuando termine la animación
-    await Future.delayed(widget.animationDuration);
+    // 4. Transición al estado final
+    await Future.delayed(const Duration(milliseconds: 500));
+    _finalController.forward();
+    
+    // 5. Llamar callback cuando termine
+    await Future.delayed(const Duration(milliseconds: 300));
     widget.onAnimationComplete?.call();
   }
 
   @override
   void dispose() {
-    _scaleController.dispose();
+    _tvController.dispose();
     _checkController.dispose();
-    _pulseController.dispose();
-    _shimmerController.dispose();
     _glowController.dispose();
+    _finalController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.color ?? const Color(0xFF4CAF50); // Verde moderno
+    final color = widget.color ?? const Color(0xFF4CAF50);
     
     return SizedBox(
       width: widget.size,
@@ -163,54 +141,37 @@ class _SuccessCheckAnimationState extends State<SuccessCheckAnimation>
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Efecto de ondas de pulso múltiples
-          AnimatedBuilder(
-            animation: _pulseAnimation,
-            builder: (context, child) {
-              return CustomPaint(
-                size: Size(widget.size, widget.size),
-                painter: PulsePainter(
-                  progress: _pulseAnimation.value,
-                  color: color.withOpacity(0.2),
-                ),
-              );
-            },
-          ),
-          
-          // Efecto glow brillante
+          // Efecto glow de fondo
           AnimatedBuilder(
             animation: _glowAnimation,
             builder: (context, child) {
-              return Transform.scale(
-                scale: 1.0 + (_glowAnimation.value * 0.3),
-                child: Container(
-                  width: widget.size * 0.9,
-                  height: widget.size * 0.9,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        color.withOpacity(0.1),
-                        color.withOpacity(0.05),
-                        Colors.transparent,
-                      ],
-                      stops: const [0.0, 0.7, 1.0],
-                    ),
+              return Container(
+                width: widget.size * 1.4,
+                height: widget.size * 1.4,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      color.withOpacity(0.4 * _glowAnimation.value),
+                      color.withOpacity(0.2 * _glowAnimation.value),
+                      Colors.transparent,
+                    ],
+                    stops: const [0.0, 0.6, 1.0],
                   ),
                 ),
               );
             },
           ),
           
-          // Círculo principal con animación de escala
+          // Círculo principal con efecto TV
           AnimatedBuilder(
-            animation: _scaleAnimation,
+            animation: _tvAnimation,
             builder: (context, child) {
               return Transform.scale(
-                scale: _scaleAnimation.value,
+                scale: _tvAnimation.value,
                 child: Container(
-                  width: widget.size * 0.8,
-                  height: widget.size * 0.8,
+                  width: widget.size * 0.9,
+                  height: widget.size * 0.9,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
@@ -218,19 +179,14 @@ class _SuccessCheckAnimationState extends State<SuccessCheckAnimation>
                       end: Alignment.bottomRight,
                       colors: [
                         color,
-                        color.withOpacity(0.8),
+                        color.withOpacity(0.9),
                       ],
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: color.withOpacity(0.4),
-                        blurRadius: 30,
-                        spreadRadius: 10,
-                      ),
-                      BoxShadow(
-                        color: color.withOpacity(0.2),
-                        blurRadius: 50,
-                        spreadRadius: 20,
+                        color: color.withOpacity(0.5 * _tvAnimation.value),
+                        blurRadius: 40 * _tvAnimation.value,
+                        spreadRadius: 15 * _tvAnimation.value,
                       ),
                     ],
                   ),
@@ -239,43 +195,40 @@ class _SuccessCheckAnimationState extends State<SuccessCheckAnimation>
             },
           ),
           
-          // Efecto shimmer
+          // UN SOLO CHECK MARK que se mantiene visible
           AnimatedBuilder(
-            animation: _shimmerAnimation,
+            animation: Listenable.merge([_checkAnimation, _finalAnimation]),
             builder: (context, child) {
-              return Transform.scale(
-                scale: _scaleAnimation.value,
-                child: Container(
-                  width: widget.size * 0.8,
-                  height: widget.size * 0.8,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      begin: Alignment(-1.0 + _shimmerAnimation.value, -1.0),
-                      end: Alignment(1.0 + _shimmerAnimation.value, 1.0),
-                      colors: [
-                        Colors.transparent,
-                        Colors.white.withOpacity(0.3),
-                        Colors.transparent,
-                      ],
-                      stops: const [0.0, 0.5, 1.0],
+              // Si la animación del check ha terminado, mostrar el check final
+              if (_checkController.isCompleted) {
+                return Transform.scale(
+                  scale: 1.0 + (_finalAnimation.value * 0.1), // Movimiento suave
+                  child: Transform.translate(
+                    offset: Offset(0, -2 * _finalAnimation.value), // Movimiento hacia arriba
+                    child: CustomPaint(
+                      size: Size(widget.size * 0.5, widget.size * 0.5),
+                      painter: CheckPainter(
+                        progress: 1.0,
+                        color: Colors.white,
+                        strokeWidth: widget.size * 0.08,
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
-          ),
-          
-          // Check mark con animación de dibujo
-          AnimatedBuilder(
-            animation: _checkAnimation,
-            builder: (context, child) {
-              return CustomPaint(
-                size: Size(widget.size * 0.4, widget.size * 0.4),
-                painter: CheckPainter(
-                  progress: _checkAnimation.value,
-                  color: Colors.white,
-                  strokeWidth: widget.size * 0.08,
+                );
+              }
+              
+              // Durante la animación inicial
+              if (_checkAnimation.value <= 0) return const SizedBox.shrink();
+              
+              return Transform.scale(
+                scale: _checkAnimation.value,
+                child: CustomPaint(
+                  size: Size(widget.size * 0.5, widget.size * 0.5),
+                  painter: CheckPainter(
+                    progress: 1.0,
+                    color: Colors.white,
+                    strokeWidth: widget.size * 0.08,
+                  ),
                 ),
               );
             },
@@ -286,55 +239,7 @@ class _SuccessCheckAnimationState extends State<SuccessCheckAnimation>
   }
 }
 
-/// Painter personalizado para el efecto de ondas de pulso modernas
-class PulsePainter extends CustomPainter {
-  final double progress;
-  final Color color;
-
-  PulsePainter({
-    required this.progress,
-    required this.color,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final maxRadius = size.width / 2;
-
-    // Dibujar múltiples ondas con gradientes y opacidades variables
-    for (int i = 0; i < 4; i++) {
-      final waveProgress = (progress - i * 0.25).clamp(0.0, 1.0);
-      if (waveProgress > 0) {
-        final radius = maxRadius * waveProgress;
-        final opacity = (1.0 - waveProgress) * 0.4;
-        
-        // Crear gradiente radial para cada onda
-        final gradient = RadialGradient(
-          colors: [
-            color.withOpacity(opacity),
-            color.withOpacity(opacity * 0.5),
-            Colors.transparent,
-          ],
-          stops: const [0.0, 0.7, 1.0],
-        );
-        
-        final rect = Rect.fromCircle(center: center, radius: radius);
-        final paint = Paint()
-          ..shader = gradient.createShader(rect)
-          ..style = PaintingStyle.fill;
-        
-        canvas.drawCircle(center, radius, paint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(PulsePainter oldDelegate) {
-    return progress != oldDelegate.progress || color != oldDelegate.color;
-  }
-}
-
-/// Painter personalizado para dibujar el check mark elegante
+/// Painter personalizado para dibujar el check mark elegante y moderno
 class CheckPainter extends CustomPainter {
   final double progress;
   final Color color;
@@ -348,13 +253,13 @@ class CheckPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Crear gradiente para el check mark
+    // Crear gradiente para el check mark más brillante
     final gradient = LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: [
-        color,
-        color.withOpacity(0.8),
+        Colors.white,
+        color.withOpacity(0.9),
       ],
     );
     
@@ -362,37 +267,44 @@ class CheckPainter extends CustomPainter {
     final paint = Paint()
       ..shader = gradient.createShader(rect)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
+      ..strokeWidth = strokeWidth * 1.5 // Más grueso para mayor visibilidad
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    // Añadir sombra al check
+    final shadowPaint = Paint()
+      ..color = Colors.black.withOpacity(0.3)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth * 1.5
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
     final path = Path();
     
-    // Definir los puntos del check mark con curvas suaves
-    final startPoint = Offset(size.width * 0.2, size.height * 0.5);
-    final middlePoint = Offset(size.width * 0.45, size.height * 0.7);
-    final endPoint = Offset(size.width * 0.8, size.height * 0.3);
+    // Definir los puntos del check mark más grande y claro
+    final startPoint = Offset(size.width * 0.15, size.height * 0.55);
+    final middlePoint = Offset(size.width * 0.45, size.height * 0.75);
+    final endPoint = Offset(size.width * 0.85, size.height * 0.25);
 
-    // Crear el path del check con curvas
+    // Crear el path del check con curvas más pronunciadas
     path.moveTo(startPoint.dx, startPoint.dy);
     path.quadraticBezierTo(
-      middlePoint.dx - 5, middlePoint.dy - 5,
+      middlePoint.dx - 8, middlePoint.dy - 8,
       middlePoint.dx, middlePoint.dy,
     );
     path.quadraticBezierTo(
-      endPoint.dx - 5, endPoint.dy + 5,
+      endPoint.dx - 8, endPoint.dy + 8,
       endPoint.dx, endPoint.dy,
     );
 
-    // Crear un path que se dibuje progresivamente
-    final pathMetrics = path.computeMetrics();
-    for (final pathMetric in pathMetrics) {
-      final extractPath = pathMetric.extractPath(
-        0.0,
-        pathMetric.length * progress,
-      );
-      canvas.drawPath(extractPath, paint);
-    }
+    // Dibujar sombra primero
+    canvas.save();
+    canvas.translate(2, 2);
+    canvas.drawPath(path, shadowPaint);
+    canvas.restore();
+
+    // Dibujar el check principal
+    canvas.drawPath(path, paint);
   }
 
   @override

@@ -609,9 +609,9 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                   right: 0,
                   child: Center(
                     child: SuccessCheckAnimation(
-                      size: 120,
+                      size: 150,
                       color: Colors.green,
-                      animationDuration: const Duration(milliseconds: 2000),
+                      animationDuration: const Duration(milliseconds: 4000),
                       onAnimationComplete: () {
                         setState(() {
                           _showSuccessAnimation = false;

@@ -6,7 +6,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:confetti/confetti.dart';
+import 'widgets/success_check_animation.dart';
 
 import 'l10n/app_localizations.dart';
 import 'mowiz_page.dart';
@@ -56,13 +56,11 @@ class MowizSuccessPage extends StatefulWidget {
 class _MowizSuccessPageState extends State<MowizSuccessPage> {
   int _seconds = 30;
   Timer? _timer;
-  late final ConfettiController _confettiController;
+  bool _showSuccessAnimation = true;
 
   @override
   void initState() {
     super.initState();
-    _confettiController =
-        ConfettiController(duration: const Duration(seconds: 3))..play();
     _startTimer();
   }
 
@@ -369,7 +367,6 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
   @override
   void dispose() {
     _timer?.cancel();
-    _confettiController.dispose();
     super.dispose();
   }
 
@@ -604,19 +601,25 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
 
           return Stack(
             children: [
-              Align(
-                alignment: Alignment.topCenter,
-                child: ConfettiWidget(
-                  confettiController: _confettiController,
-                  blastDirectionality: BlastDirectionality.explosive,
-                  shouldLoop: false,
-                  numberOfParticles: 25,
-                  maxBlastForce: 20,
-                  minBlastForce: 5,
-                  emissionFrequency: 0.15,
-                  gravity: 0.14,
+              // Animación de éxito elegante
+              if (_showSuccessAnimation)
+                Positioned(
+                  top: 50,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: SuccessCheckAnimation(
+                      size: 120,
+                      color: Colors.green,
+                      animationDuration: const Duration(milliseconds: 2000),
+                      onAnimationComplete: () {
+                        setState(() {
+                          _showSuccessAnimation = false;
+                        });
+                      },
+                    ),
+                  ),
                 ),
-              ),
               if (needsScroll)
                 SingleChildScrollView(
                   child: Padding(

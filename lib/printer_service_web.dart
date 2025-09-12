@@ -10,10 +10,10 @@ import 'package:universal_html/html.dart' as html;
 String formatPrice(double price, String locale) {
   if (locale.startsWith('es') || locale.startsWith('ca')) {
     // Use comma as decimal separator for Spanish and Catalan
-    return '${price.toStringAsFixed(2).replaceAll('.', ',')} €';
+    return '${price.toStringAsFixed(2).replaceAll('.', ',')} EUR';
   } else {
     // Use dot as decimal separator for English and others
-    return '${price.toStringAsFixed(2)} €';
+    return '${price.toStringAsFixed(2)} EUR';
   }
 }
 

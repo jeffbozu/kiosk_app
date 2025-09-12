@@ -39,29 +39,27 @@ String formatPrice(double price, String locale) {
     double? discount,
     required String locale,
   }) {
-    final l = AppLocalizations.of(context);
-    
     // Traducir etiquetas según el idioma
     String getLabel(String key) {
       switch (key) {
         case 'ticket':
-          return l.t('ticket');
+          return 'Ticket';
         case 'plate':
-          return l.t('plate');
+          return 'Matrícula';
         case 'zone':
-          return l.t('zone');
+          return 'Zona';
         case 'start':
-          return l.t('startTime');
+          return 'Hora de inicio';
         case 'end':
-          return l.t('endTime');
+          return 'Hora de fin';
         case 'price':
-          return l.t('price');
+          return 'Precio';
         case 'method':
-          return l.t('paymentMethod');
+          return 'Método de pago';
         case 'discount':
-          return l.t('discount');
+          return 'Descuento';
         case 'duration':
-          return l.t('duration');
+          return 'Duración';
         default:
           return key;
       }
@@ -82,15 +80,43 @@ String formatPrice(double price, String locale) {
       }
     }
     
+    // Mapear zona
+    String getZoneName(String zone) {
+      switch (zone) {
+        case 'coche':
+          return 'Zona Coche';
+        case 'moto':
+          return 'Zona Moto';
+        case 'camion':
+          return 'Zona Camión';
+        default:
+          return zone;
+      }
+    }
+    
+    // Mapear método de pago
+    String getMethodName(String method) {
+      switch (method) {
+        case 'qr':
+          return 'QR';
+        case 'card':
+          return 'Tarjeta';
+        case 'cash':
+          return 'Efectivo';
+        default:
+          return method;
+      }
+    }
+    
     // Generar datos QR traducidos
     final qrData = {
       getLabel('ticket'): 'Meypark',
       getLabel('plate'): plate,
-      getLabel('zone'): _getZoneName(zone),
+      getLabel('zone'): getZoneName(zone),
       getLabel('start'): formatDateTime(start),
       getLabel('end'): formatDateTime(end),
       getLabel('price'): formatPrice(price),
-      getLabel('method'): _getMethodName(method),
+      getLabel('method'): getMethodName(method),
       if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
       'timestamp': DateTime.now().toIso8601String(),
     };
@@ -733,29 +759,27 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
     double? discount,
     required String locale,
   }) {
-    final l = AppLocalizations.of(context);
-    
     // Traducir etiquetas según el idioma
     String getLabel(String key) {
       switch (key) {
         case 'ticket':
-          return l.t('ticket');
+          return 'Ticket';
         case 'plate':
-          return l.t('plate');
+          return 'Matrícula';
         case 'zone':
-          return l.t('zone');
+          return 'Zona';
         case 'start':
-          return l.t('startTime');
+          return 'Hora de inicio';
         case 'end':
-          return l.t('endTime');
+          return 'Hora de fin';
         case 'price':
-          return l.t('price');
+          return 'Precio';
         case 'method':
-          return l.t('paymentMethod');
+          return 'Método de pago';
         case 'discount':
-          return l.t('discount');
+          return 'Descuento';
         case 'duration':
-          return l.t('duration');
+          return 'Duración';
         default:
           return key;
       }
@@ -776,15 +800,43 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
       }
     }
     
+    // Mapear zona
+    String getZoneName(String zone) {
+      switch (zone) {
+        case 'coche':
+          return 'Zona Coche';
+        case 'moto':
+          return 'Zona Moto';
+        case 'camion':
+          return 'Zona Camión';
+        default:
+          return zone;
+      }
+    }
+    
+    // Mapear método de pago
+    String getMethodName(String method) {
+      switch (method) {
+        case 'qr':
+          return 'QR';
+        case 'card':
+          return 'Tarjeta';
+        case 'cash':
+          return 'Efectivo';
+        default:
+          return method;
+      }
+    }
+    
     // Generar datos QR traducidos
     final qrData = {
       getLabel('ticket'): 'Meypark',
       getLabel('plate'): plate,
-      getLabel('zone'): _getZoneName(zone),
+      getLabel('zone'): getZoneName(zone),
       getLabel('start'): formatDateTime(start),
       getLabel('end'): formatDateTime(end),
       getLabel('price'): formatPrice(price),
-      getLabel('method'): _getMethodName(method),
+      getLabel('method'): getMethodName(method),
       if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
       'timestamp': DateTime.now().toIso8601String(),
     };
@@ -993,29 +1045,27 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
     double? discount,
     required String locale,
   }) {
-    final l = AppLocalizations.of(context);
-    
     // Traducir etiquetas según el idioma
     String getLabel(String key) {
       switch (key) {
         case 'ticket':
-          return l.t('ticket');
+          return 'Ticket';
         case 'plate':
-          return l.t('plate');
+          return 'Matrícula';
         case 'zone':
-          return l.t('zone');
+          return 'Zona';
         case 'start':
-          return l.t('startTime');
+          return 'Hora de inicio';
         case 'end':
-          return l.t('endTime');
+          return 'Hora de fin';
         case 'price':
-          return l.t('price');
+          return 'Precio';
         case 'method':
-          return l.t('paymentMethod');
+          return 'Método de pago';
         case 'discount':
-          return l.t('discount');
+          return 'Descuento';
         case 'duration':
-          return l.t('duration');
+          return 'Duración';
         default:
           return key;
       }
@@ -1036,15 +1086,43 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
       }
     }
     
+    // Mapear zona
+    String getZoneName(String zone) {
+      switch (zone) {
+        case 'coche':
+          return 'Zona Coche';
+        case 'moto':
+          return 'Zona Moto';
+        case 'camion':
+          return 'Zona Camión';
+        default:
+          return zone;
+      }
+    }
+    
+    // Mapear método de pago
+    String getMethodName(String method) {
+      switch (method) {
+        case 'qr':
+          return 'QR';
+        case 'card':
+          return 'Tarjeta';
+        case 'cash':
+          return 'Efectivo';
+        default:
+          return method;
+      }
+    }
+    
     // Generar datos QR traducidos
     final qrData = {
       getLabel('ticket'): 'Meypark',
       getLabel('plate'): plate,
-      getLabel('zone'): _getZoneName(zone),
+      getLabel('zone'): getZoneName(zone),
       getLabel('start'): formatDateTime(start),
       getLabel('end'): formatDateTime(end),
       getLabel('price'): formatPrice(price),
-      getLabel('method'): _getMethodName(method),
+      getLabel('method'): getMethodName(method),
       if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
       'timestamp': DateTime.now().toIso8601String(),
     };
@@ -1144,29 +1222,27 @@ class _SmsDialogState extends State<_SmsDialog> {
     double? discount,
     required String locale,
   }) {
-    final l = AppLocalizations.of(context);
-    
     // Traducir etiquetas según el idioma
     String getLabel(String key) {
       switch (key) {
         case 'ticket':
-          return l.t('ticket');
+          return 'Ticket';
         case 'plate':
-          return l.t('plate');
+          return 'Matrícula';
         case 'zone':
-          return l.t('zone');
+          return 'Zona';
         case 'start':
-          return l.t('startTime');
+          return 'Hora de inicio';
         case 'end':
-          return l.t('endTime');
+          return 'Hora de fin';
         case 'price':
-          return l.t('price');
+          return 'Precio';
         case 'method':
-          return l.t('paymentMethod');
+          return 'Método de pago';
         case 'discount':
-          return l.t('discount');
+          return 'Descuento';
         case 'duration':
-          return l.t('duration');
+          return 'Duración';
         default:
           return key;
       }
@@ -1187,15 +1263,43 @@ class _SmsDialogState extends State<_SmsDialog> {
       }
     }
     
+    // Mapear zona
+    String getZoneName(String zone) {
+      switch (zone) {
+        case 'coche':
+          return 'Zona Coche';
+        case 'moto':
+          return 'Zona Moto';
+        case 'camion':
+          return 'Zona Camión';
+        default:
+          return zone;
+      }
+    }
+    
+    // Mapear método de pago
+    String getMethodName(String method) {
+      switch (method) {
+        case 'qr':
+          return 'QR';
+        case 'card':
+          return 'Tarjeta';
+        case 'cash':
+          return 'Efectivo';
+        default:
+          return method;
+      }
+    }
+    
     // Generar datos QR traducidos
     final qrData = {
       getLabel('ticket'): 'Meypark',
       getLabel('plate'): plate,
-      getLabel('zone'): _getZoneName(zone),
+      getLabel('zone'): getZoneName(zone),
       getLabel('start'): formatDateTime(start),
       getLabel('end'): formatDateTime(end),
       getLabel('price'): formatPrice(price),
-      getLabel('method'): _getMethodName(method),
+      getLabel('method'): getMethodName(method),
       if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
       'timestamp': DateTime.now().toIso8601String(),
     };
@@ -1275,29 +1379,27 @@ class _EmailSentDialogState extends State<_EmailSentDialog> {
     double? discount,
     required String locale,
   }) {
-    final l = AppLocalizations.of(context);
-    
     // Traducir etiquetas según el idioma
     String getLabel(String key) {
       switch (key) {
         case 'ticket':
-          return l.t('ticket');
+          return 'Ticket';
         case 'plate':
-          return l.t('plate');
+          return 'Matrícula';
         case 'zone':
-          return l.t('zone');
+          return 'Zona';
         case 'start':
-          return l.t('startTime');
+          return 'Hora de inicio';
         case 'end':
-          return l.t('endTime');
+          return 'Hora de fin';
         case 'price':
-          return l.t('price');
+          return 'Precio';
         case 'method':
-          return l.t('paymentMethod');
+          return 'Método de pago';
         case 'discount':
-          return l.t('discount');
+          return 'Descuento';
         case 'duration':
-          return l.t('duration');
+          return 'Duración';
         default:
           return key;
       }
@@ -1318,15 +1420,43 @@ class _EmailSentDialogState extends State<_EmailSentDialog> {
       }
     }
     
+    // Mapear zona
+    String getZoneName(String zone) {
+      switch (zone) {
+        case 'coche':
+          return 'Zona Coche';
+        case 'moto':
+          return 'Zona Moto';
+        case 'camion':
+          return 'Zona Camión';
+        default:
+          return zone;
+      }
+    }
+    
+    // Mapear método de pago
+    String getMethodName(String method) {
+      switch (method) {
+        case 'qr':
+          return 'QR';
+        case 'card':
+          return 'Tarjeta';
+        case 'cash':
+          return 'Efectivo';
+        default:
+          return method;
+      }
+    }
+    
     // Generar datos QR traducidos
     final qrData = {
       getLabel('ticket'): 'Meypark',
       getLabel('plate'): plate,
-      getLabel('zone'): _getZoneName(zone),
+      getLabel('zone'): getZoneName(zone),
       getLabel('start'): formatDateTime(start),
       getLabel('end'): formatDateTime(end),
       getLabel('price'): formatPrice(price),
-      getLabel('method'): _getMethodName(method),
+      getLabel('method'): getMethodName(method),
       if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
       'timestamp': DateTime.now().toIso8601String(),
     };
@@ -1406,29 +1536,27 @@ class _SmsSentDialogState extends State<_SmsSentDialog> {
     double? discount,
     required String locale,
   }) {
-    final l = AppLocalizations.of(context);
-    
     // Traducir etiquetas según el idioma
     String getLabel(String key) {
       switch (key) {
         case 'ticket':
-          return l.t('ticket');
+          return 'Ticket';
         case 'plate':
-          return l.t('plate');
+          return 'Matrícula';
         case 'zone':
-          return l.t('zone');
+          return 'Zona';
         case 'start':
-          return l.t('startTime');
+          return 'Hora de inicio';
         case 'end':
-          return l.t('endTime');
+          return 'Hora de fin';
         case 'price':
-          return l.t('price');
+          return 'Precio';
         case 'method':
-          return l.t('paymentMethod');
+          return 'Método de pago';
         case 'discount':
-          return l.t('discount');
+          return 'Descuento';
         case 'duration':
-          return l.t('duration');
+          return 'Duración';
         default:
           return key;
       }
@@ -1449,15 +1577,43 @@ class _SmsSentDialogState extends State<_SmsSentDialog> {
       }
     }
     
+    // Mapear zona
+    String getZoneName(String zone) {
+      switch (zone) {
+        case 'coche':
+          return 'Zona Coche';
+        case 'moto':
+          return 'Zona Moto';
+        case 'camion':
+          return 'Zona Camión';
+        default:
+          return zone;
+      }
+    }
+    
+    // Mapear método de pago
+    String getMethodName(String method) {
+      switch (method) {
+        case 'qr':
+          return 'QR';
+        case 'card':
+          return 'Tarjeta';
+        case 'cash':
+          return 'Efectivo';
+        default:
+          return method;
+      }
+    }
+    
     // Generar datos QR traducidos
     final qrData = {
       getLabel('ticket'): 'Meypark',
       getLabel('plate'): plate,
-      getLabel('zone'): _getZoneName(zone),
+      getLabel('zone'): getZoneName(zone),
       getLabel('start'): formatDateTime(start),
       getLabel('end'): formatDateTime(end),
       getLabel('price'): formatPrice(price),
-      getLabel('method'): _getMethodName(method),
+      getLabel('method'): getMethodName(method),
       if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
       'timestamp': DateTime.now().toIso8601String(),
     };
@@ -1681,29 +1837,27 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
     double? discount,
     required String locale,
   }) {
-    final l = AppLocalizations.of(context);
-    
     // Traducir etiquetas según el idioma
     String getLabel(String key) {
       switch (key) {
         case 'ticket':
-          return l.t('ticket');
+          return 'Ticket';
         case 'plate':
-          return l.t('plate');
+          return 'Matrícula';
         case 'zone':
-          return l.t('zone');
+          return 'Zona';
         case 'start':
-          return l.t('startTime');
+          return 'Hora de inicio';
         case 'end':
-          return l.t('endTime');
+          return 'Hora de fin';
         case 'price':
-          return l.t('price');
+          return 'Precio';
         case 'method':
-          return l.t('paymentMethod');
+          return 'Método de pago';
         case 'discount':
-          return l.t('discount');
+          return 'Descuento';
         case 'duration':
-          return l.t('duration');
+          return 'Duración';
         default:
           return key;
       }
@@ -1724,15 +1878,43 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
       }
     }
     
+    // Mapear zona
+    String getZoneName(String zone) {
+      switch (zone) {
+        case 'coche':
+          return 'Zona Coche';
+        case 'moto':
+          return 'Zona Moto';
+        case 'camion':
+          return 'Zona Camión';
+        default:
+          return zone;
+      }
+    }
+    
+    // Mapear método de pago
+    String getMethodName(String method) {
+      switch (method) {
+        case 'qr':
+          return 'QR';
+        case 'card':
+          return 'Tarjeta';
+        case 'cash':
+          return 'Efectivo';
+        default:
+          return method;
+      }
+    }
+    
     // Generar datos QR traducidos
     final qrData = {
       getLabel('ticket'): 'Meypark',
       getLabel('plate'): plate,
-      getLabel('zone'): _getZoneName(zone),
+      getLabel('zone'): getZoneName(zone),
       getLabel('start'): formatDateTime(start),
       getLabel('end'): formatDateTime(end),
       getLabel('price'): formatPrice(price),
-      getLabel('method'): _getMethodName(method),
+      getLabel('method'): getMethodName(method),
       if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
       'timestamp': DateTime.now().toIso8601String(),
     };

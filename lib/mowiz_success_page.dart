@@ -690,16 +690,28 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
       
       if (success) {
         setState(() => _state = DialogState.success);
+        // Reanudar temporizador después de 2 segundos
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) _startTimer();
+        });
       } else {
         setState(() {
           _state = DialogState.error;
           _errorMessage = 'Error al enviar el email';
+        });
+        // Reanudar temporizador después de 2 segundos
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) _startTimer();
         });
       }
     } catch (e) {
       setState(() {
         _state = DialogState.error;
         _errorMessage = e.toString();
+      });
+      // Reanudar temporizador después de 2 segundos
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) _startTimer();
       });
     }
   }
@@ -1065,16 +1077,28 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
       
       if (success) {
         setState(() => _state = DialogState.success);
+        // Reanudar temporizador después de 2 segundos
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) _startTimer();
+        });
       } else {
         setState(() {
           _state = DialogState.error;
           _errorMessage = 'Error al enviar el WhatsApp';
+        });
+        // Reanudar temporizador después de 2 segundos
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) _startTimer();
         });
       }
     } catch (e) {
       setState(() {
         _state = DialogState.error;
         _errorMessage = e.toString();
+      });
+      // Reanudar temporizador después de 2 segundos
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) _startTimer();
       });
     }
   }

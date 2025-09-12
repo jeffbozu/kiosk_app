@@ -44,10 +44,7 @@ class WhatsAppService {
       };
       final uri = Uri.parse('$baseUrl/whatsapp/send');
       
-      print('📱 WhatsApp Service - Enviando mensaje:');
-      print('   URL: $uri');
-      print('   Teléfono: $phone');
-      print('   Payload: ${jsonEncode(payload)}');
+      // Enviando mensaje WhatsApp
       
       final res = await http.post(
         uri,
@@ -55,32 +52,23 @@ class WhatsAppService {
         body: jsonEncode(payload),
       ).timeout(const Duration(seconds: 15)); // Timeout reducido de 30s a 15s
       
-      print('📱 WhatsApp Service - Respuesta:');
-      print('   Status Code: ${res.statusCode}');
-      print('   Response Body: ${res.body}');
+      // Procesando respuesta
       
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as Map<String, dynamic>;
-        print('📱 WhatsApp Service - Datos de respuesta: $data');
-        
         // Verificar diferentes formatos de respuesta
         final success = data['ok'] == true || 
                        data['success'] == true || 
                        data['status'] == 'queued' ||
                        data['status'] == 'sent';
         
-        print('📱 WhatsApp Service - Resultado: ${success ? "✅ ÉXITO" : "❌ FALLO"}');
-        print('📱 WhatsApp Service - SID: ${data['sid'] ?? 'N/A'}');
-        print('📱 WhatsApp Service - Status: ${data['status'] ?? 'N/A'}');
-        
         return success;
       } else {
-        print('📱 WhatsApp Service - Error HTTP: ${res.statusCode}');
-        print('📱 WhatsApp Service - Error Body: ${res.body}');
+        // Error HTTP
         return false;
       }
     } catch (e) {
-      print('📱 WhatsApp Service - Excepción: $e');
+      // Error en WhatsApp Service
       return false;
     }
   }

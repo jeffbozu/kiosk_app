@@ -54,19 +54,19 @@ class EmailService {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         if (responseData['success'] == true) {
-          print('✅ Email enviado exitosamente a: $recipientEmail');
+          // Email enviado exitosamente
           return true;
         } else {
-          print('❌ Error del servidor: ${responseData['error']}');
+          // Error del servidor
           return false;
         }
       } else {
-        print('❌ Error HTTP: ${response.statusCode} - ${response.body}');
+        // Error HTTP
         return false;
       }
       
     } catch (e) {
-      print('❌ Error en EmailService: $e');
+      // Error en EmailService
       return false;
     }
   }

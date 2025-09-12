@@ -335,7 +335,7 @@ class QrScannerServiceWeb {
             
             if (qr != null && qr.data != null) {
               final qrData = qr.data as String;
-              print('QR detectado: "$qrData"'); // Debug
+              // QR detectado
               
               // Validar si el QR es válido
               if (_isValidDiscount(qrData)) {
@@ -417,49 +417,46 @@ class QrScannerServiceWeb {
   static bool _isValidDiscount(String qrCode) {
     try {
       final trimmed = qrCode.trim();
-      print('🔍 QR detectado: "$trimmed" (longitud: ${trimmed.length})'); // Debug detallado
+      // QR detectado
       
-      // Mostrar cada carácter para debug
-      for (int i = 0; i < trimmed.length; i++) {
-        print('  Carácter $i: "${trimmed[i]}" (código: ${trimmed.codeUnitAt(i)})');
-      }
+      // Validando QR
       
       // Patrón más permisivo: -X o -X.XX donde X son números
       final discountPattern = RegExp(r'^-\d+(?:\.\d+)?$');
       if (discountPattern.hasMatch(trimmed)) {
         final amount = double.tryParse(trimmed);
         if (amount != null && amount < 0 && amount >= -10000) {
-          print('✅ QR válido como descuento: $amount'); // Debug
+          // QR válido como descuento
           return true;
         } else {
-          print('❌ Número fuera de rango: $amount');
+          // Número fuera de rango
         }
       } else {
-        print('❌ No coincide con patrón de descuento: $discountPattern');
+        // No coincide con patrón de descuento
       }
       
       // Códigos VIP/FREE que anulan el total
       final normalized = trimmed.toUpperCase();
       if (normalized == 'FREE' || normalized == 'VIP' || normalized == 'VIP-ALL' || normalized == '-ALL' || normalized == '-100%') {
-        print('✅ QR válido como FREE/VIP: $normalized'); // Debug
+        // QR válido como FREE/VIP
         return true;
       }
       
       // Intentar validar cualquier contenido que empiece con -
       if (trimmed.startsWith('-')) {
-        print('🔄 Contenido empieza con -, intentando validar...');
+        // Contenido empieza con -, validando
         final numberPart = trimmed.substring(1);
         final number = double.tryParse(numberPart);
         if (number != null && number >= 0) {
-          print('✅ QR válido (formato alternativo): -$number');
+          // QR válido (formato alternativo)
           return true;
         }
       }
       
-      print('❌ QR no válido: "$trimmed"'); // Debug
+      // QR no válido
       return false;
     } catch (e) {
-      print('💥 Error validando QR: $e'); // Debug
+      // Error validando QR
       return false;
     }
   }

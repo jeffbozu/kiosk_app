@@ -61,23 +61,26 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
   @override
   void initState() {
     super.initState();
+    print('🐛 DEBUG: MowizSuccessPage iniciado con zone: "${widget.zone}"');
     _startTimer();
   }
 
   /// Obtiene el nombre de la zona según el ID
   String _getZoneName(String zoneId, Function t) {
+    print('🐛 DEBUG: Zone ID recibido en _getZoneName: "$zoneId"');
     switch (zoneId) {
       case 'green':
         return t('zoneGreen');
       case 'blue':
         return t('zoneBlue');
-      case 'playa':
-        return t('zonePlaya');
-      case 'costa':
-        return t('zoneCosta');
-      case 'parque':
-        return t('zoneParque');
+      case 'coche':
+        return t('zoneCoche');
+      case 'moto':
+        return t('zoneMoto');
+      case 'camion':
+        return t('zoneCamion');
       default:
+        print('🐛 DEBUG: Zone ID no reconocido: "$zoneId", devolviendo como fallback');
         return zoneId; // Fallback al ID si no se reconoce
     }
   }
@@ -195,6 +198,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         price: widget.price,
         method: widget.method,
         discount: widget.discount,
+        onClose: _startTimer,
       ),
     );
     if (!mounted) return;
@@ -220,6 +224,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         price: widget.price,
         method: widget.method,
         discount: widget.discount,
+        onClose: _startTimer,
       ),
     );
   }
@@ -318,7 +323,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
 
         final endTime = widget.start.add(Duration(minutes: widget.minutes));
         
-        // Enviar solo usando el servicio API de WhatsApp
+        // Enviar usando WhatsApp API
         bool success = await WhatsAppService.sendTicketWhatsApp(
           phone: phone,
           plate: widget.plate,
@@ -650,6 +655,7 @@ class _EmailDialogWithStates extends StatefulWidget {
   final double price;
   final String method;
   final double? discount;
+  final VoidCallback? onClose;
   
   const _EmailDialogWithStates({
     required this.plate,
@@ -659,6 +665,7 @@ class _EmailDialogWithStates extends StatefulWidget {
     required this.price,
     required this.method,
     this.discount,
+    this.onClose,
   });
 
   @override
@@ -692,7 +699,7 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
         setState(() => _state = DialogState.success);
         // Reanudar temporizador después de 2 segundos
         Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) _startTimer();
+          if (mounted) widget.onClose?.call();
         });
       } else {
         setState(() {
@@ -701,7 +708,7 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
         });
         // Reanudar temporizador después de 2 segundos
         Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) _startTimer();
+          if (mounted) widget.onClose?.call();
         });
       }
     } catch (e) {
@@ -711,7 +718,7 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
       });
       // Reanudar temporizador después de 2 segundos
       Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) _startTimer();
+        if (mounted) widget.onClose?.call();
       });
     }
   }
@@ -1037,6 +1044,7 @@ class _WhatsAppDialogWithStates extends StatefulWidget {
   final double price;
   final String method;
   final double? discount;
+  final VoidCallback? onClose;
   
   const _WhatsAppDialogWithStates({
     required this.plate,
@@ -1046,6 +1054,7 @@ class _WhatsAppDialogWithStates extends StatefulWidget {
     required this.price,
     required this.method,
     this.discount,
+    this.onClose,
   });
 
   @override
@@ -1063,8 +1072,27 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
     try {
       final endTime = widget.start.add(Duration(minutes: widget.minutes));
       
+      // Formatear número de teléfono
+      String formattedPhone = _phone.trim();
+      if (!formattedPhone.startsWith('+')) {
+        // Si no tiene +, agregar +34
+        String cleanPhone = formattedPhone.replaceAll(RegExp(r'[^\d]'), '');
+        if (cleanPhone.startsWith('34')) {
+          formattedPhone = '+$cleanPhone';
+        } else if (cleanPhone.startsWith(RegExp(r'[6789]')) && cleanPhone.length == 9) {
+          formattedPhone = '+34$cleanPhone';
+        } else if (cleanPhone.length == 9) {
+          formattedPhone = '+34$cleanPhone';
+        } else {
+          formattedPhone = '+34$cleanPhone';
+        }
+      }
+      
+      print('📱 WhatsApp Dialog - Número original: ${_phone.trim()}');
+      print('📱 WhatsApp Dialog - Número formateado: $formattedPhone');
+      
       bool success = await WhatsAppService.sendTicketWhatsApp(
-        phone: _phone.trim(),
+        phone: formattedPhone,
         plate: widget.plate,
         zone: widget.zone,
         start: widget.start,
@@ -1079,7 +1107,7 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
         setState(() => _state = DialogState.success);
         // Reanudar temporizador después de 2 segundos
         Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) _startTimer();
+          if (mounted) widget.onClose?.call();
         });
       } else {
         setState(() {
@@ -1088,7 +1116,7 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
         });
         // Reanudar temporizador después de 2 segundos
         Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) _startTimer();
+          if (mounted) widget.onClose?.call();
         });
       }
     } catch (e) {
@@ -1098,7 +1126,7 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
       });
       // Reanudar temporizador después de 2 segundos
       Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) _startTimer();
+        if (mounted) widget.onClose?.call();
       });
     }
   }

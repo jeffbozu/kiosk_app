@@ -42,15 +42,23 @@ class WhatsAppService {
         'ticket': ticket,
         'localeCode': localeCode ?? 'es_ES'
       };
-      final uri = Uri.parse('$baseUrl/whatsapp/send');
+      final uri = Uri.parse('$baseUrl/v1/whatsapp/send');
       
       // Enviando mensaje WhatsApp
+      print('📱 WhatsApp Service - Enviando mensaje:');
+      print('   URL: $uri');
+      print('   Teléfono: $phone');
+      print('   Payload: ${jsonEncode(payload)}');
       
       final res = await http.post(
         uri,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(payload),
       ).timeout(const Duration(seconds: 15)); // Timeout reducido de 30s a 15s
+      
+      print('📱 WhatsApp Service - Respuesta:');
+      print('   Status Code: ${res.statusCode}');
+      print('   Response Body: ${res.body}');
       
       // Procesando respuesta
       

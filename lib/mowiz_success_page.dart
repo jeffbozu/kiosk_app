@@ -27,6 +27,76 @@ String formatPrice(double price, String locale) {
     // Use dot as decimal separator for English and others
     return '${price.toStringAsFixed(2)} €';
   }
+  
+  /// Genera datos QR con etiquetas traducidas según el idioma
+  String _generateTranslatedQRData({
+    required String plate,
+    required String zone,
+    required DateTime start,
+    required DateTime end,
+    required double price,
+    required String method,
+    double? discount,
+    required String locale,
+  }) {
+    final l = AppLocalizations.of(context);
+    
+    // Traducir etiquetas según el idioma
+    String getLabel(String key) {
+      switch (key) {
+        case 'ticket':
+          return l.t('ticket');
+        case 'plate':
+          return l.t('plate');
+        case 'zone':
+          return l.t('zone');
+        case 'start':
+          return l.t('startTime');
+        case 'end':
+          return l.t('endTime');
+        case 'price':
+          return l.t('price');
+        case 'method':
+          return l.t('paymentMethod');
+        case 'discount':
+          return l.t('discount');
+        case 'duration':
+          return l.t('duration');
+        default:
+          return key;
+      }
+    }
+    
+    // Formatear fechas según el idioma
+    String formatDateTime(DateTime date) {
+      final formatter = DateFormat('dd/MM/yyyy HH:mm', locale);
+      return formatter.format(date);
+    }
+    
+    // Formatear precio según el idioma
+    String formatPrice(double price) {
+      if (locale.startsWith('es') || locale.startsWith('ca')) {
+        return '${price.toStringAsFixed(2).replaceAll('.', ',')} €';
+      } else {
+        return '${price.toStringAsFixed(2)} €';
+      }
+    }
+    
+    // Generar datos QR traducidos
+    final qrData = {
+      getLabel('ticket'): 'Meypark',
+      getLabel('plate'): plate,
+      getLabel('zone'): _getZoneName(zone),
+      getLabel('start'): formatDateTime(start),
+      getLabel('end'): formatDateTime(end),
+      getLabel('price'): formatPrice(price),
+      getLabel('method'): _getMethodName(method),
+      if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+    
+    return jsonEncode(qrData);
+  }
 }
 
 class MowizSuccessPage extends StatefulWidget {
@@ -125,17 +195,17 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
       // Calcular fecha de fin basada en los minutos
       final endTime = widget.start.add(Duration(minutes: widget.minutes));
       
-      // Generar datos QR para el ticket
-      final qrData = jsonEncode({
-        'plate': widget.plate,
-        'zone': widget.zone,
-        'start': widget.start.toIso8601String(),
-        'end': endTime.toIso8601String(),
-        'price': widget.price,
-        'method': widget.method,
-        if (widget.discount != null && widget.discount != 0) 'discount': widget.discount,
-        'timestamp': DateTime.now().toIso8601String(),
-      });
+      // Generar QR con etiquetas traducidas
+      final qrData = _generateTranslatedQRData(
+        plate: widget.plate,
+        zone: widget.zone,
+        start: widget.start,
+        end: endTime,
+        price: widget.price,
+        method: widget.method,
+        discount: widget.discount,
+        locale: AppLocalizations.of(context).locale.languageCode,
+      );
       
       // Imprimir ticket usando el servicio unificado
       final success = await UnifiedService.printTicket(
@@ -244,17 +314,17 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
       // Calcular fecha de fin
       final endTime = widget.start.add(Duration(minutes: widget.minutes));
       
-      // Generar datos QR para el ticket
-      final qrData = jsonEncode({
-        'plate': widget.plate,
-        'zone': widget.zone,
-        'start': widget.start.toIso8601String(),
-        'end': endTime.toIso8601String(),
-        'price': widget.price,
-        'method': widget.method,
-        if (widget.discount != null && widget.discount != 0) 'discount': widget.discount,
-        'timestamp': DateTime.now().toIso8601String(),
-      });
+      // Generar QR con etiquetas traducidas
+      final qrData = _generateTranslatedQRData(
+        plate: widget.plate,
+        zone: widget.zone,
+        start: widget.start,
+        end: endTime,
+        price: widget.price,
+        method: widget.method,
+        discount: widget.discount,
+        locale: AppLocalizations.of(context).locale.languageCode,
+      );
       
       // Enviar email
       final success = await EmailService.sendTicketEmail(
@@ -323,6 +393,18 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
 
         final endTime = widget.start.add(Duration(minutes: widget.minutes));
         
+        // Generar QR con etiquetas traducidas
+        final qrData = _generateTranslatedQRData(
+          plate: widget.plate,
+          zone: widget.zone,
+          start: widget.start,
+          end: endTime,
+          price: widget.price,
+          method: widget.method,
+          discount: widget.discount,
+          locale: AppLocalizations.of(context).locale.languageCode,
+        );
+        
         // Enviar usando WhatsApp API
         bool success = await WhatsAppService.sendTicketWhatsApp(
           phone: phone,
@@ -333,8 +415,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
           price: widget.price,
           method: widget.method,
           discount: widget.discount,
-          qrData:
-              'ticket|plate:${widget.plate}|zone:${widget.zone}|start:${widget.start.toIso8601String()}|end:${endTime.toIso8601String()}|price:${widget.price}${widget.discount != null && widget.discount != 0 ? '|discount:${widget.discount}' : ''}',
+          qrData: qrData,
           localeCode: AppLocalizations.of(context).locale.toString(),
         );
 
@@ -640,6 +721,76 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
       ),
     );
   }
+  
+  /// Genera datos QR con etiquetas traducidas según el idioma
+  String _generateTranslatedQRData({
+    required String plate,
+    required String zone,
+    required DateTime start,
+    required DateTime end,
+    required double price,
+    required String method,
+    double? discount,
+    required String locale,
+  }) {
+    final l = AppLocalizations.of(context);
+    
+    // Traducir etiquetas según el idioma
+    String getLabel(String key) {
+      switch (key) {
+        case 'ticket':
+          return l.t('ticket');
+        case 'plate':
+          return l.t('plate');
+        case 'zone':
+          return l.t('zone');
+        case 'start':
+          return l.t('startTime');
+        case 'end':
+          return l.t('endTime');
+        case 'price':
+          return l.t('price');
+        case 'method':
+          return l.t('paymentMethod');
+        case 'discount':
+          return l.t('discount');
+        case 'duration':
+          return l.t('duration');
+        default:
+          return key;
+      }
+    }
+    
+    // Formatear fechas según el idioma
+    String formatDateTime(DateTime date) {
+      final formatter = DateFormat('dd/MM/yyyy HH:mm', locale);
+      return formatter.format(date);
+    }
+    
+    // Formatear precio según el idioma
+    String formatPrice(double price) {
+      if (locale.startsWith('es') || locale.startsWith('ca')) {
+        return '${price.toStringAsFixed(2).replaceAll('.', ',')} €';
+      } else {
+        return '${price.toStringAsFixed(2)} €';
+      }
+    }
+    
+    // Generar datos QR traducidos
+    final qrData = {
+      getLabel('ticket'): 'Meypark',
+      getLabel('plate'): plate,
+      getLabel('zone'): _getZoneName(zone),
+      getLabel('start'): formatDateTime(start),
+      getLabel('end'): formatDateTime(end),
+      getLabel('price'): formatPrice(price),
+      getLabel('method'): _getMethodName(method),
+      if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+    
+    return jsonEncode(qrData);
+  }
 }
 
 // NUEVOS DIÁLOGOS CON ESTADOS
@@ -830,6 +981,76 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
         ];
     }
   }
+  
+  /// Genera datos QR con etiquetas traducidas según el idioma
+  String _generateTranslatedQRData({
+    required String plate,
+    required String zone,
+    required DateTime start,
+    required DateTime end,
+    required double price,
+    required String method,
+    double? discount,
+    required String locale,
+  }) {
+    final l = AppLocalizations.of(context);
+    
+    // Traducir etiquetas según el idioma
+    String getLabel(String key) {
+      switch (key) {
+        case 'ticket':
+          return l.t('ticket');
+        case 'plate':
+          return l.t('plate');
+        case 'zone':
+          return l.t('zone');
+        case 'start':
+          return l.t('startTime');
+        case 'end':
+          return l.t('endTime');
+        case 'price':
+          return l.t('price');
+        case 'method':
+          return l.t('paymentMethod');
+        case 'discount':
+          return l.t('discount');
+        case 'duration':
+          return l.t('duration');
+        default:
+          return key;
+      }
+    }
+    
+    // Formatear fechas según el idioma
+    String formatDateTime(DateTime date) {
+      final formatter = DateFormat('dd/MM/yyyy HH:mm', locale);
+      return formatter.format(date);
+    }
+    
+    // Formatear precio según el idioma
+    String formatPrice(double price) {
+      if (locale.startsWith('es') || locale.startsWith('ca')) {
+        return '${price.toStringAsFixed(2).replaceAll('.', ',')} €';
+      } else {
+        return '${price.toStringAsFixed(2)} €';
+      }
+    }
+    
+    // Generar datos QR traducidos
+    final qrData = {
+      getLabel('ticket'): 'Meypark',
+      getLabel('plate'): plate,
+      getLabel('zone'): _getZoneName(zone),
+      getLabel('start'): formatDateTime(start),
+      getLabel('end'): formatDateTime(end),
+      getLabel('price'): formatPrice(price),
+      getLabel('method'): _getMethodName(method),
+      if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+    
+    return jsonEncode(qrData);
+  }
 }
 
 // Diálogo para ingresar el teléfono
@@ -911,6 +1132,76 @@ class _SmsDialogState extends State<_SmsDialog> {
       ],
     );
   }
+  
+  /// Genera datos QR con etiquetas traducidas según el idioma
+  String _generateTranslatedQRData({
+    required String plate,
+    required String zone,
+    required DateTime start,
+    required DateTime end,
+    required double price,
+    required String method,
+    double? discount,
+    required String locale,
+  }) {
+    final l = AppLocalizations.of(context);
+    
+    // Traducir etiquetas según el idioma
+    String getLabel(String key) {
+      switch (key) {
+        case 'ticket':
+          return l.t('ticket');
+        case 'plate':
+          return l.t('plate');
+        case 'zone':
+          return l.t('zone');
+        case 'start':
+          return l.t('startTime');
+        case 'end':
+          return l.t('endTime');
+        case 'price':
+          return l.t('price');
+        case 'method':
+          return l.t('paymentMethod');
+        case 'discount':
+          return l.t('discount');
+        case 'duration':
+          return l.t('duration');
+        default:
+          return key;
+      }
+    }
+    
+    // Formatear fechas según el idioma
+    String formatDateTime(DateTime date) {
+      final formatter = DateFormat('dd/MM/yyyy HH:mm', locale);
+      return formatter.format(date);
+    }
+    
+    // Formatear precio según el idioma
+    String formatPrice(double price) {
+      if (locale.startsWith('es') || locale.startsWith('ca')) {
+        return '${price.toStringAsFixed(2).replaceAll('.', ',')} €';
+      } else {
+        return '${price.toStringAsFixed(2)} €';
+      }
+    }
+    
+    // Generar datos QR traducidos
+    final qrData = {
+      getLabel('ticket'): 'Meypark',
+      getLabel('plate'): plate,
+      getLabel('zone'): _getZoneName(zone),
+      getLabel('start'): formatDateTime(start),
+      getLabel('end'): formatDateTime(end),
+      getLabel('price'): formatPrice(price),
+      getLabel('method'): _getMethodName(method),
+      if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+    
+    return jsonEncode(qrData);
+  }
 }
 
 // Diálogo de confirmación de email enviado
@@ -972,6 +1263,76 @@ class _EmailSentDialogState extends State<_EmailSentDialog> {
       ],
     );
   }
+  
+  /// Genera datos QR con etiquetas traducidas según el idioma
+  String _generateTranslatedQRData({
+    required String plate,
+    required String zone,
+    required DateTime start,
+    required DateTime end,
+    required double price,
+    required String method,
+    double? discount,
+    required String locale,
+  }) {
+    final l = AppLocalizations.of(context);
+    
+    // Traducir etiquetas según el idioma
+    String getLabel(String key) {
+      switch (key) {
+        case 'ticket':
+          return l.t('ticket');
+        case 'plate':
+          return l.t('plate');
+        case 'zone':
+          return l.t('zone');
+        case 'start':
+          return l.t('startTime');
+        case 'end':
+          return l.t('endTime');
+        case 'price':
+          return l.t('price');
+        case 'method':
+          return l.t('paymentMethod');
+        case 'discount':
+          return l.t('discount');
+        case 'duration':
+          return l.t('duration');
+        default:
+          return key;
+      }
+    }
+    
+    // Formatear fechas según el idioma
+    String formatDateTime(DateTime date) {
+      final formatter = DateFormat('dd/MM/yyyy HH:mm', locale);
+      return formatter.format(date);
+    }
+    
+    // Formatear precio según el idioma
+    String formatPrice(double price) {
+      if (locale.startsWith('es') || locale.startsWith('ca')) {
+        return '${price.toStringAsFixed(2).replaceAll('.', ',')} €';
+      } else {
+        return '${price.toStringAsFixed(2)} €';
+      }
+    }
+    
+    // Generar datos QR traducidos
+    final qrData = {
+      getLabel('ticket'): 'Meypark',
+      getLabel('plate'): plate,
+      getLabel('zone'): _getZoneName(zone),
+      getLabel('start'): formatDateTime(start),
+      getLabel('end'): formatDateTime(end),
+      getLabel('price'): formatPrice(price),
+      getLabel('method'): _getMethodName(method),
+      if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+    
+    return jsonEncode(qrData);
+  }
 }
 
 // Diálogo de confirmación de SMS enviado
@@ -1032,6 +1393,76 @@ class _SmsSentDialogState extends State<_SmsSentDialog> {
         ),
       ],
     );
+  }
+  
+  /// Genera datos QR con etiquetas traducidas según el idioma
+  String _generateTranslatedQRData({
+    required String plate,
+    required String zone,
+    required DateTime start,
+    required DateTime end,
+    required double price,
+    required String method,
+    double? discount,
+    required String locale,
+  }) {
+    final l = AppLocalizations.of(context);
+    
+    // Traducir etiquetas según el idioma
+    String getLabel(String key) {
+      switch (key) {
+        case 'ticket':
+          return l.t('ticket');
+        case 'plate':
+          return l.t('plate');
+        case 'zone':
+          return l.t('zone');
+        case 'start':
+          return l.t('startTime');
+        case 'end':
+          return l.t('endTime');
+        case 'price':
+          return l.t('price');
+        case 'method':
+          return l.t('paymentMethod');
+        case 'discount':
+          return l.t('discount');
+        case 'duration':
+          return l.t('duration');
+        default:
+          return key;
+      }
+    }
+    
+    // Formatear fechas según el idioma
+    String formatDateTime(DateTime date) {
+      final formatter = DateFormat('dd/MM/yyyy HH:mm', locale);
+      return formatter.format(date);
+    }
+    
+    // Formatear precio según el idioma
+    String formatPrice(double price) {
+      if (locale.startsWith('es') || locale.startsWith('ca')) {
+        return '${price.toStringAsFixed(2).replaceAll('.', ',')} €';
+      } else {
+        return '${price.toStringAsFixed(2)} €';
+      }
+    }
+    
+    // Generar datos QR traducidos
+    final qrData = {
+      getLabel('ticket'): 'Meypark',
+      getLabel('plate'): plate,
+      getLabel('zone'): _getZoneName(zone),
+      getLabel('start'): formatDateTime(start),
+      getLabel('end'): formatDateTime(end),
+      getLabel('price'): formatPrice(price),
+      getLabel('method'): _getMethodName(method),
+      if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+    
+    return jsonEncode(qrData);
   }
 }
 
@@ -1237,5 +1668,75 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
           ),
         ];
     }
+  }
+  
+  /// Genera datos QR con etiquetas traducidas según el idioma
+  String _generateTranslatedQRData({
+    required String plate,
+    required String zone,
+    required DateTime start,
+    required DateTime end,
+    required double price,
+    required String method,
+    double? discount,
+    required String locale,
+  }) {
+    final l = AppLocalizations.of(context);
+    
+    // Traducir etiquetas según el idioma
+    String getLabel(String key) {
+      switch (key) {
+        case 'ticket':
+          return l.t('ticket');
+        case 'plate':
+          return l.t('plate');
+        case 'zone':
+          return l.t('zone');
+        case 'start':
+          return l.t('startTime');
+        case 'end':
+          return l.t('endTime');
+        case 'price':
+          return l.t('price');
+        case 'method':
+          return l.t('paymentMethod');
+        case 'discount':
+          return l.t('discount');
+        case 'duration':
+          return l.t('duration');
+        default:
+          return key;
+      }
+    }
+    
+    // Formatear fechas según el idioma
+    String formatDateTime(DateTime date) {
+      final formatter = DateFormat('dd/MM/yyyy HH:mm', locale);
+      return formatter.format(date);
+    }
+    
+    // Formatear precio según el idioma
+    String formatPrice(double price) {
+      if (locale.startsWith('es') || locale.startsWith('ca')) {
+        return '${price.toStringAsFixed(2).replaceAll('.', ',')} €';
+      } else {
+        return '${price.toStringAsFixed(2)} €';
+      }
+    }
+    
+    // Generar datos QR traducidos
+    final qrData = {
+      getLabel('ticket'): 'Meypark',
+      getLabel('plate'): plate,
+      getLabel('zone'): _getZoneName(zone),
+      getLabel('start'): formatDateTime(start),
+      getLabel('end'): formatDateTime(end),
+      getLabel('price'): formatPrice(price),
+      getLabel('method'): _getMethodName(method),
+      if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+    
+    return jsonEncode(qrData);
   }
 }

@@ -31,6 +31,7 @@ class MowizSummaryPage extends StatefulWidget {
   final int minutes;
   final double price;
   final double? discount;
+  final String? selectedCompany;
   const MowizSummaryPage({
     super.key,
     required this.plate,
@@ -39,6 +40,7 @@ class MowizSummaryPage extends StatefulWidget {
     required this.minutes,
     required this.price,
     this.discount,
+    this.selectedCompany,
   });
 
   @override
@@ -204,7 +206,7 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
                           builder: (_) => MowizTimePage(
                             zone: widget.zone,
                             plate: widget.plate,
-                            selectedCompany: null, // EYPSA por defecto
+                            selectedCompany: widget.selectedCompany,
                           ),
                         ),
                         (route) => false,

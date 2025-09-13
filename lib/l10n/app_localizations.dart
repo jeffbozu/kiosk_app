@@ -105,6 +105,13 @@ class AppLocalizations {
       // NUEVO: traducción de "clear" (botón para borrar tiempo)
       'clear': 'Borrar',
       'scanQrButton': 'Escanear QR',
+      // NUEVAS TRADUCCIONES PARA ESCÁNER QR
+      'scanQrTitle': 'Escanear Código QR',
+      'scanQrInstructions': 'Coloca el código QR dentro del marco',
+      'scanning': 'Escaneando... Apunta hacia el código QR',
+      'scanPaused': 'Escaneo pausado',
+      'changeCamera': 'Cambiar cámara',
+      'cancelScan': 'Cancelar escaneo',
       // NUEVAS TRADUCCIONES PARA DIÁLOGOS CON ESTADOS
       'sendingEmail': 'Enviando email...',
       'sendingWhatsApp': 'Enviando WhatsApp...',
@@ -209,6 +216,13 @@ class AppLocalizations {
       // NUEVO: traducción de "clear" (botón para borrar tiempo)
       'clear': 'Esborrar',
       'scanQrButton': 'Escanejar QR',
+      // NUEVAS TRADUCCIONES PARA ESCÁNER QR
+      'scanQrTitle': 'Escanejar Codi QR',
+      'scanQrInstructions': 'Col·loca el codi QR dins del marc',
+      'scanning': 'Escanejant... Apunta cap al codi QR',
+      'scanPaused': 'Escaneig pausat',
+      'changeCamera': 'Canviar càmera',
+      'cancelScan': 'Cancel·lar escaneig',
       // NUEVAS TRADUCCIONES PARA DIÁLOGOS CON ESTADOS
       'sendingEmail': 'Enviant email...',
       'sendingWhatsApp': 'Enviant WhatsApp...',
@@ -313,6 +327,13 @@ class AppLocalizations {
       // NEW: translation of "clear" (button to clear time)
       'clear': 'Clear',
       'scanQrButton': 'Scan QR',
+      // NUEVAS TRADUCCIONES PARA ESCÁNER QR
+      'scanQrTitle': 'Scan QR Code',
+      'scanQrInstructions': 'Place the QR code within the frame',
+      'scanning': 'Scanning... Point towards the QR code',
+      'scanPaused': 'Scan paused',
+      'changeCamera': 'Change camera',
+      'cancelScan': 'Cancel scan',
       // NUEVAS TRADUCCIONES PARA DIÁLOGOS CON ESTADOS
       'sendingEmail': 'Sending email...',
       'sendingWhatsApp': 'Sending WhatsApp...',

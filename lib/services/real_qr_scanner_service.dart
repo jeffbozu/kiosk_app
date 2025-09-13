@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../l10n/app_localizations.dart';
 
 /// Servicio de escáner QR real que usa la cámara del dispositivo
 class RealQrScannerService {
@@ -191,7 +192,7 @@ class _QrScannerScreenState extends State<_QrScannerScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        title: const Text('Escanear Código QR'),
+        title: Text(AppLocalizations.of(context).scanQrTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.camera_front),
@@ -223,8 +224,8 @@ class _QrScannerScreenState extends State<_QrScannerScreen> {
               ),
               child: Text(
                 _isScanning 
-                  ? '🔍 Escaneando... Apunta hacia el código QR'
-                  : '⏹️ Escaneo pausado',
+                  ? '🔍 ${AppLocalizations.of(context).scanning}'
+                  : '⏹️ ${AppLocalizations.of(context).scanPaused}',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -250,9 +251,9 @@ class _QrScannerScreenState extends State<_QrScannerScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Cancelar',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              child: Text(
+                AppLocalizations.of(context).cancelScan,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -265,11 +266,12 @@ class _QrScannerScreenState extends State<_QrScannerScreen> {
     return Container(
       decoration: ShapeDecoration(
         shape: QrScannerOverlayShape(
-          borderColor: Colors.red,
-          borderRadius: 10,
-          borderLength: 30,
-          borderWidth: 10,
-          cutOutSize: 300,
+          borderColor: Colors.white,
+          borderRadius: 20,
+          borderLength: 40,
+          borderWidth: 4,
+          cutOutSize: 280,
+          overlayColor: const Color.fromRGBO(0, 0, 0, 120),
         ),
       ),
     );
@@ -364,7 +366,40 @@ class QrScannerOverlayShape extends ShapeBorder {
       )
       ..restore();
 
-    // Draw border
+    // Draw elegant corners with glow effect
+    final glowPaint = Paint()
+      ..color = borderColor.withOpacity(0.3)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = borderWidth * 2
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+
+    // Draw glow effect
+    canvas.drawPath(
+      Path()
+        ..moveTo(cutOutRect.left - borderOffset, cutOutRect.top + borderLength)
+        ..lineTo(cutOutRect.left - borderOffset, cutOutRect.top + borderRadius)
+        ..quadraticBezierTo(cutOutRect.left - borderOffset, cutOutRect.top - borderOffset,
+            cutOutRect.left + borderRadius, cutOutRect.top - borderOffset)
+        ..lineTo(cutOutRect.left + borderLength, cutOutRect.top - borderOffset)
+        ..moveTo(cutOutRect.right + borderOffset, cutOutRect.top + borderLength)
+        ..lineTo(cutOutRect.right + borderOffset, cutOutRect.top + borderRadius)
+        ..quadraticBezierTo(cutOutRect.right + borderOffset, cutOutRect.top - borderOffset,
+            cutOutRect.right - borderRadius, cutOutRect.top - borderOffset)
+        ..lineTo(cutOutRect.right - borderLength, cutOutRect.top - borderOffset)
+        ..moveTo(cutOutRect.left - borderOffset, cutOutRect.bottom - borderLength)
+        ..lineTo(cutOutRect.left - borderOffset, cutOutRect.bottom - borderRadius)
+        ..quadraticBezierTo(cutOutRect.left - borderOffset, cutOutRect.bottom + borderOffset,
+            cutOutRect.left + borderRadius, cutOutRect.bottom + borderOffset)
+        ..lineTo(cutOutRect.left + borderLength, cutOutRect.bottom + borderOffset)
+        ..moveTo(cutOutRect.right + borderOffset, cutOutRect.bottom - borderLength)
+        ..lineTo(cutOutRect.right + borderOffset, cutOutRect.bottom - borderRadius)
+        ..quadraticBezierTo(cutOutRect.right + borderOffset, cutOutRect.bottom + borderOffset,
+            cutOutRect.right - borderRadius, cutOutRect.bottom + borderOffset)
+        ..lineTo(cutOutRect.right - borderLength, cutOutRect.bottom + borderOffset),
+      glowPaint,
+    );
+
+    // Draw main border
     canvas.drawPath(
       Path()
         ..moveTo(cutOutRect.left - borderOffset, cutOutRect.top + borderLength)

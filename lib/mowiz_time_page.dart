@@ -328,6 +328,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                                     start   : _now,
                                     minutes : minutes,
                                     price   : _totalCents / 100,
+                                    selectedCompany: widget.selectedCompany,
                                   ),
                                 ),
                               );

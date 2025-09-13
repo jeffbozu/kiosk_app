@@ -102,6 +102,10 @@ class _QrScannerScreenState extends State<_QrScannerScreen> {
   void initState() {
     super.initState();
     _startTimeout();
+    // Iniciar escaneo automáticamente
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startScanning();
+    });
   }
   
   @override
@@ -115,6 +119,12 @@ class _QrScannerScreenState extends State<_QrScannerScreen> {
       if (mounted) {
         Navigator.of(context).pop();
       }
+    });
+  }
+  
+  void _startScanning() {
+    setState(() {
+      _isScanning = true;
     });
   }
   
@@ -184,11 +194,7 @@ class _QrScannerScreenState extends State<_QrScannerScreen> {
         title: const Text('Escanear Código QR'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.flash_off, color: Colors.grey),
-            onPressed: () => widget.controller.toggleTorch(),
-          ),
-          IconButton(
-            icon: const Icon(Icons.camera_rear),
+            icon: const Icon(Icons.camera_front),
             onPressed: () => widget.controller.switchCamera(),
           ),
         ],
@@ -205,28 +211,29 @@ class _QrScannerScreenState extends State<_QrScannerScreen> {
           _buildScannerOverlay(),
           
           // Indicador de estado
-          if (_isScanning)
-            Positioned(
-              top: 20,
-              left: 20,
-              right: 20,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(20),
+          Positioned(
+            top: 20,
+            left: 20,
+            right: 20,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                _isScanning 
+                  ? '🔍 Escaneando... Apunta hacia el código QR'
+                  : '⏹️ Escaneo pausado',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
                 ),
-                child: const Text(
-                  '🔍 Apunta la cámara hacia el código QR',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+                textAlign: TextAlign.center,
               ),
             ),
+          ),
           
           // Botón de cancelar
           Positioned(

@@ -536,7 +536,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
   }
   
   void _processManualCode(String code, String locale) {
-    double? discount;
+    double discount;
     
     if (code == 'FREE') {
       discount = -99999.0; // Descuento total
@@ -546,10 +546,16 @@ class _MowizTimePageState extends State<MowizTimePage> {
       final parsedDiscount = double.tryParse(cleanCode);
       if (parsedDiscount != null) {
         discount = -parsedDiscount; // Hacer negativo
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Código no válido. Usa formato: -5.50, -5,50 o FREE'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
       }
-    }
-    
-    if (discount == null) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Código no válido. Usa formato: -5.50, -5,50 o FREE'),

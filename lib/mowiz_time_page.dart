@@ -395,10 +395,12 @@ class _MowizTimePageState extends State<MowizTimePage> {
                             if (discount <= -99999.0) {
                               // QR FREE: precio final 0.00€
                               final originalPrice = _totalCents / 100;
+                              print('DEBUG FREE: originalPrice=$originalPrice, _totalCents=$_totalCents');
                               setState(() {
                                 _totalCents = 0;
                                 _discountEurosApplied = originalPrice;
                               });
+                              print('DEBUG FREE after setState: _totalCents=$_totalCents, _discountEurosApplied=$_discountEurosApplied');
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text('Descuento FREE aplicado: ${formatPrice(originalPrice.toDouble(), locale)} - Precio final: ${formatPrice(0.0, locale)}'),
@@ -461,6 +463,17 @@ class _MowizTimePageState extends State<MowizTimePage> {
                       ),
                       child: AutoSizeText(t('scanQrButton'), maxLines: 1),
                     ),
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      onPressed: () => _showManualCodeDialog(),
+                      style: kMowizFilledButtonStyle.copyWith(
+                        minimumSize: const MaterialStatePropertyAll(
+                            Size(double.infinity, 46)),
+                        backgroundColor: MaterialStatePropertyAll(
+                            Theme.of(context).colorScheme.tertiary),
+                      ),
+                      child: AutoSizeText('Introducir código manualmente', maxLines: 1),
+                    ),
                   ],
                 ),
               ),
@@ -469,5 +482,125 @@ class _MowizTimePageState extends State<MowizTimePage> {
         },
       ),
     );
+  }
+  
+  /* ---- manual code dialog ---- */
+  
+  void _showManualCodeDialog() {
+    final TextEditingController codeController = TextEditingController();
+    final t = AppLocalizations.of(context).t;
+    final locale = Intl.getCurrentLocale();
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Introducir código de descuento'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Introduce el código de descuento:'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: codeController,
+                decoration: const InputDecoration(
+                  hintText: 'Ej: -5.50, -5,50, FREE',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.text,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Formatos válidos:\n• -5.50 o -5,50 (descuento en euros)\n• FREE (descuento total)',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final code = codeController.text.trim().toUpperCase();
+                Navigator.of(context).pop();
+                _processManualCode(code, locale);
+              },
+              child: const Text('Aplicar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  
+  void _processManualCode(String code, String locale) {
+    double? discount;
+    
+    if (code == 'FREE') {
+      discount = -99999.0; // Descuento total
+    } else if (code.startsWith('-')) {
+      // Procesar descuento numérico
+      final cleanCode = code.substring(1).replaceAll(',', '.');
+      discount = double.tryParse(cleanCode);
+      if (discount != null) {
+        discount = -discount; // Hacer negativo
+      }
+    }
+    
+    if (discount == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Código no válido. Usa formato: -5.50, -5,50 o FREE'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    
+    // Aplicar el descuento usando la misma lógica que el QR
+    if (discount <= -99999.0) {
+      // Código FREE: precio final 0.00€
+      final originalPrice = _totalCents / 100;
+      print('DEBUG MANUAL FREE: originalPrice=$originalPrice, _totalCents=$_totalCents');
+      setState(() {
+        _totalCents = 0;
+        _discountEurosApplied = originalPrice;
+      });
+      print('DEBUG MANUAL FREE after setState: _totalCents=$_totalCents, _discountEurosApplied=$_discountEurosApplied');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Descuento FREE aplicado: ${formatPrice(originalPrice.toDouble(), locale)} - Precio final: ${formatPrice(0.0, locale)}'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      // Descuento normal
+      final newTotal = (_totalCents / 100) + discount;
+      final newTotalCents = (newTotal * 100).round();
+      
+      setState(() {
+        if (newTotal <= 0) {
+          _totalCents = 0;
+          _discountEurosApplied = (_totalCents / 100) - discount;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Descuento aplicado: ${formatPrice(discount.toDouble(), locale)} - Precio final: ${formatPrice(0.0, locale)}'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          _totalCents = newTotalCents;
+          _discountEurosApplied = discount;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Descuento aplicado: ${formatPrice(discount.toDouble(), locale)} - Precio final: ${formatPrice((newTotalCents / 100).toDouble(), locale)}'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      });
+    }
   }
 }

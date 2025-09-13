@@ -192,7 +192,7 @@ class _QrScannerScreenState extends State<_QrScannerScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        title: Text(AppLocalizations.of(context).scanQrTitle),
+        title: Text(AppLocalizations.of(context).t('scanQrTitle')),
         actions: [
           IconButton(
             icon: const Icon(Icons.camera_front),
@@ -224,8 +224,8 @@ class _QrScannerScreenState extends State<_QrScannerScreen> {
               ),
               child: Text(
                 _isScanning 
-                  ? '🔍 ${AppLocalizations.of(context).scanning}'
-                  : '⏹️ ${AppLocalizations.of(context).scanPaused}',
+                  ? '🔍 ${AppLocalizations.of(context).t('scanning')}'
+                  : '⏹️ ${AppLocalizations.of(context).t('scanPaused')}',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -252,7 +252,7 @@ class _QrScannerScreenState extends State<_QrScannerScreen> {
                 ),
               ),
               child: Text(
-                AppLocalizations.of(context).cancelScan,
+                AppLocalizations.of(context).t('cancelScan'),
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
             ),

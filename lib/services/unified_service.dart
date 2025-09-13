@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../printer_service.dart';
 import '../printer_service_web.dart';
 import '../qr_scanner_service.dart';
 import '../qr_scanner_service_web.dart';
+import 'real_qr_scanner_service.dart';
 
 /// Servicio unificado que detecta automáticamente la plataforma
 /// y usa la implementación apropiada (web o desktop)
@@ -54,7 +56,7 @@ class UnifiedService {
   }
   
   /// Escanea un código QR usando la implementación apropiada
-  static Future<double?> scanQrCode({int timeout = 30}) async {
+  static Future<double?> scanQrCode({required BuildContext context, int timeout = 30}) async {
     if (_isWeb) {
       // En web: usar cámara del dispositivo
       final result = await QrScannerServiceWeb.scanQrCode(timeout: timeout);
@@ -73,8 +75,36 @@ class UnifiedService {
       // En desktop: usar escáner USB/serie
       return await QrScannerService.scanQrCode(timeout: timeout);
     } else {
-      // En móvil: no soportado por ahora
-      throw UnsupportedError('Plataforma no soportada para escáner QR');
+      // En móvil: usar escáner QR real con cámara
+      try {
+        // Inicializar el escáner real si no está inicializado
+        if (!RealQrScannerService.isAvailable) {
+          final initialized = await RealQrScannerService.initialize();
+          if (!initialized) {
+            throw Exception('No se pudo inicializar el escáner QR');
+          }
+        }
+        
+        final result = await RealQrScannerService.scanQrCode(
+          context: context,
+          timeout: timeout,
+        );
+        
+        if (result != null) {
+          final parsed = double.tryParse(result);
+          if (parsed != null) return parsed;
+          // Soporte VIP/FREE: cualquier código reconocido como gratis
+          final normalized = result.trim().toUpperCase();
+          if (normalized == 'FREE' || normalized == 'VIP' || normalized == 'VIP-ALL' || normalized == '-ALL' || normalized == '-100%') {
+            // Retornamos un valor especial para indicar descuento total
+            return -99999.0;
+          }
+        }
+        return null;
+      } catch (e) {
+        print('Error escaneando QR con cámara real: $e');
+        return null;
+      }
     }
   }
   
@@ -85,7 +115,11 @@ class UnifiedService {
     } else if (_isDesktop) {
       return await QrScannerService.isScannerConnected();
     } else {
-      return false;
+      // En móvil: verificar si el escáner real está disponible
+      if (!RealQrScannerService.isAvailable) {
+        return await RealQrScannerService.initialize();
+      }
+      return RealQrScannerService.isAvailable;
     }
   }
   
@@ -120,14 +154,19 @@ class UnifiedService {
     } else if (_isDesktop) {
       print('UnifiedService: Inicializado en modo DESKTOP');
     } else {
-      print('UnifiedService: Inicializado en modo MOBILE (limitado)');
+      // En móvil: inicializar el escáner QR real
+      await RealQrScannerService.initialize();
+      print('UnifiedService: Inicializado en modo MOBILE con escáner QR real');
     }
   }
   
   /// Libera recursos
-  static void dispose() {
+  static Future<void> dispose() async {
     if (_isWeb) {
       QrScannerServiceWeb.dispose();
+    } else if (!_isDesktop) {
+      // En móvil: liberar recursos del escáner real
+      await RealQrScannerService.dispose();
     }
   }
 }

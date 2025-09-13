@@ -387,7 +387,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                           );
                           
                           // Escanear código QR
-                          final discount = await UnifiedService.scanQrCode(timeout: 30);
+                          final discount = await UnifiedService.scanQrCode(context: context, timeout: 30);
                           
                           if (discount != null) {
                             // Verificar si es un QR FREE (descuento total)

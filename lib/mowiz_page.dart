@@ -7,6 +7,7 @@ import 'mowiz_cancel_page.dart';
 import 'home_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
 import 'styles/mowiz_buttons.dart';
+import 'styles/mowiz_design_system.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'sound_helper.dart';
 
@@ -24,33 +25,22 @@ class MowizPage extends StatelessWidget {
         ThemeModeButton(),
       ],
       body: SafeArea(
-        // 🟢 SafeArea para evitar solapamientos inferiores y superiores
         child: LayoutBuilder(
           builder: (context, constraints) {
             final width = constraints.maxWidth;
             final height = constraints.maxHeight;
 
-            // 🔵 Definimos un ancho máximo profesional para contenido
-            const double maxContentWidth = 500;
-            final double contentWidth = width > maxContentWidth ? maxContentWidth : width;
-            final EdgeInsets padding = EdgeInsets.symmetric(horizontal: contentWidth * 0.05);
+            // 🎨 Usar sistema de diseño homogéneo
+            final contentWidth = MowizDesignSystem.getContentWidth(width);
+            final horizontalPadding = MowizDesignSystem.getHorizontalPadding(contentWidth);
+            final spacing = MowizDesignSystem.getSpacing(width);
+            final titleFontSize = MowizDesignSystem.getTitleFontSize(width);
+            final buttonHeight = MowizDesignSystem.getPrimaryButtonHeight(width);
 
-            final bool isWide = contentWidth >= 700;
-            final double gap = isWide ? 32 : 24;
-            final double fontSize = isWide ? 28 : 22;
-            final double buttonHeight = isWide ? 100 : 60;
-
-            final ButtonStyle baseStyle = kMowizFilledButtonStyle.copyWith(
-              minimumSize: MaterialStatePropertyAll(Size(double.infinity, buttonHeight)),
-              padding: MaterialStatePropertyAll(EdgeInsets.symmetric(vertical: 0)),
-              shape: const MaterialStatePropertyAll(
-                RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(30)),
-                ),
-              ),
-              textStyle: MaterialStatePropertyAll(
-                TextStyle(fontSize: fontSize),
-              ),
+            final ButtonStyle baseStyle = MowizDesignSystem.getPrimaryButtonStyle(
+              width: width,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
             );
 
             final payBtn = FilledButton(
@@ -79,13 +69,10 @@ class MowizPage extends StatelessWidget {
                   ),
                 );
               },
-              style: baseStyle.copyWith(
-                backgroundColor: MaterialStatePropertyAll(
-                  Theme.of(context).colorScheme.secondary,
-                ),
-                foregroundColor: MaterialStatePropertyAll(
-                  Theme.of(context).colorScheme.onSecondary,
-                ),
+              style: MowizDesignSystem.getPrimaryButtonStyle(
+                width: width,
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+                foregroundColor: Theme.of(context).colorScheme.onSecondary,
               ),
               child: AutoSizeText(
                 t('cancelDenuncia'),
@@ -96,15 +83,15 @@ class MowizPage extends StatelessWidget {
 
             // 🟣 Botón home (inferior)
             final homeBtn = Padding(
-              padding: const EdgeInsets.only(top: 28, bottom: 16),
+              padding: EdgeInsets.only(top: spacing, bottom: MowizDesignSystem.spacingM),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: 320,
+                  constraints: BoxConstraints(
+                    maxWidth: contentWidth * 0.8,
                   ),
                   child: SizedBox(
                     width: contentWidth * 0.6,
-                    height: 46,
+                    height: MowizDesignSystem.getSecondaryButtonHeight(width),
                     child: TextButton(
                       onPressed: () {
                         SoundHelper.playTap();
@@ -114,8 +101,11 @@ class MowizPage extends StatelessWidget {
                         );
                       },
                       style: TextButton.styleFrom(
-                        minimumSize: const Size.fromHeight(40),
-                        textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                        minimumSize: Size.fromHeight(MowizDesignSystem.getSecondaryButtonHeight(width)),
+                        textStyle: TextStyle(
+                          fontSize: MowizDesignSystem.getBodyFontSize(width),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       child: Text(t('home')),
                     ),
@@ -124,33 +114,22 @@ class MowizPage extends StatelessWidget {
               ),
             );
 
-            Widget mainButtons = isWide
-                ? Row(
-                    children: [
-                      Expanded(child: payBtn),
-                      SizedBox(width: gap),
-                      Expanded(child: cancelBtn),
-                    ],
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      payBtn,
-                      SizedBox(height: gap),
-                      cancelBtn,
-                    ],
-                  );
+            // 🎨 Usar layout responsive del sistema de diseño
+            final mainButtons = MowizDesignSystem.getButtonLayout(
+              width: width,
+              buttons: [payBtn, cancelBtn],
+              spacing: spacing,
+            );
 
             return Center(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: maxContentWidth,
-                  minWidth: 260,
+                  maxWidth: MowizDesignSystem.maxContentWidth,
+                  minWidth: MowizDesignSystem.minContentWidth,
                   minHeight: height,
                 ),
                 child: Padding(
-                  padding: padding,
+                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

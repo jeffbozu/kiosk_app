@@ -10,6 +10,7 @@ import 'mowiz_time_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
 import 'mowiz_page.dart';
 import 'styles/mowiz_buttons.dart';
+import 'styles/mowiz_design_system.dart';
 import 'sound_helper.dart';
 
 class _ZoneData {
@@ -106,16 +107,13 @@ class _MowizPayPageState extends State<MowizPayPage> {
             final width = constraints.maxWidth;
             final height = constraints.maxHeight;
 
-            // 🔵 Ancho máximo profesional para evitar botones gigantes
-            const double maxContentWidth = 500;
-            final double contentWidth = width > maxContentWidth ? maxContentWidth : width;
-            final EdgeInsets padding = EdgeInsets.symmetric(horizontal: contentWidth * 0.05);
-
-            final bool isWide = contentWidth >= 700;
-            final double gap = isWide ? 32 : 20;
-            final double titleFont = isWide ? 28 : 22;
-            final double inputFont = isWide ? 22 : 17;
-            final double buttonHeight = isWide ? 60 : 48;
+            // 🎨 Usar sistema de diseño homogéneo
+            final contentWidth = MowizDesignSystem.getContentWidth(width);
+            final horizontalPadding = MowizDesignSystem.getHorizontalPadding(contentWidth);
+            final spacing = MowizDesignSystem.getSpacing(width);
+            final titleFontSize = MowizDesignSystem.getTitleFontSize(width);
+            final bodyFontSize = MowizDesignSystem.getBodyFontSize(width);
+            final buttonHeight = MowizDesignSystem.getPrimaryButtonHeight(width);
 
             Widget zoneButton(String value, String text, Color color) {
               return FilledButton(
@@ -124,16 +122,12 @@ class _MowizPayPageState extends State<MowizPayPage> {
                   print('🐛 DEBUG: Zona seleccionada - ID: "$value", Nombre: "$text"');
                   setState(() => _selectedZone = value);
                 },
-                style: kMowizFilledButtonStyle.copyWith(
-                  minimumSize: MaterialStatePropertyAll(
-                    Size(double.infinity, buttonHeight),
-                  ),
-                  backgroundColor: MaterialStatePropertyAll(
-                    _selectedZone == value ? color : colorScheme.secondary,
-                  ),
-                  textStyle: MaterialStatePropertyAll(
-                    TextStyle(fontSize: inputFont),
-                  ),
+                style: MowizDesignSystem.getPrimaryButtonStyle(
+                  width: width,
+                  backgroundColor: _selectedZone == value ? color : colorScheme.secondary,
+                  foregroundColor: _selectedZone == value 
+                    ? Colors.white 
+                    : colorScheme.onSecondary,
                 ),
                 child: AutoSizeText(
                   text,
@@ -143,115 +137,115 @@ class _MowizPayPageState extends State<MowizPayPage> {
               );
             }
 
-            // 🟣 Distribución vertical y centralizada sin scroll
-            return Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: maxContentWidth,
-                  minWidth: 260,
-                  minHeight: height,
-                ),
-                child: Padding(
-                  padding: padding,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      AutoSizeText(
-                        t('selectZone'),
-                        maxLines: 1,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: titleFont,
+            // 🎨 Usar sistema de diseño homogéneo con scroll inteligente
+            return MowizDesignSystem.getScrollableContent(
+              availableHeight: height,
+              contentHeight: 600, // Altura estimada del contenido
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: MowizDesignSystem.maxContentWidth,
+                    minWidth: MowizDesignSystem.minContentWidth,
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        AutoSizeText(
+                          t('selectZone'),
+                          maxLines: 1,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: titleFontSize,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: gap),
-                      if (_loadingZones)
-                        const Center(child: CircularProgressIndicator())
-                      else
-                        Builder(
-                          builder: (context) {
-                            final count = _zones.length.clamp(1, 3);
-                            final btnWidth =
-                                (contentWidth - gap * (count - 1)) / count;
-                            return Wrap(
-                              spacing: gap,
-                              runSpacing: gap,
-                              alignment: WrapAlignment.center,
-                              children: _zones
-                                  .map(
-                                    (z) => SizedBox(
-                                      width: btnWidth,
-                                      child: zoneButton(z.id, z.name, z.color),
+                        SizedBox(height: spacing),
+                        if (_loadingZones)
+                          const Center(child: CircularProgressIndicator())
+                        else
+                          Builder(
+                            builder: (context) {
+                              final count = _zones.length.clamp(1, 3);
+                              final btnWidth = (contentWidth - spacing * (count - 1)) / count;
+                              return Wrap(
+                                spacing: spacing,
+                                runSpacing: spacing,
+                                alignment: WrapAlignment.center,
+                                children: _zones
+                                    .map(
+                                      (z) => SizedBox(
+                                        width: btnWidth,
+                                        child: zoneButton(z.id, z.name, z.color),
+                                      ),
+                                    )
+                                    .toList(),
+                              );
+                            },
+                          ),
+                        SizedBox(height: spacing),
+                        TextField(
+                          controller: _plateCtrl,
+                          enabled: _selectedZone != null,
+                          decoration: InputDecoration(
+                            labelText: t('plate'),
+                            hintText: t('enterPlate'),
+                          ),
+                          style: TextStyle(fontSize: bodyFontSize),
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        SizedBox(height: spacing * 1.5),
+                        FilledButton(
+                          onPressed: _confirmEnabled
+                              ? () {
+                                  SoundHelper.playTap();
+                                  print('🐛 DEBUG: Navegando a MowizTimePage con zone: "$_selectedZone"');
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => MowizTimePage(
+                                        zone: _selectedZone!,
+                                        plate: _plateCtrl.text.trim(),
+                                        selectedCompany: widget.selectedCompany,
+                                      ),
                                     ),
-                                  )
-                                  .toList(),
+                                  );
+                                }
+                              : null,
+                          style: MowizDesignSystem.getPrimaryButtonStyle(
+                            width: width,
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                          child: AutoSizeText(
+                            t('confirm'),
+                            maxLines: 1,
+                            minFontSize: 13,
+                          ),
+                        ),
+                        SizedBox(height: spacing),
+                        FilledButton(
+                          onPressed: () {
+                            SoundHelper.playTap();
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(builder: (_) => const MowizPage()),
+                              (route) => false,
                             );
                           },
-                        ),
-                      SizedBox(height: gap),
-                      TextField(
-                        controller: _plateCtrl,
-                        enabled: _selectedZone != null,
-                        decoration: InputDecoration(
-                          labelText: t('plate'),
-                          hintText: t('enterPlate'),
-                        ),
-                        style: TextStyle(fontSize: inputFont),
-                        onChanged: (_) => setState(() {}),
-                      ),
-                      SizedBox(height: gap * 1.5),
-                      FilledButton(
-                        onPressed: _confirmEnabled
-                            ? () {
-                                SoundHelper.playTap();
-                                print('🐛 DEBUG: Navegando a MowizTimePage con zone: "$_selectedZone"');
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => MowizTimePage(
-                                      zone: _selectedZone!,
-                                      plate: _plateCtrl.text.trim(),
-                                      selectedCompany: widget.selectedCompany,
-                                    ),
-                                  ),
-                                );
-                              }
-                            : null,
-                        style: kMowizFilledButtonStyle.copyWith(
-                          minimumSize: MaterialStatePropertyAll(Size(double.infinity, buttonHeight)),
-                          textStyle: MaterialStatePropertyAll(
-                            TextStyle(fontSize: titleFont),
+                          style: MowizDesignSystem.getSecondaryButtonStyle(
+                            width: width,
+                            backgroundColor: Theme.of(context).colorScheme.secondary,
+                            foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                          ),
+                          child: AutoSizeText(
+                            t('back'),
+                            maxLines: 1,
+                            minFontSize: 13,
                           ),
                         ),
-                        child: AutoSizeText(
-                          t('confirm'),
-                          maxLines: 1,
-                          minFontSize: 13,
-                        ),
-                      ),
-                      SizedBox(height: gap),
-                      FilledButton(
-                        onPressed: () {
-                          SoundHelper.playTap();
-                          Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(builder: (_) => const MowizPage()),
-                            (route) => false,
-                          );
-                        },
-                        style: kMowizFilledButtonStyle.copyWith(
-                          minimumSize: MaterialStatePropertyAll(Size(double.infinity, buttonHeight)),
-                          textStyle: MaterialStatePropertyAll(
-                            TextStyle(fontSize: titleFont),
-                          ),
-                        ),
-                        child: AutoSizeText(
-                          t('back'),
-                          maxLines: 1,
-                          minFontSize: 13,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

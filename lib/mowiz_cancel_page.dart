@@ -9,6 +9,7 @@ import 'config_service.dart';
 import 'l10n/app_localizations.dart';
 import 'mowiz/mowiz_scaffold.dart';
 import 'styles/mowiz_buttons.dart';
+import 'styles/mowiz_design_system.dart';
 import 'sound_helper.dart';
 
 class MowizCancelPage extends StatefulWidget {
@@ -97,62 +98,73 @@ class _MowizCancelPageState extends State<MowizCancelPage> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
-          final isLargeTablet = width >= 900;
-          final isTablet = width >= 600 && width < 900;
-          final padding = EdgeInsets.all(width * 0.05);
-          final double gap = width * 0.04;
-          final double fontSize =
-              isLargeTablet ? 28 : isTablet ? 24 : 20;
+          final height = constraints.maxHeight;
 
-          return Center(
-            child: Padding(
-              padding: padding,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TextField(
-                    controller: _plateCtrl,
-                    textCapitalization: TextCapitalization.characters,
-                    decoration: InputDecoration(hintText: t('enterPlate')),
-                    style: TextStyle(fontSize: fontSize),
-                    onChanged: (_) => setState(() {}),
+          // 🎨 Usar sistema de diseño homogéneo
+          final contentWidth = MowizDesignSystem.getContentWidth(width);
+          final horizontalPadding = MowizDesignSystem.getHorizontalPadding(contentWidth);
+          final spacing = MowizDesignSystem.getSpacing(width);
+          final bodyFontSize = MowizDesignSystem.getBodyFontSize(width);
+
+          return MowizDesignSystem.getScrollableContent(
+            availableHeight: height,
+            contentHeight: 400, // Altura estimada del contenido
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MowizDesignSystem.maxContentWidth,
+                  minWidth: MowizDesignSystem.minContentWidth,
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextField(
+                        controller: _plateCtrl,
+                        textCapitalization: TextCapitalization.characters,
+                        decoration: InputDecoration(hintText: t('enterPlate')),
+                        style: TextStyle(fontSize: bodyFontSize),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                      SizedBox(height: spacing * 1.2),
+                      FilledButton(
+                        onPressed: _validateDisabled
+                            ? null
+                            : () {
+                                SoundHelper.playTap();
+                                _validate();
+                              },
+                        style: MowizDesignSystem.getPrimaryButtonStyle(
+                          width: width,
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                        child: _loading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : AutoSizeText(t('validate'), maxLines: 1),
+                      ),
+                      SizedBox(height: spacing),
+                      FilledButton(
+                        onPressed: () {
+                          SoundHelper.playTap();
+                          Navigator.of(context).pop();
+                        },
+                        style: MowizDesignSystem.getSecondaryButtonStyle(
+                          width: width,
+                          backgroundColor: const Color(0xFFA7A7A7),
+                          foregroundColor: Colors.white,
+                        ),
+                        child: AutoSizeText(t('cancel'), maxLines: 1),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: gap * 1.2),
-                  FilledButton(
-                    onPressed: _validateDisabled
-                        ? null
-                        : () {
-                            SoundHelper.playTap();
-                            _validate();
-                          },
-                    style: kMowizFilledButtonStyle.copyWith(
-                      textStyle:
-                          MaterialStatePropertyAll(TextStyle(fontSize: fontSize)),
-                    ),
-                    child: _loading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : AutoSizeText(t('validate'), maxLines: 1),
-                  ),
-                  SizedBox(height: gap),
-                  FilledButton(
-                    onPressed: () {
-                      SoundHelper.playTap();
-                      Navigator.of(context).pop();
-                    },
-                    style: kMowizFilledButtonStyle.copyWith(
-                      backgroundColor:
-                          const MaterialStatePropertyAll(Color(0xFFA7A7A7)),
-                      textStyle:
-                          MaterialStatePropertyAll(TextStyle(fontSize: fontSize)),
-                    ),
-                    child: AutoSizeText(t('cancel'), maxLines: 1),
-                  ),
-                ],
+                ),
               ),
             ),
           );

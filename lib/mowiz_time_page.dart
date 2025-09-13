@@ -14,6 +14,7 @@ import 'mowiz_pay_page.dart';
 import 'mowiz_summary_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
 import 'styles/mowiz_buttons.dart';
+import 'styles/mowiz_design_system.dart';
 import 'sound_helper.dart';
 import 'services/unified_service.dart';
 
@@ -172,13 +173,16 @@ class _MowizTimePageState extends State<MowizTimePage> {
 
     /* ---- time navigation buttons ---- */
     
-    Widget timeNavigationButton(String text, VoidCallback? onPressed, double fs) => SizedBox(
+    Widget timeNavigationButton(String text, VoidCallback? onPressed, double width) => SizedBox(
           width: 80,
-          height: 60,
+          height: MowizDesignSystem.getSecondaryButtonHeight(width),
           child: ElevatedButton(
-            style: kMowizFilledButtonStyle.copyWith(
-              minimumSize: const MaterialStatePropertyAll(Size(80, 60)),
-              textStyle  : MaterialStatePropertyAll(TextStyle(fontSize: fs + 4)),
+            style: MowizDesignSystem.getSecondaryButtonStyle(
+              width: width,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            ).copyWith(
+              minimumSize: MaterialStatePropertyAll(Size(80, MowizDesignSystem.getSecondaryButtonHeight(width))),
             ),
             onPressed: onPressed != null ? () {
               SoundHelper.playTap();
@@ -192,177 +196,182 @@ class _MowizTimePageState extends State<MowizTimePage> {
       title: 'MeyPark - ${t('selectDuration')}',
       body : LayoutBuilder(
         builder: (context, c) {
-          final width   = c.maxWidth;
-          const gap     = 18.0;
-          final fontSz  = width >= 600 ? 24.0 : 19.0;
-          final labelSz = fontSz - 2;
+          final width = c.maxWidth;
+          final height = c.maxHeight;
+          
+          // 🎨 Usar sistema de diseño homogéneo
+          final contentWidth = MowizDesignSystem.getContentWidth(width);
+          final horizontalPadding = MowizDesignSystem.getHorizontalPadding(contentWidth);
+          final spacing = MowizDesignSystem.getSpacing(width);
+          final titleFontSize = MowizDesignSystem.getTitleFontSize(width);
+          final bodyFontSize = MowizDesignSystem.getBodyFontSize(width);
+          final labelFontSize = MowizDesignSystem.getSubtitleFontSize(width);
 
-          return Center(
-            child: ConstrainedBox(
-              constraints:
-                  const BoxConstraints(maxWidth: 550),
-              child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    AutoSizeText(
-                      DateFormat('EEE, d MMM yyyy - HH:mm', locale)
-                          .format(_now),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      style: TextStyle(
-                          fontSize: labelSz,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 22),
+          return MowizDesignSystem.getScrollableContent(
+            availableHeight: height,
+            contentHeight: 800, // Altura estimada del contenido
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MowizDesignSystem.maxContentWidth,
+                  minWidth: MowizDesignSystem.minContentWidth,
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: MowizDesignSystem.paddingM),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AutoSizeText(
+                        DateFormat('EEE, d MMM yyyy - HH:mm', locale)
+                            .format(_now),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        style: TextStyle(
+                            fontSize: labelFontSize,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: spacing),
 
-                    if (!_loaded)
-                      const Center(child: CircularProgressIndicator())
-                    else
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          timeNavigationButton(
-                            '-',
-                            _currentTimeIndex > 0 ? _decrementTime : null,
-                            fontSz,
-                          ),
-                          const SizedBox(width: 20),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Theme.of(context).colorScheme.outline),
-                              borderRadius: BorderRadius.circular(8),
+                      if (!_loaded)
+                        const Center(child: CircularProgressIndicator())
+                      else
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            timeNavigationButton(
+                              '-',
+                              _currentTimeIndex > 0 ? _decrementTime : null,
+                              width,
                             ),
-                            child: AutoSizeText(
-                              _blocks.isNotEmpty ? _fmtMin(_blocks[_currentTimeIndex]) : '0 min',
-                              style: TextStyle(
-                                fontSize: fontSz + 2,
-                                fontWeight: FontWeight.bold,
+                            SizedBox(width: spacing),
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: spacing, vertical: MowizDesignSystem.paddingM),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Theme.of(context).colorScheme.outline),
+                                borderRadius: BorderRadius.circular(MowizDesignSystem.borderRadiusM),
                               ),
-                              maxLines: 1,
-                            ),
-                          ),
-                          const SizedBox(width: 20),
-                          timeNavigationButton(
-                            '+',
-                            _currentTimeIndex < _blocks.length - 1 ? _incrementTime : null,
-                            fontSz,
-                          ),
-                        ],
-                      ),
-
-                    const SizedBox(height: 18),
-                    ElevatedButton(
-                      onPressed: _blocks.isNotEmpty ? _clear : null,
-                      style: kMowizFilledButtonStyle.copyWith(
-                        backgroundColor: MaterialStatePropertyAll(
-                            Theme.of(context).colorScheme.secondary),
-                        foregroundColor: MaterialStatePropertyAll(
-                            Theme.of(context).colorScheme.onSecondary),
-                        minimumSize:
-                            const MaterialStatePropertyAll(Size(150, 44)),
-                      ),
-                      child: AutoSizeText(t('clear'), maxLines: 1),
-                    ),
-                    const SizedBox(height: 26),
-
-                    AutoSizeText('${minutes ~/ 60}h ${minutes % 60}m',
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        style: TextStyle(
-                            fontSize: fontSz + 10,
-                            fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 6),
-                    AutoSizeText('${t('price')}: $priceStr',
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        style: TextStyle(
-                            fontSize: labelSz,
-                            fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 6),
-                    AutoSizeText(
-                        '${t('until')}: ${DateFormat('HH:mm', locale).format(finish)}',
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        style: TextStyle(
-                            fontSize: labelSz,
-                            fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 12),
-
-                    if (_loaded) ...[
-                      const SizedBox(height: 4),
-                      Column(
-                        children: (() {
-                          final sorted = _steps.entries.toList()
-                            ..sort((a, b) => a.key.compareTo(b.key));
-                          return sorted
-                              .map((e) => Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 2),
-                                    child: AutoSizeText(
-                                      '${_fmtMin(e.key)} - ${formatPrice((e.value / 100).toDouble(), locale)}',
-                                      maxLines: 1,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          fontSize: fontSz - 4),
-                                    ),
-                                  ))
-                              .toList();
-                        })(),
-                      ),
-                    ],
-
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: _totalSec > 0
-                          ? () {
-                              SoundHelper.playTap();
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => MowizSummaryPage(
-                                    plate   : widget.plate,
-                                    zone    : widget.zone,
-                                    start   : _now,
-                                    minutes : minutes,
-                                    price   : _totalCents / 100,
-                                    selectedCompany: widget.selectedCompany,
-                                  ),
+                              child: AutoSizeText(
+                                _blocks.isNotEmpty ? _fmtMin(_blocks[_currentTimeIndex]) : '0 min',
+                                style: TextStyle(
+                                  fontSize: bodyFontSize + 2,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                              );
-                            }
-                          : null,
-                      style: kMowizFilledButtonStyle.copyWith(
-                        minimumSize: const MaterialStatePropertyAll(
-                            Size(double.infinity, 50)),
-                        textStyle:
-                            MaterialStatePropertyAll(TextStyle(fontSize: fontSz)),
+                                maxLines: 1,
+                              ),
+                            ),
+                            SizedBox(width: spacing),
+                            timeNavigationButton(
+                              '+',
+                              _currentTimeIndex < _blocks.length - 1 ? _incrementTime : null,
+                              width,
+                            ),
+                          ],
+                        ),
+
+                      SizedBox(height: spacing),
+                      FilledButton(
+                        onPressed: _blocks.isNotEmpty ? _clear : null,
+                        style: MowizDesignSystem.getSecondaryButtonStyle(
+                          width: width,
+                          backgroundColor: Theme.of(context).colorScheme.secondary,
+                          foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                        ).copyWith(
+                          minimumSize: MaterialStatePropertyAll(Size(150, MowizDesignSystem.getSecondaryButtonHeight(width))),
+                        ),
+                        child: AutoSizeText(t('clear'), maxLines: 1),
                       ),
-                      child: AutoSizeText(t('continue'), maxLines: 1),
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      onPressed: () {
-                        SoundHelper.playTap();
-                        Navigator.of(context).pushAndRemoveUntil(
-                          MaterialPageRoute(
-                              builder: (_) => const MowizPayPage()),
-                          (_) => false,
-                        );
-                      },
-                      style: kMowizFilledButtonStyle.copyWith(
-                        minimumSize: const MaterialStatePropertyAll(
-                            Size(double.infinity, 46)),
-                        backgroundColor: MaterialStatePropertyAll(
-                            Theme.of(context).colorScheme.secondary),
+                      SizedBox(height: spacing * 1.5),
+
+                      AutoSizeText('${minutes ~/ 60}h ${minutes % 60}m',
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          style: TextStyle(
+                              fontSize: titleFontSize,
+                              fontWeight: FontWeight.bold)),
+                      SizedBox(height: MowizDesignSystem.spacingS),
+                      AutoSizeText('${t('price')}: $priceStr',
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          style: TextStyle(
+                              fontSize: labelFontSize,
+                              fontWeight: FontWeight.bold)),
+                      SizedBox(height: MowizDesignSystem.spacingS),
+                      AutoSizeText(
+                          '${t('until')}: ${DateFormat('HH:mm', locale).format(finish)}',
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          style: TextStyle(
+                              fontSize: labelFontSize,
+                              fontWeight: FontWeight.bold)),
+                      SizedBox(height: spacing),
+
+                      if (_loaded) ...[
+                        SizedBox(height: MowizDesignSystem.spacingS),
+                        Column(
+                          children: (() {
+                            final sorted = _steps.entries.toList()
+                              ..sort((a, b) => a.key.compareTo(b.key));
+                            return sorted
+                                .map((e) => Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 2),
+                                      child: AutoSizeText(
+                                        '${_fmtMin(e.key)} - ${formatPrice((e.value / 100).toDouble(), locale)}',
+                                        maxLines: 1,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(fontSize: bodyFontSize - 4),
+                                      ),
+                                    ))
+                                .toList();
+                          })(),
+                        ),
+                      ],
+
+                      SizedBox(height: spacing * 1.5),
+                      FilledButton(
+                        onPressed: _totalSec > 0
+                            ? () {
+                                SoundHelper.playTap();
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => MowizSummaryPage(
+                                      plate   : widget.plate,
+                                      zone    : widget.zone,
+                                      start   : _now,
+                                      minutes : minutes,
+                                      price   : _totalCents / 100,
+                                      selectedCompany: widget.selectedCompany,
+                                    ),
+                                  ),
+                                );
+                              }
+                            : null,
+                        style: MowizDesignSystem.getPrimaryButtonStyle(
+                          width: width,
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                        child: AutoSizeText(t('continue'), maxLines: 1),
                       ),
-                      child: AutoSizeText(t('back'), maxLines: 1),
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      onPressed: () async {
+                      SizedBox(height: spacing),
+                      FilledButton(
+                        onPressed: () {
+                          SoundHelper.playTap();
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                                builder: (_) => const MowizPayPage()),
+                            (_) => false,
+                          );
+                        },
+                        style: MowizDesignSystem.getSecondaryButtonStyle(
+                          width: width,
+                          backgroundColor: Theme.of(context).colorScheme.secondary,
+                          foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                        ),
+                        child: AutoSizeText(t('back'), maxLines: 1),
+                      ),
+                      SizedBox(height: spacing),
+                      FilledButton(
+                        onPressed: () async {
                         SoundHelper.playTap();
                         
                         try {
@@ -454,27 +463,26 @@ class _MowizTimePageState extends State<MowizTimePage> {
                             ),
                           );
                         }
-                      },
-                      style: kMowizFilledButtonStyle.copyWith(
-                        minimumSize: const MaterialStatePropertyAll(
-                            Size(double.infinity, 46)),
-                        backgroundColor: MaterialStatePropertyAll(
-                            Theme.of(context).colorScheme.secondary),
+                        },
+                        style: MowizDesignSystem.getSecondaryButtonStyle(
+                          width: width,
+                          backgroundColor: Theme.of(context).colorScheme.secondary,
+                          foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                        ),
+                        child: AutoSizeText(t('scanQrButton'), maxLines: 1),
                       ),
-                      child: AutoSizeText(t('scanQrButton'), maxLines: 1),
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      onPressed: () => _showManualCodeDialog(),
-                      style: kMowizFilledButtonStyle.copyWith(
-                        minimumSize: const MaterialStatePropertyAll(
-                            Size(double.infinity, 46)),
-                        backgroundColor: MaterialStatePropertyAll(
-                            Theme.of(context).colorScheme.tertiary),
+                      SizedBox(height: spacing),
+                      FilledButton(
+                        onPressed: () => _showManualCodeDialog(),
+                        style: MowizDesignSystem.getSecondaryButtonStyle(
+                          width: width,
+                          backgroundColor: Theme.of(context).colorScheme.tertiary,
+                          foregroundColor: Theme.of(context).colorScheme.onTertiary,
+                        ),
+                        child: AutoSizeText('Introducir código manualmente', maxLines: 1),
                       ),
-                      child: AutoSizeText('Introducir código manualmente', maxLines: 1),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

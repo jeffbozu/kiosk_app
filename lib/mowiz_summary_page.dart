@@ -204,6 +204,7 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
                           builder: (_) => MowizTimePage(
                             zone: widget.zone,
                             plate: widget.plate,
+                            selectedCompany: null, // EYPSA por defecto
                           ),
                         ),
                         (route) => false,

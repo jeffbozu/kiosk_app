@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'modern_language_selector.dart';
 import 'theme_mode_button.dart';
 import 'l10n/app_localizations.dart';
-import 'mowiz_pay_page.dart';
+import 'company_selection_page.dart';
 import 'mowiz_cancel_page.dart';
 import 'home_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
@@ -58,7 +58,7 @@ class MowizPage extends StatelessWidget {
                 SoundHelper.playTap();
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => const MowizPayPage(),
+                    builder: (_) => const CompanySelectionPage(),
                   ),
                 );
               },

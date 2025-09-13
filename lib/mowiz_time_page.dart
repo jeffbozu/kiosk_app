@@ -31,7 +31,8 @@ String formatPrice(double price, String locale) {
 class MowizTimePage extends StatefulWidget {
   final String zone;
   final String plate;
-  const MowizTimePage({super.key, required this.zone, required this.plate});
+  final String? selectedCompany;
+  const MowizTimePage({super.key, required this.zone, required this.plate, this.selectedCompany});
 
   @override
   State<MowizTimePage> createState() => _MowizTimePageState();
@@ -72,10 +73,18 @@ class _MowizTimePageState extends State<MowizTimePage> {
       _loaded = false;
     });
 
-    final url =
-        '${ConfigService.apiBaseUrl}/v1/onstreet-service/product/by-zone/${widget.zone}&plate=${widget.plate}';
+    // 🎯 Determinar URL según la empresa seleccionada
+    String apiUrl;
+    if (widget.selectedCompany == 'MOWIZ') {
+      // MOWIZ usa la rama tariff2 con tarifas diferentes
+      apiUrl = 'https://tariff2.onrender.com/v1/onstreet-service/product/by-zone/${widget.zone}&plate=${widget.plate}';
+    } else {
+      // EYPSA usa la rama main (por defecto)
+      apiUrl = '${ConfigService.apiBaseUrl}/v1/onstreet-service/product/by-zone/${widget.zone}&plate=${widget.plate}';
+    }
+
     try {
-      final res = await http.get(Uri.parse(url));
+      final res = await http.get(Uri.parse(apiUrl));
       if (res.statusCode == 200) {
         final body = jsonDecode(res.body) as List;
         if (body.isNotEmpty) {

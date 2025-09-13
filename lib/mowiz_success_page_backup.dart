@@ -164,7 +164,6 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
   /// Obtiene el nombre de la zona según el ID
   String _getZoneName(String zoneId, Function t) {
     print('🐛 DEBUG: Zone ID recibido en _getZoneName: "$zoneId"');
-    print('🐛 DEBUG: Widget.zone en MowizSuccessPage: "${widget.zone}"');
     switch (zoneId) {
       case 'green':
         return t('zoneGreen');

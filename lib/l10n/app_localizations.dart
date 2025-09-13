@@ -113,6 +113,11 @@ class AppLocalizations {
       'sendSuccess': '¡Enviado exitosamente!',
       'sendError': 'Error al enviar',
       'retry': 'Reintentar',
+      // NUEVAS TRADUCCIONES PARA SELECCIÓN DE EMPRESA
+      'selectCompany': 'Selecciona empresa',
+      'chooseCompanyDescription': 'Elige la empresa para cargar las zonas disponibles',
+      'eypsaDescription': 'Sistema de estacionamiento EYPSA',
+      'mowizDescription': 'Sistema de estacionamiento MOWIZ',
     },
     'ca': {
       'welcome': 'Benvingut a Meypar Optima App',
@@ -212,6 +217,11 @@ class AppLocalizations {
       'sendSuccess': 'Enviat amb èxit!',
       'sendError': 'Error en enviar',
       'retry': 'Tornar a intentar',
+      // NUEVAS TRADUCCIONES PARA SELECCIÓN DE EMPRESA
+      'selectCompany': 'Selecciona empresa',
+      'chooseCompanyDescription': 'Tria l\'empresa per carregar les zones disponibles',
+      'eypsaDescription': 'Sistema d\'estacionament EYPSA',
+      'mowizDescription': 'Sistema d\'estacionament MOWIZ',
     },
     'en': {
       'welcome': 'Welcome to Meypar Optima App',
@@ -311,6 +321,11 @@ class AppLocalizations {
       'sendSuccess': 'Sent successfully!',
       'sendError': 'Error sending',
       'retry': 'Retry',
+      // NUEVAS TRADUCCIONES PARA SELECCIÓN DE EMPRESA
+      'selectCompany': 'Select company',
+      'chooseCompanyDescription': 'Choose the company to load available zones',
+      'eypsaDescription': 'EYPSA parking system',
+      'mowizDescription': 'MOWIZ parking system',
     },
   };
 

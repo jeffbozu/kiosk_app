@@ -20,7 +20,9 @@ class _ZoneData {
 }
 
 class MowizPayPage extends StatefulWidget {
-  const MowizPayPage({super.key});
+  final String? selectedCompany;
+  
+  const MowizPayPage({super.key, this.selectedCompany});
 
   @override
   State<MowizPayPage> createState() => _MowizPayPageState();
@@ -45,10 +47,19 @@ class _MowizPayPageState extends State<MowizPayPage> {
       _selectedZone = null;
       _loadingZones = true;
     });
+    
     try {
-      final res = await http.get(
-        Uri.parse('${ConfigService.apiBaseUrl}/v1/onstreet-service/zones'),
-      );
+      // 🎯 Determinar URL según la empresa seleccionada
+      String apiUrl;
+      if (widget.selectedCompany == 'MOWIZ') {
+        // MOWIZ usa la rama tariff2 con zonas diferentes
+        apiUrl = 'https://tariff2.onrender.com/v1/onstreet-service/zones';
+      } else {
+        // EYPSA usa la rama main (por defecto)
+        apiUrl = '${ConfigService.apiBaseUrl}/v1/onstreet-service/zones';
+      }
+      
+      final res = await http.get(Uri.parse(apiUrl));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as List;
         _zones = data
@@ -88,7 +99,7 @@ class _MowizPayPageState extends State<MowizPayPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return MowizScaffold(
-      title: 'MeyPark - ${t('selectZone')}',
+      title: 'MeyPark - ${widget.selectedCompany ?? 'EYPSA'} - ${t('selectZone')}',
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -110,6 +121,7 @@ class _MowizPayPageState extends State<MowizPayPage> {
               return FilledButton(
                 onPressed: () {
                   SoundHelper.playTap();
+                  print('🐛 DEBUG: Zona seleccionada - ID: "$value", Nombre: "$text"');
                   setState(() => _selectedZone = value);
                 },
                 style: kMowizFilledButtonStyle.copyWith(
@@ -194,11 +206,13 @@ class _MowizPayPageState extends State<MowizPayPage> {
                         onPressed: _confirmEnabled
                             ? () {
                                 SoundHelper.playTap();
+                                print('🐛 DEBUG: Navegando a MowizTimePage con zone: "$_selectedZone"');
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (_) => MowizTimePage(
                                       zone: _selectedZone!,
                                       plate: _plateCtrl.text.trim(),
+                                      selectedCompany: widget.selectedCompany,
                                     ),
                                   ),
                                 );

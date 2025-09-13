@@ -543,9 +543,9 @@ class _MowizTimePageState extends State<MowizTimePage> {
     } else if (code.startsWith('-')) {
       // Procesar descuento numérico
       final cleanCode = code.substring(1).replaceAll(',', '.');
-      discount = double.tryParse(cleanCode);
-      if (discount != null) {
-        discount = -discount; // Hacer negativo
+      final parsedDiscount = double.tryParse(cleanCode);
+      if (parsedDiscount != null) {
+        discount = -parsedDiscount; // Hacer negativo
       }
     }
     
@@ -571,7 +571,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
       print('DEBUG MANUAL FREE after setState: _totalCents=$_totalCents, _discountEurosApplied=$_discountEurosApplied');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Descuento FREE aplicado: ${formatPrice(originalPrice.toDouble(), locale)} - Precio final: ${formatPrice(0.0, locale)}'),
+          content: Text('Descuento FREE aplicado: ${formatPrice(originalPrice, locale)} - Precio final: ${formatPrice(0.0, locale)}'),
           backgroundColor: Colors.green,
         ),
       );
@@ -586,7 +586,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
           _discountEurosApplied = (_totalCents / 100) - discount;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Descuento aplicado: ${formatPrice(discount.toDouble(), locale)} - Precio final: ${formatPrice(0.0, locale)}'),
+              content: Text('Descuento aplicado: ${formatPrice(discount, locale)} - Precio final: ${formatPrice(0.0, locale)}'),
               backgroundColor: Colors.green,
             ),
           );
@@ -595,7 +595,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
           _discountEurosApplied = discount;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Descuento aplicado: ${formatPrice(discount.toDouble(), locale)} - Precio final: ${formatPrice((newTotalCents / 100).toDouble(), locale)}'),
+              content: Text('Descuento aplicado: ${formatPrice(discount, locale)} - Precio final: ${formatPrice((newTotalCents / 100).toDouble(), locale)}'),
               backgroundColor: Colors.green,
             ),
           );

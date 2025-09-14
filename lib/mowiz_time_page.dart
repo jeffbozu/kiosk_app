@@ -344,7 +344,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                                       zone    : widget.zone,
                                       start   : _now,
                                       minutes : minutes,
-                                      price   : _totalCents / 100,
+                                      price   : effectivePrice.toDouble(),
                                       selectedCompany: widget.selectedCompany,
                                     ),
                                   ),

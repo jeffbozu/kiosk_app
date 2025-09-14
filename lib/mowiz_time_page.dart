@@ -213,7 +213,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
             child: Center(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: MowizDesignSystem.maxContentWidth,
+                  maxWidth: MowizDesignSystem.getContentWidth(width),
                   minWidth: MowizDesignSystem.minContentWidth,
                 ),
                 child: Padding(
@@ -235,38 +235,77 @@ class _MowizTimePageState extends State<MowizTimePage> {
                       if (!_loaded)
                         const Center(child: CircularProgressIndicator())
                       else
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            timeNavigationButton(
-                              '-',
-                              _currentTimeIndex > 0 ? _decrementTime : null,
-                              width,
-                            ),
-                            SizedBox(width: spacing),
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: spacing, vertical: MowizDesignSystem.paddingM),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Theme.of(context).colorScheme.outline),
-                                borderRadius: BorderRadius.circular(MowizDesignSystem.borderRadiusM),
-                              ),
-                              child: AutoSizeText(
-                                _blocks.isNotEmpty ? _fmtMin(_blocks[_currentTimeIndex]) : '0 min',
-                                style: TextStyle(
-                                  fontSize: bodyFontSize + 2,
-                                  fontWeight: FontWeight.bold,
+                        MowizDesignSystem.isKiosk(width) 
+                          ? Column(
+                              children: [
+                                // Layout vertical para aparcímetro
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: spacing, vertical: MowizDesignSystem.paddingL),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Theme.of(context).colorScheme.outline),
+                                    borderRadius: BorderRadius.circular(MowizDesignSystem.borderRadiusL),
+                                  ),
+                                  child: AutoSizeText(
+                                    _blocks.isNotEmpty ? _fmtMin(_blocks[_currentTimeIndex]) : '0 min',
+                                    style: TextStyle(
+                                      fontSize: bodyFontSize + 4,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    textAlign: TextAlign.center,
+                                  ),
                                 ),
-                                maxLines: 1,
-                              ),
+                                SizedBox(height: spacing),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    timeNavigationButton(
+                                      '-',
+                                      _currentTimeIndex > 0 ? _decrementTime : null,
+                                      width,
+                                    ),
+                                    SizedBox(width: spacing * 2),
+                                    timeNavigationButton(
+                                      '+',
+                                      _currentTimeIndex < _blocks.length - 1 ? _incrementTime : null,
+                                      width,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                timeNavigationButton(
+                                  '-',
+                                  _currentTimeIndex > 0 ? _decrementTime : null,
+                                  width,
+                                ),
+                                SizedBox(width: spacing),
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: spacing, vertical: MowizDesignSystem.paddingM),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Theme.of(context).colorScheme.outline),
+                                    borderRadius: BorderRadius.circular(MowizDesignSystem.borderRadiusM),
+                                  ),
+                                  child: AutoSizeText(
+                                    _blocks.isNotEmpty ? _fmtMin(_blocks[_currentTimeIndex]) : '0 min',
+                                    style: TextStyle(
+                                      fontSize: bodyFontSize + 2,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                  ),
+                                ),
+                                SizedBox(width: spacing),
+                                timeNavigationButton(
+                                  '+',
+                                  _currentTimeIndex < _blocks.length - 1 ? _incrementTime : null,
+                                  width,
+                                ),
+                              ],
                             ),
-                            SizedBox(width: spacing),
-                            timeNavigationButton(
-                              '+',
-                              _currentTimeIndex < _blocks.length - 1 ? _incrementTime : null,
-                              width,
-                            ),
-                          ],
-                        ),
 
                       SizedBox(height: spacing),
                       FilledButton(

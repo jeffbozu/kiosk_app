@@ -144,7 +144,7 @@ class _MowizPayPageState extends State<MowizPayPage> {
               child: Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    maxWidth: MowizDesignSystem.maxContentWidth,
+                    maxWidth: MowizDesignSystem.getContentWidth(width),
                     minWidth: MowizDesignSystem.minContentWidth,
                   ),
                   child: Padding(
@@ -168,21 +168,36 @@ class _MowizPayPageState extends State<MowizPayPage> {
                         else
                           Builder(
                             builder: (context) {
-                              final count = _zones.length.clamp(1, 3);
-                              final btnWidth = (contentWidth - spacing * (count - 1)) / count;
-                              return Wrap(
-                                spacing: spacing,
-                                runSpacing: spacing,
-                                alignment: WrapAlignment.center,
-                                children: _zones
-                                    .map(
-                                      (z) => SizedBox(
-                                        width: btnWidth,
-                                        child: zoneButton(z.id, z.name, z.color),
-                                      ),
-                                    )
-                                    .toList(),
-                              );
+                              if (MowizDesignSystem.isKiosk(width)) {
+                                // Layout vertical para aparcímetro (botones apilados)
+                                return Column(
+                                  children: _zones
+                                      .map(
+                                        (z) => Padding(
+                                          padding: EdgeInsets.only(bottom: spacing * 0.5),
+                                          child: zoneButton(z.id, z.name, z.color),
+                                        ),
+                                      )
+                                      .toList(),
+                                );
+                              } else {
+                                // Layout horizontal para otras pantallas
+                                final count = _zones.length.clamp(1, 3);
+                                final btnWidth = (contentWidth - spacing * (count - 1)) / count;
+                                return Wrap(
+                                  spacing: spacing,
+                                  runSpacing: spacing,
+                                  alignment: WrapAlignment.center,
+                                  children: _zones
+                                      .map(
+                                        (z) => SizedBox(
+                                          width: btnWidth,
+                                          child: zoneButton(z.id, z.name, z.color),
+                                        ),
+                                      )
+                                      .toList(),
+                                );
+                              }
                             },
                           ),
                         SizedBox(height: spacing),

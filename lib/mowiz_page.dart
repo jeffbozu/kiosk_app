@@ -115,16 +115,26 @@ class MowizPage extends StatelessWidget {
             );
 
             // 🎨 Usar layout responsive del sistema de diseño
-            final mainButtons = MowizDesignSystem.getButtonLayout(
-              width: width,
-              buttons: [payBtn, cancelBtn],
-              spacing: spacing,
-            );
+            Widget mainButtons;
+            if (MowizDesignSystem.isKiosk(width)) {
+              // Layout específico para aparcímetro (botones centrados y grandes)
+              mainButtons = MowizDesignSystem.getKioskLayout(
+                buttons: [payBtn, cancelBtn],
+                spacing: spacing,
+              );
+            } else {
+              // Layout responsive normal
+              mainButtons = MowizDesignSystem.getButtonLayout(
+                width: width,
+                buttons: [payBtn, cancelBtn],
+                spacing: spacing,
+              );
+            }
 
             return Center(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: MowizDesignSystem.maxContentWidth,
+                  maxWidth: MowizDesignSystem.getContentWidth(width),
                   minWidth: MowizDesignSystem.minContentWidth,
                   minHeight: height,
                 ),

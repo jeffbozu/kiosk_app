@@ -615,8 +615,12 @@ class _HomePageState extends State<HomePage> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _canDecreaseDuration 
                                 ? const Color(0xFFE62144) 
-                                : Colors.grey,
+                                : Colors.grey.withOpacity(0.3),
+                            foregroundColor: _canDecreaseDuration 
+                                ? Colors.white 
+                                : Colors.white.withOpacity(0.5),
                             shape: const CircleBorder(),
+                            elevation: _canDecreaseDuration ? 2 : 0,
                           ),
                           child: const Icon(Icons.remove, color: Colors.white),
                         ),
@@ -641,8 +645,12 @@ class _HomePageState extends State<HomePage> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _canIncreaseDuration 
                                 ? const Color(0xFFE62144) 
-                                : Colors.grey,
+                                : Colors.grey.withOpacity(0.3),
+                            foregroundColor: _canIncreaseDuration 
+                                ? Colors.white 
+                                : Colors.white.withOpacity(0.5),
                             shape: const CircleBorder(),
+                            elevation: _canIncreaseDuration ? 2 : 0,
                           ),
                           child: const Icon(Icons.add, color: Colors.white),
                         ),
@@ -674,12 +682,15 @@ class _HomePageState extends State<HomePage> {
                   SizedBox(height: spacing * 1.5),
                   FilledButton(
                     onPressed: allReady ? _confirmAndPay : null,
-                    style: MowizDesignSystem.getPrimaryButtonStyle(
+                    style: MowizDesignSystem.getSmartWidthButtonStyle(
                       width: width,
                       backgroundColor: allReady 
                           ? const Color(0xFFE62144) 
                           : Colors.grey,
                       foregroundColor: Colors.white,
+                      text: AppLocalizations.of(context).t('pay'),
+                      isPrimary: true,
+                      isEnabled: allReady,
                     ),
                     child: _saving
                         ? SizedBox(
@@ -695,14 +706,15 @@ class _HomePageState extends State<HomePage> {
                           ),
                   ),
                   SizedBox(height: spacing * 0.5),
-                  TextButton(
+                  FilledButton(
                     onPressed: _refreshPage,
-                    style: TextButton.styleFrom(
-                      minimumSize: Size.fromHeight(MowizDesignSystem.getSecondaryButtonHeight(width)),
-                      textStyle: TextStyle(
-                        fontSize: bodyFontSize,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    style: MowizDesignSystem.getSmartWidthButtonStyle(
+                      width: width,
+                      backgroundColor: const Color(0xFF7F7F7F),
+                      foregroundColor: Colors.white,
+                      text: AppLocalizations.of(context).t('cancel'),
+                      isPrimary: false,
+                      isEnabled: true,
                     ),
                     child: Text(AppLocalizations.of(context).t('cancel')),
                   ),
@@ -715,10 +727,13 @@ class _HomePageState extends State<HomePage> {
                         ),
                       );
                     },
-                    style: MowizDesignSystem.getPrimaryButtonStyle(
+                    style: MowizDesignSystem.getSmartWidthButtonStyle(
                       width: width,
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Colors.white,
+                      text: 'MOWIZ',
+                      isPrimary: true,
+                      isEnabled: true,
                     ),
                     child: Text(
                       'MOWIZ',

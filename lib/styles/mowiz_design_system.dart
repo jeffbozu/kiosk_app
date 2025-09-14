@@ -196,10 +196,21 @@ class MowizDesignSystem {
     required double width,
     required Color backgroundColor,
     required Color foregroundColor,
+    bool isEnabled = true,
   }) {
     return ButtonStyle(
-      backgroundColor: MaterialStatePropertyAll(backgroundColor),
-      foregroundColor: MaterialStatePropertyAll(foregroundColor),
+      backgroundColor: MaterialStateProperty.resolveWith((states) {
+        if (states.contains(MaterialState.disabled)) {
+          return backgroundColor.withOpacity(0.3);
+        }
+        return backgroundColor;
+      }),
+      foregroundColor: MaterialStateProperty.resolveWith((states) {
+        if (states.contains(MaterialState.disabled)) {
+          return foregroundColor.withOpacity(0.5);
+        }
+        return foregroundColor;
+      }),
       minimumSize: MaterialStatePropertyAll(
         Size(double.infinity, getPrimaryButtonHeight(width))
       ),
@@ -217,7 +228,12 @@ class MowizDesignSystem {
           fontWeight: FontWeight.w600,
         ),
       ),
-      elevation: MaterialStatePropertyAll(2),
+      elevation: MaterialStateProperty.resolveWith((states) {
+        if (states.contains(MaterialState.disabled)) {
+          return 0;
+        }
+        return 2;
+      }),
     );
   }
   
@@ -226,10 +242,21 @@ class MowizDesignSystem {
     required double width,
     required Color backgroundColor,
     required Color foregroundColor,
+    bool isEnabled = true,
   }) {
     return ButtonStyle(
-      backgroundColor: MaterialStatePropertyAll(backgroundColor),
-      foregroundColor: MaterialStatePropertyAll(foregroundColor),
+      backgroundColor: MaterialStateProperty.resolveWith((states) {
+        if (states.contains(MaterialState.disabled)) {
+          return backgroundColor.withOpacity(0.3);
+        }
+        return backgroundColor;
+      }),
+      foregroundColor: MaterialStateProperty.resolveWith((states) {
+        if (states.contains(MaterialState.disabled)) {
+          return foregroundColor.withOpacity(0.5);
+        }
+        return foregroundColor;
+      }),
       minimumSize: MaterialStatePropertyAll(
         Size(double.infinity, getSecondaryButtonHeight(width))
       ),
@@ -247,7 +274,64 @@ class MowizDesignSystem {
           fontWeight: FontWeight.w500,
         ),
       ),
-      elevation: MaterialStatePropertyAll(1),
+      elevation: MaterialStateProperty.resolveWith((states) {
+        if (states.contains(MaterialState.disabled)) {
+          return 0;
+        }
+        return 1;
+      }),
+    );
+  }
+
+  /// Obtiene el estilo para botones con ancho inteligente (proporcional al texto)
+  static ButtonStyle getSmartWidthButtonStyle({
+    required double width,
+    required Color backgroundColor,
+    required Color foregroundColor,
+    required String text,
+    bool isPrimary = true,
+    bool isEnabled = true,
+  }) {
+    // Calcular ancho mínimo basado en el texto
+    final textLength = text.length;
+    final minWidth = (textLength * 12.0).clamp(120.0, 300.0); // Ancho mínimo inteligente
+    
+    return ButtonStyle(
+      backgroundColor: MaterialStateProperty.resolveWith((states) {
+        if (states.contains(MaterialState.disabled)) {
+          return backgroundColor.withOpacity(0.3);
+        }
+        return backgroundColor;
+      }),
+      foregroundColor: MaterialStateProperty.resolveWith((states) {
+        if (states.contains(MaterialState.disabled)) {
+          return foregroundColor.withOpacity(0.5);
+        }
+        return foregroundColor;
+      }),
+      minimumSize: MaterialStatePropertyAll(
+        Size(minWidth, isPrimary ? getPrimaryButtonHeight(width) : getSecondaryButtonHeight(width))
+      ),
+      padding: MaterialStatePropertyAll(
+        EdgeInsets.symmetric(horizontal: getPadding(width) * 0.8)
+      ),
+      shape: MaterialStatePropertyAll(
+        RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(isPrimary ? borderRadiusXXL : borderRadiusL),
+        ),
+      ),
+      textStyle: MaterialStatePropertyAll(
+        TextStyle(
+          fontSize: getBodyFontSize(width),
+          fontWeight: isPrimary ? FontWeight.w600 : FontWeight.w500,
+        ),
+      ),
+      elevation: MaterialStateProperty.resolveWith((states) {
+        if (states.contains(MaterialState.disabled)) {
+          return 0;
+        }
+        return isPrimary ? 2 : 1;
+      }),
     );
   }
 
@@ -340,10 +424,21 @@ class MowizDesignSystem {
     required Color backgroundColor,
     required Color foregroundColor,
     bool isPrimary = true,
+    bool isEnabled = true,
   }) {
     return ButtonStyle(
-      backgroundColor: MaterialStatePropertyAll(backgroundColor),
-      foregroundColor: MaterialStatePropertyAll(foregroundColor),
+      backgroundColor: MaterialStateProperty.resolveWith((states) {
+        if (states.contains(MaterialState.disabled)) {
+          return backgroundColor.withOpacity(0.3);
+        }
+        return backgroundColor;
+      }),
+      foregroundColor: MaterialStateProperty.resolveWith((states) {
+        if (states.contains(MaterialState.disabled)) {
+          return foregroundColor.withOpacity(0.5);
+        }
+        return foregroundColor;
+      }),
       minimumSize: MaterialStatePropertyAll(
         Size(double.infinity, isPrimary ? kioskPrimaryButtonHeight : kioskSecondaryButtonHeight)
       ),
@@ -361,7 +456,12 @@ class MowizDesignSystem {
           fontWeight: FontWeight.w600,
         ),
       ),
-      elevation: MaterialStatePropertyAll(3),
+      elevation: MaterialStateProperty.resolveWith((states) {
+        if (states.contains(MaterialState.disabled)) {
+          return 0;
+        }
+        return 3;
+      }),
     );
   }
   

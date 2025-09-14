@@ -122,12 +122,15 @@ class _MowizPayPageState extends State<MowizPayPage> {
                   print('🐛 DEBUG: Zona seleccionada - ID: "$value", Nombre: "$text"');
                   setState(() => _selectedZone = value);
                 },
-                style: MowizDesignSystem.getPrimaryButtonStyle(
+                style: MowizDesignSystem.getSmartWidthButtonStyle(
                   width: width,
                   backgroundColor: _selectedZone == value ? color : colorScheme.secondary,
                   foregroundColor: _selectedZone == value 
                     ? Colors.white 
                     : colorScheme.onSecondary,
+                  text: text,
+                  isPrimary: true,
+                  isEnabled: true,
                 ),
                 child: AutoSizeText(
                   text,
@@ -228,10 +231,13 @@ class _MowizPayPageState extends State<MowizPayPage> {
                                   );
                                 }
                               : null,
-                          style: MowizDesignSystem.getPrimaryButtonStyle(
+                          style: MowizDesignSystem.getSmartWidthButtonStyle(
                             width: width,
                             backgroundColor: Theme.of(context).colorScheme.primary,
                             foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                            text: t('confirm'),
+                            isPrimary: true,
+                            isEnabled: _confirmEnabled,
                           ),
                           child: AutoSizeText(
                             t('confirm'),
@@ -248,10 +254,13 @@ class _MowizPayPageState extends State<MowizPayPage> {
                               (route) => false,
                             );
                           },
-                          style: MowizDesignSystem.getSecondaryButtonStyle(
+                          style: MowizDesignSystem.getSmartWidthButtonStyle(
                             width: width,
                             backgroundColor: Theme.of(context).colorScheme.secondary,
                             foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                            text: t('back'),
+                            isPrimary: false,
+                            isEnabled: true,
                           ),
                           child: AutoSizeText(
                             t('back'),

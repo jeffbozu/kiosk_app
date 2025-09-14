@@ -163,10 +163,13 @@ class _CompanySelectionPageState extends State<CompanySelectionPage>
                               SoundHelper.playTap();
                               Navigator.of(context).pop();
                             },
-                            style: MowizDesignSystem.getSecondaryButtonStyle(
+                            style: MowizDesignSystem.getSmartWidthButtonStyle(
                               width: width,
                               backgroundColor: colorScheme.surface,
                               foregroundColor: colorScheme.onSurface,
+                              text: t('back'),
+                              isPrimary: false,
+                              isEnabled: true,
                             ).copyWith(
                               side: MaterialStatePropertyAll(
                                 BorderSide(
@@ -208,10 +211,13 @@ class _CompanySelectionPageState extends State<CompanySelectionPage>
   }) {
     return FilledButton(
       onPressed: onTap,
-      style: MowizDesignSystem.getPrimaryButtonStyle(
+      style: MowizDesignSystem.getSmartWidthButtonStyle(
         width: width,
         backgroundColor: color,
         foregroundColor: Colors.white,
+        text: title,
+        isPrimary: true,
+        isEnabled: true,
       ).copyWith(
         padding: MaterialStatePropertyAll(
           EdgeInsets.symmetric(

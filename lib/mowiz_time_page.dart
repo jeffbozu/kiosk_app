@@ -173,23 +173,20 @@ class _MowizTimePageState extends State<MowizTimePage> {
 
     /* ---- time navigation buttons ---- */
     
-    Widget timeNavigationButton(String text, VoidCallback? onPressed, double width) => SizedBox(
-          width: 80,
-          height: MowizDesignSystem.getSecondaryButtonHeight(width),
-          child: ElevatedButton(
-            style: MowizDesignSystem.getSecondaryButtonStyle(
-              width: width,
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            ).copyWith(
-              minimumSize: MaterialStatePropertyAll(Size(80, MowizDesignSystem.getSecondaryButtonHeight(width))),
-            ),
-            onPressed: onPressed != null ? () {
-              SoundHelper.playTap();
-              onPressed();
-            } : null,
-            child: AutoSizeText(text, maxLines: 1),
+    Widget timeNavigationButton(String text, VoidCallback? onPressed, double width) => ElevatedButton(
+          style: MowizDesignSystem.getSmartWidthButtonStyle(
+            width: width,
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            text: text,
+            isPrimary: false,
+            isEnabled: onPressed != null,
           ),
+          onPressed: onPressed != null ? () {
+            SoundHelper.playTap();
+            onPressed();
+          } : null,
+          child: AutoSizeText(text, maxLines: 1),
         );
 
     return MowizScaffold(
@@ -207,18 +204,19 @@ class _MowizTimePageState extends State<MowizTimePage> {
           final bodyFontSize = MowizDesignSystem.getBodyFontSize(width);
           final labelFontSize = MowizDesignSystem.getSubtitleFontSize(width);
 
-          return MowizDesignSystem.getScrollableContent(
-            availableHeight: height,
-            contentHeight: 800, // Altura estimada del contenido
-            child: Center(
+          if (MowizDesignSystem.isKiosk(width)) {
+            // Layout específico para aparcímetro - aprovechar toda la altura
+            return Center(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
                   maxWidth: MowizDesignSystem.getContentWidth(width),
                   minWidth: MowizDesignSystem.minContentWidth,
+                  minHeight: height,
                 ),
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: MowizDesignSystem.paddingM),
+                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       AutoSizeText(
@@ -238,24 +236,24 @@ class _MowizTimePageState extends State<MowizTimePage> {
                         MowizDesignSystem.isKiosk(width) 
                           ? Column(
                               children: [
-                                // Layout vertical para aparcímetro
+                                // Layout vertical para aparcímetro - más compacto
                                 Container(
-                                  padding: EdgeInsets.symmetric(horizontal: spacing, vertical: MowizDesignSystem.paddingL),
+                                  padding: EdgeInsets.symmetric(horizontal: spacing * 2, vertical: MowizDesignSystem.paddingXL),
                                   decoration: BoxDecoration(
-                                    border: Border.all(color: Theme.of(context).colorScheme.outline),
-                                    borderRadius: BorderRadius.circular(MowizDesignSystem.borderRadiusL),
+                                    border: Border.all(color: Theme.of(context).colorScheme.outline, width: 2),
+                                    borderRadius: BorderRadius.circular(MowizDesignSystem.borderRadiusXL),
                                   ),
                                   child: AutoSizeText(
                                     _blocks.isNotEmpty ? _fmtMin(_blocks[_currentTimeIndex]) : '0 min',
                                     style: TextStyle(
-                                      fontSize: bodyFontSize + 4,
+                                      fontSize: bodyFontSize + 8, // Texto más grande
                                       fontWeight: FontWeight.bold,
                                     ),
                                     maxLines: 1,
                                     textAlign: TextAlign.center,
                                   ),
                                 ),
-                                SizedBox(height: spacing),
+                                SizedBox(height: spacing * 0.5),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
@@ -264,7 +262,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                                       _currentTimeIndex > 0 ? _decrementTime : null,
                                       width,
                                     ),
-                                    SizedBox(width: spacing * 2),
+                                    SizedBox(width: spacing * 3),
                                     timeNavigationButton(
                                       '+',
                                       _currentTimeIndex < _blocks.length - 1 ? _incrementTime : null,
@@ -310,12 +308,13 @@ class _MowizTimePageState extends State<MowizTimePage> {
                       SizedBox(height: spacing),
                       FilledButton(
                         onPressed: _blocks.isNotEmpty ? _clear : null,
-                        style: MowizDesignSystem.getSecondaryButtonStyle(
+                        style: MowizDesignSystem.getSmartWidthButtonStyle(
                           width: width,
                           backgroundColor: Theme.of(context).colorScheme.secondary,
                           foregroundColor: Theme.of(context).colorScheme.onSecondary,
-                        ).copyWith(
-                          minimumSize: MaterialStatePropertyAll(Size(150, MowizDesignSystem.getSecondaryButtonHeight(width))),
+                          text: t('clear'),
+                          isPrimary: false,
+                          isEnabled: _blocks.isNotEmpty,
                         ),
                         child: AutoSizeText(t('clear'), maxLines: 1),
                       ),
@@ -384,10 +383,13 @@ class _MowizTimePageState extends State<MowizTimePage> {
                                 );
                               }
                             : null,
-                        style: MowizDesignSystem.getPrimaryButtonStyle(
+                        style: MowizDesignSystem.getSmartWidthButtonStyle(
                           width: width,
                           backgroundColor: Theme.of(context).colorScheme.primary,
                           foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                          text: t('continue'),
+                          isPrimary: true,
+                          isEnabled: _totalSec > 0,
                         ),
                         child: AutoSizeText(t('continue'), maxLines: 1),
                       ),
@@ -401,10 +403,13 @@ class _MowizTimePageState extends State<MowizTimePage> {
                             (_) => false,
                           );
                         },
-                        style: MowizDesignSystem.getSecondaryButtonStyle(
+                        style: MowizDesignSystem.getSmartWidthButtonStyle(
                           width: width,
                           backgroundColor: Theme.of(context).colorScheme.secondary,
                           foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                          text: t('back'),
+                          isPrimary: false,
+                          isEnabled: true,
                         ),
                         child: AutoSizeText(t('back'), maxLines: 1),
                       ),
@@ -503,20 +508,26 @@ class _MowizTimePageState extends State<MowizTimePage> {
                           );
                         }
                         },
-                        style: MowizDesignSystem.getSecondaryButtonStyle(
+                        style: MowizDesignSystem.getSmartWidthButtonStyle(
                           width: width,
                           backgroundColor: Theme.of(context).colorScheme.secondary,
                           foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                          text: t('scanQrButton'),
+                          isPrimary: false,
+                          isEnabled: true,
                         ),
                         child: AutoSizeText(t('scanQrButton'), maxLines: 1),
                       ),
                       SizedBox(height: spacing),
                       FilledButton(
                         onPressed: () => _showManualCodeDialog(),
-                        style: MowizDesignSystem.getSecondaryButtonStyle(
+                        style: MowizDesignSystem.getSmartWidthButtonStyle(
                           width: width,
                           backgroundColor: Theme.of(context).colorScheme.tertiary,
                           foregroundColor: Theme.of(context).colorScheme.onTertiary,
+                          text: 'Introducir código manualmente',
+                          isPrimary: false,
+                          isEnabled: true,
                         ),
                         child: AutoSizeText('Introducir código manualmente', maxLines: 1),
                       ),
@@ -524,8 +535,42 @@ class _MowizTimePageState extends State<MowizTimePage> {
                   ),
                 ),
               ),
-            ),
-          );
+            );
+          } else {
+            // Layout para otras pantallas (móvil, tablet, desktop)
+            return MowizDesignSystem.getScrollableContent(
+              availableHeight: height,
+              contentHeight: 800,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: MowizDesignSystem.getContentWidth(width),
+                    minWidth: MowizDesignSystem.minContentWidth,
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: MowizDesignSystem.paddingM),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Resto del contenido para otras pantallas...
+                        AutoSizeText(
+                          DateFormat('EEE, d MMM yyyy - HH:mm', locale)
+                              .format(_now),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          style: TextStyle(
+                              fontSize: labelFontSize,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(height: spacing),
+                        // ... resto del contenido
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }
         },
       ),
     );

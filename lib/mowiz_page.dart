@@ -52,7 +52,14 @@ class MowizPage extends StatelessWidget {
                   ),
                 );
               },
-              style: baseStyle,
+              style: MowizDesignSystem.getSmartWidthButtonStyle(
+                width: width,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                text: t('payTicket'),
+                isPrimary: true,
+                isEnabled: true,
+              ),
               child: AutoSizeText(
                 t('payTicket'),
                 maxLines: 1,
@@ -69,10 +76,13 @@ class MowizPage extends StatelessWidget {
                   ),
                 );
               },
-              style: MowizDesignSystem.getPrimaryButtonStyle(
+              style: MowizDesignSystem.getSmartWidthButtonStyle(
                 width: width,
                 backgroundColor: Theme.of(context).colorScheme.secondary,
                 foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                text: t('cancelDenuncia'),
+                isPrimary: true,
+                isEnabled: true,
               ),
               child: AutoSizeText(
                 t('cancelDenuncia'),
@@ -92,7 +102,7 @@ class MowizPage extends StatelessWidget {
                   child: SizedBox(
                     width: contentWidth * 0.6,
                     height: MowizDesignSystem.getSecondaryButtonHeight(width),
-                    child: TextButton(
+                    child: FilledButton(
                       onPressed: () {
                         SoundHelper.playTap();
                         Navigator.of(context).pushAndRemoveUntil(
@@ -100,12 +110,13 @@ class MowizPage extends StatelessWidget {
                           (route) => false,
                         );
                       },
-                      style: TextButton.styleFrom(
-                        minimumSize: Size.fromHeight(MowizDesignSystem.getSecondaryButtonHeight(width)),
-                        textStyle: TextStyle(
-                          fontSize: MowizDesignSystem.getBodyFontSize(width),
-                          fontWeight: FontWeight.w600,
-                        ),
+                      style: MowizDesignSystem.getSmartWidthButtonStyle(
+                        width: width,
+                        backgroundColor: const Color(0xFF7F7F7F),
+                        foregroundColor: Colors.white,
+                        text: t('home'),
+                        isPrimary: false,
+                        isEnabled: true,
                       ),
                       child: Text(t('home')),
                     ),

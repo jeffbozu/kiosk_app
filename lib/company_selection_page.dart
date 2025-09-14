@@ -4,6 +4,7 @@ import 'l10n/app_localizations.dart';
 import 'mowiz/mowiz_scaffold.dart';
 import 'mowiz_pay_page.dart';
 import 'sound_helper.dart';
+import 'styles/mowiz_design_system.dart';
 
 class CompanySelectionPage extends StatefulWidget {
   const CompanySelectionPage({super.key});
@@ -75,27 +76,26 @@ class _CompanySelectionPageState extends State<CompanySelectionPage>
             final width = constraints.maxWidth;
             final height = constraints.maxHeight;
 
-            // 🔵 Ancho máximo profesional
-            const double maxContentWidth = 600;
-            final double contentWidth = width > maxContentWidth ? maxContentWidth : width;
-            final EdgeInsets padding = EdgeInsets.symmetric(horizontal: contentWidth * 0.05);
+            // 🎨 Usar sistema de diseño homogéneo
+            final contentWidth = MowizDesignSystem.getContentWidth(width);
+            final horizontalPadding = MowizDesignSystem.getHorizontalPadding(contentWidth);
+            final spacing = MowizDesignSystem.getSpacing(width);
+            final titleFontSize = MowizDesignSystem.getTitleFontSize(width);
+            final bodyFontSize = MowizDesignSystem.getBodyFontSize(width);
+            final buttonHeight = MowizDesignSystem.getPrimaryButtonHeight(width);
 
-            final bool isWide = contentWidth >= 700;
-            final double gap = isWide ? 28 : 16;
-            final double titleFont = isWide ? 26 : 20;
-            final double subtitleFont = isWide ? 15 : 13;
-            final double buttonHeight = isWide ? 65 : 50;
-
-            return SingleChildScrollView(
+            return MowizDesignSystem.getScrollableContent(
+              availableHeight: height,
+              contentHeight: 600, // Altura estimada del contenido
               child: Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    maxWidth: maxContentWidth,
-                    minWidth: 300,
+                    maxWidth: contentWidth,
+                    minWidth: MowizDesignSystem.minContentWidth,
                     minHeight: height,
                   ),
                   child: Padding(
-                    padding: padding,
+                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                     child: FadeTransition(
                       opacity: _fadeAnimation,
                       child: SlideTransition(
@@ -111,11 +111,11 @@ class _CompanySelectionPageState extends State<CompanySelectionPage>
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: titleFont,
+                              fontSize: titleFontSize,
                               color: colorScheme.primary,
                             ),
                           ),
-                          SizedBox(height: gap * 0.5),
+                          SizedBox(height: spacing * 0.5),
                           
                           // 🎯 Subtítulo explicativo
                           AutoSizeText(
@@ -123,11 +123,11 @@ class _CompanySelectionPageState extends State<CompanySelectionPage>
                             maxLines: 2,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: subtitleFont,
+                              fontSize: bodyFontSize * 0.9,
                               color: colorScheme.onSurface.withOpacity(0.7),
                             ),
                           ),
-                          SizedBox(height: gap * 1.5),
+                          SizedBox(height: spacing * 1.5),
 
                           // 🎯 Botón EYPSA
                           _buildCompanyButton(
@@ -138,9 +138,10 @@ class _CompanySelectionPageState extends State<CompanySelectionPage>
                             icon: Icons.business,
                             onTap: () => _selectCompany('EYPSA'),
                             buttonHeight: buttonHeight,
+                            width: width,
                           ),
                           
-                          SizedBox(height: gap),
+                          SizedBox(height: spacing),
 
                           // 🎯 Botón MOWIZ
                           _buildCompanyButton(
@@ -151,9 +152,10 @@ class _CompanySelectionPageState extends State<CompanySelectionPage>
                             icon: Icons.local_parking,
                             onTap: () => _selectCompany('MOWIZ'),
                             buttonHeight: buttonHeight,
+                            width: width,
                           ),
 
-                          SizedBox(height: gap * 1.5),
+                          SizedBox(height: spacing * 1.5),
 
                           // 🎯 Botón de regreso
                           FilledButton(
@@ -161,23 +163,23 @@ class _CompanySelectionPageState extends State<CompanySelectionPage>
                               SoundHelper.playTap();
                               Navigator.of(context).pop();
                             },
-                            style: FilledButton.styleFrom(
+                            style: MowizDesignSystem.getSecondaryButtonStyle(
+                              width: width,
                               backgroundColor: colorScheme.surface,
                               foregroundColor: colorScheme.onSurface,
-                              side: BorderSide(
-                                color: colorScheme.outline,
-                                width: 1,
-                              ),
-                              minimumSize: Size(double.infinity, buttonHeight * 0.8),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                            ).copyWith(
+                              side: MaterialStatePropertyAll(
+                                BorderSide(
+                                  color: colorScheme.outline,
+                                  width: 1,
+                                ),
                               ),
                             ),
                             child: AutoSizeText(
                               t('back'),
                               maxLines: 1,
                               minFontSize: 14,
-                              style: TextStyle(fontSize: subtitleFont),
+                              style: TextStyle(fontSize: bodyFontSize * 0.9),
                             ),
                           ),
                           ],
@@ -202,18 +204,22 @@ class _CompanySelectionPageState extends State<CompanySelectionPage>
     required IconData icon,
     required VoidCallback onTap,
     required double buttonHeight,
+    required double width,
   }) {
     return FilledButton(
       onPressed: onTap,
-      style: FilledButton.styleFrom(
+      style: MowizDesignSystem.getPrimaryButtonStyle(
+        width: width,
         backgroundColor: color,
         foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        minimumSize: Size(double.infinity, buttonHeight),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+      ).copyWith(
+        padding: MaterialStatePropertyAll(
+          EdgeInsets.symmetric(
+            horizontal: MowizDesignSystem.getPadding(width),
+            vertical: MowizDesignSystem.paddingL,
+          ),
         ),
-        elevation: 4,
+        elevation: MaterialStatePropertyAll(4),
       ),
       child: Row(
         children: [
@@ -243,9 +249,9 @@ class _CompanySelectionPageState extends State<CompanySelectionPage>
                 AutoSizeText(
                   title,
                   maxLines: 1,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: MowizDesignSystem.getBodyFontSize(width) * 1.1,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -256,7 +262,7 @@ class _CompanySelectionPageState extends State<CompanySelectionPage>
                   minFontSize: 12,
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.9),
-                    fontSize: 14,
+                    fontSize: MowizDesignSystem.getBodyFontSize(width) * 0.8,
                   ),
                 ),
               ],

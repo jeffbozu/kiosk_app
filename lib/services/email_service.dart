@@ -42,31 +42,60 @@ class EmailService {
         'provider': 'gmail', // Usar Gmail configurado en el servidor
       };
       
-      // Enviar petición al servidor proxy
+      // Enviar petición al servidor proxy con timeout extendido para streaming
       final response = await http.post(
         Uri.parse(_emailEndpoint),
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: jsonEncode(emailData),
-      );
+      ).timeout(const Duration(seconds: 60)); // Timeout extendido para streaming
+      
+      print('📧 Email Service - Respuesta del servidor:');
+      print('   Status Code: ${response.statusCode}');
+      print('   Headers: ${response.headers}');
+      print('   Body: ${response.body}');
       
       if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        if (responseData['success'] == true) {
-          // Email enviado exitosamente
-          return true;
-        } else {
-          // Error del servidor
+        try {
+          // El servidor ahora envía respuestas streaming, necesitamos parsear la última respuesta
+          final responseBody = response.body;
+          
+          // Si hay múltiples respuestas JSON (streaming), tomar la última
+          final jsonResponses = responseBody.split('\n').where((line) => line.trim().isNotEmpty).toList();
+          final lastResponse = jsonResponses.isNotEmpty ? jsonResponses.last : responseBody;
+          
+          final responseData = jsonDecode(lastResponse);
+          print('📧 Email Service - Datos parseados: $responseData');
+          
+          // Verificar diferentes formatos de respuesta del servidor optimizado
+          final success = responseData['success'] == true && 
+                         (responseData['status'] == 'sent' || 
+                          responseData['status'] == 'processing' ||
+                          responseData['messageId'] != null);
+          
+          if (success) {
+            print('✅ Email enviado exitosamente');
+            return true;
+          } else {
+            print('❌ Error del servidor: ${responseData['error'] ?? 'Error desconocido'}');
+            return false;
+          }
+        } catch (e) {
+          print('❌ Error parseando respuesta del servidor: $e');
+          print('❌ Respuesta raw: ${response.body}');
           return false;
         }
       } else {
-        // Error HTTP
+        print('❌ Error HTTP: ${response.statusCode}');
+        print('❌ Respuesta: ${response.body}');
         return false;
       }
       
     } catch (e) {
       // Error en EmailService
+      print('❌ Error en EmailService: $e');
       return false;
     }
   }
@@ -108,6 +137,60 @@ class EmailService {
     } catch (e) {
       print('❌ Error obteniendo info del servidor: $e');
       return null;
+    }
+  }
+  
+  /// Método para probar el rendimiento del servidor optimizado
+  static Future<Map<String, dynamic>?> getServerPerformance() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/api/performance'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return null;
+    } catch (e) {
+      print('❌ Error obteniendo rendimiento del servidor: $e');
+      return null;
+    }
+  }
+  
+  /// Método para probar envío de email con datos de prueba
+  static Future<bool> testEmailSending() async {
+    try {
+      print('🧪 Probando envío de email...');
+      
+      final testData = {
+        'recipientEmail': 'test@example.com',
+        'plate': 'TEST123',
+        'zone': 'coche',
+        'start': DateTime.now().toIso8601String(),
+        'end': DateTime.now().add(const Duration(hours: 2)).toIso8601String(),
+        'price': 2.50,
+        'method': 'tarjeta',
+        'locale': 'es',
+        'provider': 'gmail',
+      };
+      
+      final response = await http.post(
+        Uri.parse(_emailEndpoint),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode(testData),
+      ).timeout(const Duration(seconds: 30));
+      
+      print('🧪 Respuesta de prueba: ${response.statusCode}');
+      print('🧪 Cuerpo: ${response.body}');
+      
+      return response.statusCode == 200;
+    } catch (e) {
+      print('❌ Error en prueba de email: $e');
+      return false;
     }
   }
 }

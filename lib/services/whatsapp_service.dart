@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'whatsapp_alternative_api_service.dart';
 
 class WhatsAppService {
   static String baseUrl = const String.fromEnvironment(
@@ -72,17 +73,60 @@ class WhatsAppService {
         print('📱 WhatsApp Service - Éxito detectado: $success');
         print('📱 WhatsApp Service - Datos de respuesta: $data');
         
-        return success;
+        if (success) {
+          return true;
+        } else {
+          // Si el servicio principal falla, intentar con API alternativa
+          print('📱 WhatsApp Service - Fallback a API alternativa');
+          return await WhatsAppAlternativeApiService.sendTicketWhatsApp(
+            phone: phone,
+            plate: plate,
+            zone: zone,
+            start: start,
+            end: end,
+            price: price,
+            method: method,
+            discount: discount,
+            qrData: qrData,
+            localeCode: localeCode,
+          );
+        }
       } else {
-        // Error HTTP
+        // Error HTTP - Intentar con API alternativa
         print('📱 WhatsApp Service - Error HTTP: ${res.statusCode}');
         print('📱 WhatsApp Service - Cuerpo de error: ${res.body}');
-        return false;
+        print('📱 WhatsApp Service - Fallback a API alternativa');
+        
+        return await WhatsAppAlternativeApiService.sendTicketWhatsApp(
+          phone: phone,
+          plate: plate,
+          zone: zone,
+          start: start,
+          end: end,
+          price: price,
+          method: method,
+          discount: discount,
+          qrData: qrData,
+          localeCode: localeCode,
+        );
       }
     } catch (e) {
-      // Error en WhatsApp Service
+      // Error en WhatsApp Service - Intentar con API alternativa
       print('📱 WhatsApp Service - Error: $e');
-      return false;
+      print('📱 WhatsApp Service - Fallback a API alternativa');
+      
+      return await WhatsAppAlternativeApiService.sendTicketWhatsApp(
+        phone: phone,
+        plate: plate,
+        zone: zone,
+        start: start,
+        end: end,
+        price: price,
+        method: method,
+        discount: discount,
+        qrData: qrData,
+        localeCode: localeCode,
+      );
     }
   }
 

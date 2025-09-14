@@ -914,7 +914,10 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
       });
       // Reanudar temporizador después de 2 segundos
       Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) widget.onClose?.call();
+        if (mounted) {
+          Navigator.of(context).pop(); // Cerrar el diálogo
+          widget.onClose?.call();
+        }
       });
     }
   }
@@ -1687,7 +1690,10 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
         setState(() => _state = DialogState.success);
         // Reanudar temporizador después de 2 segundos
         Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) widget.onClose?.call();
+          if (mounted) {
+            Navigator.of(context).pop(); // Cerrar el diálogo
+            widget.onClose?.call();
+          }
         });
       } else {
         setState(() {
@@ -1696,7 +1702,10 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
         });
         // Reanudar temporizador después de 2 segundos
         Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) widget.onClose?.call();
+          if (mounted) {
+            Navigator.of(context).pop(); // Cerrar el diálogo
+            widget.onClose?.call();
+          }
         });
       }
     } catch (e) {
@@ -1706,7 +1715,10 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
       });
       // Reanudar temporizador después de 2 segundos
       Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) widget.onClose?.call();
+        if (mounted) {
+          Navigator.of(context).pop(); // Cerrar el diálogo
+          widget.onClose?.call();
+        }
       });
     }
   }

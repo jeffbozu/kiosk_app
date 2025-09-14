@@ -50,6 +50,7 @@ class WhatsAppAlternativeApiService {
         price: price,
         method: method,
         discount: discount,
+        qrData: qrData,
         localeCode: localeCode ?? 'es_ES',
       );
 
@@ -141,6 +142,7 @@ class WhatsAppAlternativeApiService {
     required double price,
     required String method,
     double? discount,
+    String? qrData,
     required String localeCode,
   }) {
     final l = localeCode;

@@ -42,49 +42,28 @@ class EmailService {
         'provider': 'gmail', // Usar Gmail configurado en el servidor
       };
       
-      // Enviar petición al servidor proxy con timeout extendido para streaming
+      // Enviar petición al servidor proxy
       final response = await http.post(
         Uri.parse(_emailEndpoint),
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
         },
         body: jsonEncode(emailData),
-      ).timeout(const Duration(seconds: 60)); // Timeout extendido para streaming
+      ).timeout(const Duration(seconds: 30));
       
       print('📧 Email Service - Respuesta del servidor:');
       print('   Status Code: ${response.statusCode}');
-      print('   Headers: ${response.headers}');
       print('   Body: ${response.body}');
       
       if (response.statusCode == 200) {
-        try {
-          // El servidor ahora envía respuestas streaming, necesitamos parsear la última respuesta
-          final responseBody = response.body;
-          
-          // Si hay múltiples respuestas JSON (streaming), tomar la última
-          final jsonResponses = responseBody.split('\n').where((line) => line.trim().isNotEmpty).toList();
-          final lastResponse = jsonResponses.isNotEmpty ? jsonResponses.last : responseBody;
-          
-          final responseData = jsonDecode(lastResponse);
-          print('📧 Email Service - Datos parseados: $responseData');
-          
-          // Verificar diferentes formatos de respuesta del servidor optimizado
-          final success = responseData['success'] == true && 
-                         (responseData['status'] == 'sent' || 
-                          responseData['status'] == 'processing' ||
-                          responseData['messageId'] != null);
-          
-          if (success) {
-            print('✅ Email enviado exitosamente');
-            return true;
-          } else {
-            print('❌ Error del servidor: ${responseData['error'] ?? 'Error desconocido'}');
-            return false;
-          }
-        } catch (e) {
-          print('❌ Error parseando respuesta del servidor: $e');
-          print('❌ Respuesta raw: ${response.body}');
+        final responseData = jsonDecode(response.body);
+        print('📧 Email Service - Datos parseados: $responseData');
+        
+        if (responseData['success'] == true) {
+          print('✅ Email enviado exitosamente');
+          return true;
+        } else {
+          print('❌ Error del servidor: ${responseData['error'] ?? 'Error desconocido'}');
           return false;
         }
       } else {

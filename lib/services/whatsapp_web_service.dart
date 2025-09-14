@@ -64,7 +64,7 @@ class WhatsAppWebService {
       return false;
     }
   }
-  
+
   /// Formatea el número de teléfono para WhatsApp
   static String _formatPhoneNumber(String phone) {
     // Remover todos los caracteres no numéricos

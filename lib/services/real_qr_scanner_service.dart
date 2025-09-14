@@ -8,6 +8,7 @@ import '../l10n/app_localizations.dart';
 class RealQrScannerService {
   static MobileScannerController? _controller;
   static bool _isInitialized = false;
+  static bool get isInitialized => _isInitialized;
   static bool _isScanning = false;
   
   /// Inicializa el servicio de escáner QR (sin solicitar permisos)

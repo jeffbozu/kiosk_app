@@ -204,9 +204,10 @@ class _MowizTimePageState extends State<MowizTimePage> {
           final bodyFontSize = MowizDesignSystem.getBodyFontSize(width);
           final labelFontSize = MowizDesignSystem.getSubtitleFontSize(width);
 
-          if (MowizDesignSystem.isKiosk(width)) {
-            // Layout específico para aparcímetro - aprovechar toda la altura
-            return Center(
+          return MowizDesignSystem.getScrollableContent(
+            availableHeight: height,
+            contentHeight: 800,
+            child: Center(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
                   maxWidth: MowizDesignSystem.getContentWidth(width),
@@ -233,46 +234,27 @@ class _MowizTimePageState extends State<MowizTimePage> {
                       if (!_loaded)
                         const Center(child: CircularProgressIndicator())
                       else
-                        MowizDesignSystem.isKiosk(width) 
-                          ? Column(
-                              children: [
-                                // Layout vertical para aparcímetro - más compacto
-                                Container(
-                                  padding: EdgeInsets.symmetric(horizontal: spacing * 2, vertical: MowizDesignSystem.paddingXL),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Theme.of(context).colorScheme.outline, width: 2),
-                                    borderRadius: BorderRadius.circular(MowizDesignSystem.borderRadiusXL),
-                                  ),
-                                  child: AutoSizeText(
-                                    _blocks.isNotEmpty ? _fmtMin(_blocks[_currentTimeIndex]) : '0 min',
-                                    style: TextStyle(
-                                      fontSize: bodyFontSize + 8, // Texto más grande
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    maxLines: 1,
-                                    textAlign: TextAlign.center,
-                                  ),
+                        Column(
+                          children: [
+                            // Layout vertical para aparcímetro - más compacto
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: spacing * 2, vertical: MowizDesignSystem.paddingXL),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Theme.of(context).colorScheme.outline, width: 2),
+                                borderRadius: BorderRadius.circular(MowizDesignSystem.borderRadiusXL),
+                              ),
+                              child: AutoSizeText(
+                                _blocks.isNotEmpty ? _fmtMin(_blocks[_currentTimeIndex]) : '0 min',
+                                style: TextStyle(
+                                  fontSize: bodyFontSize + 8, // Texto más grande
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                SizedBox(height: spacing * 0.5),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    timeNavigationButton(
-                                      '-',
-                                      _currentTimeIndex > 0 ? _decrementTime : null,
-                                      width,
-                                    ),
-                                    SizedBox(width: spacing * 3),
-                                    timeNavigationButton(
-                                      '+',
-                                      _currentTimeIndex < _blocks.length - 1 ? _incrementTime : null,
-                                      width,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            )
-                          : Row(
+                                maxLines: 1,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            SizedBox(height: spacing * 0.5),
+                            Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 timeNavigationButton(
@@ -280,23 +262,7 @@ class _MowizTimePageState extends State<MowizTimePage> {
                                   _currentTimeIndex > 0 ? _decrementTime : null,
                                   width,
                                 ),
-                                SizedBox(width: spacing),
-                                Container(
-                                  padding: EdgeInsets.symmetric(horizontal: spacing, vertical: MowizDesignSystem.paddingM),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Theme.of(context).colorScheme.outline),
-                                    borderRadius: BorderRadius.circular(MowizDesignSystem.borderRadiusM),
-                                  ),
-                                  child: AutoSizeText(
-                                    _blocks.isNotEmpty ? _fmtMin(_blocks[_currentTimeIndex]) : '0 min',
-                                    style: TextStyle(
-                                      fontSize: bodyFontSize + 2,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    maxLines: 1,
-                                  ),
-                                ),
-                                SizedBox(width: spacing),
+                                SizedBox(width: spacing * 3),
                                 timeNavigationButton(
                                   '+',
                                   _currentTimeIndex < _blocks.length - 1 ? _incrementTime : null,
@@ -304,6 +270,8 @@ class _MowizTimePageState extends State<MowizTimePage> {
                                 ),
                               ],
                             ),
+                          ],
+                        ),
 
                       SizedBox(height: spacing),
                       FilledButton(
@@ -535,42 +503,8 @@ class _MowizTimePageState extends State<MowizTimePage> {
                   ),
                 ),
               ),
-            );
-          } else {
-            // Layout para otras pantallas (móvil, tablet, desktop)
-            return MowizDesignSystem.getScrollableContent(
-              availableHeight: height,
-              contentHeight: 800,
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: MowizDesignSystem.getContentWidth(width),
-                    minWidth: MowizDesignSystem.minContentWidth,
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: MowizDesignSystem.paddingM),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Resto del contenido para otras pantallas...
-                        AutoSizeText(
-                          DateFormat('EEE, d MMM yyyy - HH:mm', locale)
-                              .format(_now),
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          style: TextStyle(
-                              fontSize: labelFontSize,
-                              fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(height: spacing),
-                        // ... resto del contenido
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }
+            ),
+          );
         },
       ),
     );

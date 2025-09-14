@@ -10,8 +10,21 @@ class RealQrScannerService {
   static bool _isInitialized = false;
   static bool _isScanning = false;
   
-  /// Inicializa el servicio de escáner QR
+  /// Inicializa el servicio de escáner QR (sin solicitar permisos)
   static Future<bool> initialize() async {
+    try {
+      // Solo verificar si la cámara está disponible, sin solicitar permisos
+      _isInitialized = true;
+      print('✅ RealQrScannerService inicializado (permisos se solicitarán cuando sea necesario)');
+      return true;
+    } catch (e) {
+      print('❌ Error inicializando RealQrScannerService: $e');
+      return false;
+    }
+  }
+
+  /// Inicializa la cámara y solicita permisos cuando sea necesario
+  static Future<bool> _initializeCamera() async {
     try {
       // Verificar permisos de cámara
       final cameraStatus = await Permission.camera.status;
@@ -30,11 +43,10 @@ class RealQrScannerService {
         torchEnabled: false,
       );
       
-      _isInitialized = true;
-      print('✅ RealQrScannerService inicializado correctamente');
+      print('✅ Cámara inicializada correctamente');
       return true;
     } catch (e) {
-      print('❌ Error inicializando RealQrScannerService: $e');
+      print('❌ Error inicializando cámara: $e');
       return false;
     }
   }
@@ -47,8 +59,12 @@ class RealQrScannerService {
     required BuildContext context,
     int timeout = 30,
   }) async {
+    // Inicializar la cámara si no está disponible
     if (!isAvailable) {
-      throw Exception('Escáner QR no disponible');
+      final cameraInitialized = await _initializeCamera();
+      if (!cameraInitialized) {
+        throw Exception('No se pudo inicializar la cámara');
+      }
     }
     
     _isScanning = true;

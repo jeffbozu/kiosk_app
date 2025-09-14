@@ -103,10 +103,7 @@ class UnifiedService {
   
   /// Verifica si el escáner está conectado
   static Future<bool> isScannerConnected() async {
-    // Usar escáner real en todas las plataformas
-    if (!RealQrScannerService.isAvailable) {
-      return await RealQrScannerService.initialize();
-    }
+    // Solo verificar si el servicio está inicializado, sin inicializar la cámara
     return RealQrScannerService.isAvailable;
   }
   

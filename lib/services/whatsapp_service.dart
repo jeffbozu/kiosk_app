@@ -61,7 +61,6 @@ class WhatsAppService {
       print('   Response Body: ${res.body}');
       
       // Procesando respuesta
-      
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as Map<String, dynamic>;
         // Verificar diferentes formatos de respuesta
@@ -70,13 +69,19 @@ class WhatsAppService {
                        data['status'] == 'queued' ||
                        data['status'] == 'sent';
         
+        print('📱 WhatsApp Service - Éxito detectado: $success');
+        print('📱 WhatsApp Service - Datos de respuesta: $data');
+        
         return success;
       } else {
         // Error HTTP
+        print('📱 WhatsApp Service - Error HTTP: ${res.statusCode}');
+        print('📱 WhatsApp Service - Cuerpo de error: ${res.body}');
         return false;
       }
     } catch (e) {
       // Error en WhatsApp Service
+      print('📱 WhatsApp Service - Error: $e');
       return false;
     }
   }

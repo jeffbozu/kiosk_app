@@ -7,12 +7,13 @@ class MowizDesignSystem {
   MowizDesignSystem._();
 
   // ========================================
-  // 📱 BREAKPOINTS RESPONSIVE
+  // 📱 BREAKPOINTS RESPONSIVE OPTIMIZADOS
   // ========================================
-  static const double mobileBreakpoint = 500;
-  static const double tabletBreakpoint = 700;
-  static const double desktopBreakpoint = 900;
-  static const double largeDesktopBreakpoint = 1200;
+  static const double mobileBreakpoint = 480;        // Móviles
+  static const double tabletVerticalBreakpoint = 600; // 10" vertical (aparcímetro)
+  static const double tabletBreakpoint = 768;        // Tablets horizontales
+  static const double desktopBreakpoint = 1024;      // PC/Portátil
+  static const double largeDesktopBreakpoint = 1440; // Pantallas grandes
 
   // ========================================
   // 📏 TAMAÑOS DE FUENTE CONSISTENTES
@@ -23,6 +24,14 @@ class MowizDesignSystem {
   static const double captionFontSize = 16.0;
   static const double smallFontSize = 14.0;
   static const double tinyFontSize = 12.0;
+  
+  // ========================================
+  // 🏪 TAMAÑOS ESPECÍFICOS PARA APARCÍMETRO
+  // ========================================
+  static const double kioskTitleFontSize = 36.0;     // Títulos más grandes
+  static const double kioskSubtitleFontSize = 28.0;  // Subtítulos más grandes
+  static const double kioskBodyFontSize = 22.0;      // Texto más legible
+  static const double kioskCaptionFontSize = 20.0;   // Captions más grandes
 
   // ========================================
   // 🔘 ALTURAS DE BOTONES CONSISTENTES
@@ -31,6 +40,13 @@ class MowizDesignSystem {
   static const double secondaryButtonHeight = 48.0;
   static const double smallButtonHeight = 40.0;
   static const double largeButtonHeight = 80.0;
+  
+  // ========================================
+  // 🏪 BOTONES ESPECÍFICOS PARA APARCÍMETRO
+  // ========================================
+  static const double kioskPrimaryButtonHeight = 80.0;   // Botones más grandes
+  static const double kioskSecondaryButtonHeight = 65.0; // Botones secundarios más grandes
+  static const double kioskSmallButtonHeight = 50.0;     // Botones pequeños más grandes
 
   // ========================================
   // 📐 ESPACIADO CONSISTENTE
@@ -54,8 +70,9 @@ class MowizDesignSystem {
   // ========================================
   // 🎯 ANCHO MÁXIMO DE CONTENIDO
   // ========================================
-  static const double maxContentWidth = 500.0;
+  static const double maxContentWidth = 800.0;  // Aumentado para PC/portátil
   static const double minContentWidth = 260.0;
+  static const double kioskMaxContentWidth = 600.0;  // Específico para aparcímetro
 
   // ========================================
   // 🔄 BORDER RADIUS CONSISTENTE
@@ -73,14 +90,20 @@ class MowizDesignSystem {
   /// Determina si es móvil basado en el ancho
   static bool isMobile(double width) => width < mobileBreakpoint;
   
-  /// Determina si es tablet basado en el ancho
-  static bool isTablet(double width) => width >= mobileBreakpoint && width < desktopBreakpoint;
+  /// Determina si es tablet vertical (aparcímetro 10")
+  static bool isTabletVertical(double width) => width >= mobileBreakpoint && width < tabletVerticalBreakpoint;
+  
+  /// Determina si es tablet horizontal basado en el ancho
+  static bool isTablet(double width) => width >= tabletVerticalBreakpoint && width < desktopBreakpoint;
   
   /// Determina si es desktop basado en el ancho
   static bool isDesktop(double width) => width >= desktopBreakpoint;
   
   /// Determina si es pantalla ancha basado en el ancho
   static bool isWide(double width) => width >= tabletBreakpoint;
+  
+  /// Determina si es aparcímetro (tablet vertical 10")
+  static bool isKiosk(double width) => isTabletVertical(width);
 
   // ========================================
   // 🎨 OBTENER TAMAÑOS RESPONSIVE
@@ -88,6 +111,7 @@ class MowizDesignSystem {
   
   /// Obtiene el tamaño de fuente del título según el ancho
   static double getTitleFontSize(double width) {
+    if (isKiosk(width)) return kioskTitleFontSize;
     if (isMobile(width)) return titleFontSize * 0.8;
     if (isTablet(width)) return titleFontSize * 0.9;
     return titleFontSize;
@@ -95,6 +119,7 @@ class MowizDesignSystem {
   
   /// Obtiene el tamaño de fuente del subtítulo según el ancho
   static double getSubtitleFontSize(double width) {
+    if (isKiosk(width)) return kioskSubtitleFontSize;
     if (isMobile(width)) return subtitleFontSize * 0.8;
     if (isTablet(width)) return subtitleFontSize * 0.9;
     return subtitleFontSize;
@@ -102,6 +127,7 @@ class MowizDesignSystem {
   
   /// Obtiene el tamaño de fuente del cuerpo según el ancho
   static double getBodyFontSize(double width) {
+    if (isKiosk(width)) return kioskBodyFontSize;
     if (isMobile(width)) return bodyFontSize * 0.85;
     if (isTablet(width)) return bodyFontSize * 0.9;
     return bodyFontSize;
@@ -109,6 +135,7 @@ class MowizDesignSystem {
   
   /// Obtiene la altura del botón principal según el ancho
   static double getPrimaryButtonHeight(double width) {
+    if (isKiosk(width)) return kioskPrimaryButtonHeight;
     if (isMobile(width)) return primaryButtonHeight * 0.8;
     if (isTablet(width)) return primaryButtonHeight * 0.9;
     return primaryButtonHeight;
@@ -116,6 +143,7 @@ class MowizDesignSystem {
   
   /// Obtiene la altura del botón secundario según el ancho
   static double getSecondaryButtonHeight(double width) {
+    if (isKiosk(width)) return kioskSecondaryButtonHeight;
     if (isMobile(width)) return secondaryButtonHeight * 0.8;
     if (isTablet(width)) return secondaryButtonHeight * 0.9;
     return secondaryButtonHeight;
@@ -123,6 +151,7 @@ class MowizDesignSystem {
   
   /// Obtiene el espaciado según el ancho
   static double getSpacing(double width) {
+    if (isKiosk(width)) return spacingXL;  // Más espaciado para aparcímetro
     if (isMobile(width)) return spacingM;
     if (isTablet(width)) return spacingL;
     return spacingXL;
@@ -130,6 +159,7 @@ class MowizDesignSystem {
   
   /// Obtiene el padding según el ancho
   static double getPadding(double width) {
+    if (isKiosk(width)) return paddingXL;  // Más padding para aparcímetro
     if (isMobile(width)) return paddingM;
     if (isTablet(width)) return paddingL;
     return paddingXL;
@@ -141,6 +171,12 @@ class MowizDesignSystem {
   
   /// Obtiene el ancho del contenido según el ancho disponible
   static double getContentWidth(double availableWidth) {
+    if (isKiosk(availableWidth)) {
+      // Para aparcímetro, usar ancho específico
+      if (availableWidth > kioskMaxContentWidth) return kioskMaxContentWidth;
+      if (availableWidth < minContentWidth) return minContentWidth;
+      return availableWidth;
+    }
     if (availableWidth > maxContentWidth) return maxContentWidth;
     if (availableWidth < minContentWidth) return minContentWidth;
     return availableWidth;
@@ -293,6 +329,70 @@ class MowizDesignSystem {
       );
     }
     return child;
+  }
+
+  // ========================================
+  // 🏪 MÉTODOS ESPECÍFICOS PARA APARCÍMETRO
+  // ========================================
+  
+  /// Obtiene el estilo de botón optimizado para aparcímetro
+  static ButtonStyle getKioskButtonStyle({
+    required Color backgroundColor,
+    required Color foregroundColor,
+    bool isPrimary = true,
+  }) {
+    return ButtonStyle(
+      backgroundColor: MaterialStatePropertyAll(backgroundColor),
+      foregroundColor: MaterialStatePropertyAll(foregroundColor),
+      minimumSize: MaterialStatePropertyAll(
+        Size(double.infinity, isPrimary ? kioskPrimaryButtonHeight : kioskSecondaryButtonHeight)
+      ),
+      padding: MaterialStatePropertyAll(
+        EdgeInsets.symmetric(horizontal: paddingXL, vertical: paddingL)
+      ),
+      shape: MaterialStatePropertyAll(
+        RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(borderRadiusXXL),
+        ),
+      ),
+      textStyle: MaterialStatePropertyAll(
+        TextStyle(
+          fontSize: kioskBodyFontSize,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      elevation: MaterialStatePropertyAll(3),
+    );
+  }
+  
+  /// Obtiene el layout optimizado para aparcímetro (botones centrados y grandes)
+  static Widget getKioskLayout({
+    required List<Widget> buttons,
+    double? spacing,
+  }) {
+    final effectiveSpacing = spacing ?? spacingXXL;
+    
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: buttons.asMap().entries.map((entry) {
+        final index = entry.key;
+        final button = entry.value;
+        return Column(
+          children: [
+            button,
+            if (index < buttons.length - 1) SizedBox(height: effectiveSpacing),
+          ],
+        );
+      }).toList(),
+    );
+  }
+  
+  /// Obtiene el ancho de contenido específico para aparcímetro
+  static double getKioskContentWidth(double availableWidth) {
+    if (availableWidth > kioskMaxContentWidth) return kioskMaxContentWidth;
+    if (availableWidth < minContentWidth) return minContentWidth;
+    return availableWidth;
   }
 }
 

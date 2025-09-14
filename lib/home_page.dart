@@ -11,6 +11,7 @@ import 'locale_provider.dart';
 import 'theme_mode_button.dart';
 import 'ticket_success_page.dart';
 import 'mowiz_page.dart';
+import 'styles/mowiz_design_system.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -533,11 +534,33 @@ class _HomePageState extends State<HomePage> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                final height = constraints.maxHeight;
+                
+                // 🎨 Usar sistema de diseño homogéneo
+                final contentWidth = MowizDesignSystem.getContentWidth(width);
+                final horizontalPadding = MowizDesignSystem.getHorizontalPadding(contentWidth);
+                final spacing = MowizDesignSystem.getSpacing(width);
+                final titleFontSize = MowizDesignSystem.getTitleFontSize(width);
+                final bodyFontSize = MowizDesignSystem.getBodyFontSize(width);
+                final buttonHeight = MowizDesignSystem.getPrimaryButtonHeight(width);
+                
+                return MowizDesignSystem.getScrollableContent(
+                  availableHeight: height,
+                  contentHeight: 800, // Altura estimada del contenido
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: contentWidth,
+                        minWidth: MowizDesignSystem.minContentWidth,
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
                   Row(
                     children: [
                       const Icon(Icons.access_time, color: Color(0xFFE62144)),
@@ -584,37 +607,49 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      ElevatedButton(
-                        onPressed: _canDecreaseDuration ? _decreaseDuration : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              _canDecreaseDuration ? const Color(0xFFE62144) : Colors.grey,
-                          minimumSize: const Size(40, 40),
+                      SizedBox(
+                        width: MowizDesignSystem.getSecondaryButtonHeight(width),
+                        height: MowizDesignSystem.getSecondaryButtonHeight(width),
+                        child: ElevatedButton(
+                          onPressed: _canDecreaseDuration ? _decreaseDuration : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _canDecreaseDuration 
+                                ? const Color(0xFFE62144) 
+                                : Colors.grey,
+                            shape: const CircleBorder(),
+                          ),
+                          child: const Icon(Icons.remove, color: Colors.white),
                         ),
-                        child: const Icon(Icons.remove, color: Colors.white),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: EdgeInsets.symmetric(horizontal: spacing),
                         child: Text(
                           _selectedDuration > 0
                               ? '$_selectedDuration min'
                               : '-- min',
-                          style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: bodyFontSize,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                      ElevatedButton(
-                        onPressed: _canIncreaseDuration ? _increaseDuration : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              _canIncreaseDuration ? const Color(0xFFE62144) : Colors.grey,
-                          minimumSize: const Size(40, 40),
+                      SizedBox(
+                        width: MowizDesignSystem.getSecondaryButtonHeight(width),
+                        height: MowizDesignSystem.getSecondaryButtonHeight(width),
+                        child: ElevatedButton(
+                          onPressed: _canIncreaseDuration ? _increaseDuration : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _canIncreaseDuration 
+                                ? const Color(0xFFE62144) 
+                                : Colors.grey,
+                            shape: const CircleBorder(),
+                          ),
+                          child: const Icon(Icons.add, color: Colors.white),
                         ),
-                        child: const Icon(Icons.add, color: Colors.white),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: spacing * 0.5),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -622,25 +657,32 @@ class _HomePageState extends State<HomePage> {
                         '${AppLocalizations.of(context).t('price')}: ${_intlReady ? NumberFormat.currency(
                           symbol: '€', locale: Intl.defaultLocale, decimalDigits: 2
                         ).format(_price) : _price.toStringAsFixed(2) + ' €'}',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, 
+                          fontSize: bodyFontSize * 0.9,
+                        ),
                       ),
                       Text(
                         '${AppLocalizations.of(context).t('until')}: ${_paidUntilFormattedWithDate}',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, 
+                          fontSize: bodyFontSize * 0.9,
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
+                  SizedBox(height: spacing * 1.5),
+                  FilledButton(
                     onPressed: allReady ? _confirmAndPay : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          allReady ? const Color(0xFFE62144) : Colors.grey,
+                    style: MowizDesignSystem.getPrimaryButtonStyle(
+                      width: width,
+                      backgroundColor: allReady 
+                          ? const Color(0xFFE62144) 
+                          : Colors.grey,
+                      foregroundColor: Colors.white,
                     ),
                     child: _saving
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 24,
                             height: 24,
                             child: CircularProgressIndicator(
@@ -652,12 +694,19 @@ class _HomePageState extends State<HomePage> {
                             AppLocalizations.of(context).t('pay'),
                           ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: spacing * 0.5),
                   TextButton(
                     onPressed: _refreshPage,
+                    style: TextButton.styleFrom(
+                      minimumSize: Size.fromHeight(MowizDesignSystem.getSecondaryButtonHeight(width)),
+                      textStyle: TextStyle(
+                        fontSize: bodyFontSize,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                     child: Text(AppLocalizations.of(context).t('cancel')),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: spacing * 1.5),
                   FilledButton(
                     onPressed: () {
                       Navigator.of(context).push(
@@ -666,18 +715,26 @@ class _HomePageState extends State<HomePage> {
                         ),
                       );
                     },
-                    style: FilledButton.styleFrom(
+                    style: MowizDesignSystem.getPrimaryButtonStyle(
+                      width: width,
                       backgroundColor: Theme.of(context).colorScheme.primary,
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      textStyle: const TextStyle(
-                        fontSize: 24,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text(
+                      'MOWIZ',
+                      style: TextStyle(
+                        fontSize: bodyFontSize * 1.2,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    child: const Text('MOWIZ'),
                   ),
-                ],
-              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
     );
   }

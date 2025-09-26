@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'whatsapp_alternative_api_service.dart';
+import 'twilio_direct_service.dart';
 
 class WhatsAppService {
   static String baseUrl = const String.fromEnvironment(
@@ -22,6 +23,32 @@ class WhatsAppService {
     String? localeCode,
   }) async {
     try {
+      print('📱 WhatsApp Service - Intentando envío directo a Twilio...');
+
+      // 🚀 NUEVO: Intentar primero con Twilio Direct
+      final twilioSuccess = await TwilioDirectService.sendTicketWhatsApp(
+        phone: phone,
+        plate: plate,
+        zone: zone,
+        start: start,
+        end: end,
+        price: price,
+        method: method,
+        discount: discount,
+        qrData: qrData,
+        localeCode: localeCode,
+      );
+
+      if (twilioSuccess) {
+        print('✅ WhatsApp enviado exitosamente via Twilio Direct');
+        return true;
+      }
+
+      print(
+        '📱 WhatsApp Service - Twilio Direct falló, intentando con RENDER...',
+      );
+
+      // Fallback a RENDER si Twilio falla
       final l = localeCode ?? 'es_ES';
       final dateFmt = DateFormat('dd/MM/yyyy HH:mm', l);
       final duration = _formatDuration(start, end);
@@ -39,45 +66,48 @@ class WhatsAppService {
       };
 
       final payload = {
-        'phone': phone, 
+        'phone': phone,
         'ticket': ticket,
-        'localeCode': localeCode ?? 'es_ES'
+        'localeCode': localeCode ?? 'es_ES',
       };
       final uri = Uri.parse('$baseUrl/v1/whatsapp/send');
-      
+
       // Enviando mensaje WhatsApp
-      print('📱 WhatsApp Service - Enviando mensaje:');
+      print('📱 WhatsApp Service - Enviando mensaje via RENDER:');
       print('   URL: $uri');
       print('   Teléfono: $phone');
       print('   Payload: ${jsonEncode(payload)}');
-      
-      final res = await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(payload),
-      ).timeout(const Duration(seconds: 15)); // Timeout reducido de 30s a 15s
-      
-      print('📱 WhatsApp Service - Respuesta:');
+
+      final res = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      print('📱 WhatsApp Service - Respuesta RENDER:');
       print('   Status Code: ${res.statusCode}');
       print('   Response Body: ${res.body}');
-      
+
       // Procesando respuesta
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as Map<String, dynamic>;
-        // Verificar diferentes formatos de respuesta
-        final success = data['ok'] == true || 
-                       data['success'] == true || 
-                       data['status'] == 'queued' ||
-                       data['status'] == 'sent';
-        
-        print('📱 WhatsApp Service - Éxito detectado: $success');
-        print('📱 WhatsApp Service - Datos de respuesta: $data');
-        
+        final success =
+            data['ok'] == true ||
+            data['success'] == true ||
+            data['status'] == 'queued' ||
+            data['status'] == 'sent';
+
+        print('📱 WhatsApp Service - Éxito RENDER: $success');
+
         if (success) {
           return true;
         } else {
-          // Si el servicio principal falla, intentar con API alternativa
-          print('📱 WhatsApp Service - Fallback a API alternativa');
+          // Si RENDER falla, intentar con API alternativa
+          print(
+            '📱 WhatsApp Service - RENDER falló, intentando API alternativa',
+          );
           return await WhatsAppAlternativeApiService.sendTicketWhatsApp(
             phone: phone,
             plate: plate,
@@ -93,10 +123,9 @@ class WhatsAppService {
         }
       } else {
         // Error HTTP - Intentar con API alternativa
-        print('📱 WhatsApp Service - Error HTTP: ${res.statusCode}');
-        print('📱 WhatsApp Service - Cuerpo de error: ${res.body}');
-        print('📱 WhatsApp Service - Fallback a API alternativa');
-        
+        print('📱 WhatsApp Service - Error HTTP RENDER: ${res.statusCode}');
+        print('📱 WhatsApp Service - Intentando API alternativa');
+
         return await WhatsAppAlternativeApiService.sendTicketWhatsApp(
           phone: phone,
           plate: plate,
@@ -113,8 +142,8 @@ class WhatsAppService {
     } catch (e) {
       // Error en WhatsApp Service - Intentar con API alternativa
       print('📱 WhatsApp Service - Error: $e');
-      print('📱 WhatsApp Service - Fallback a API alternativa');
-      
+      print('📱 WhatsApp Service - Intentando API alternativa');
+
       return await WhatsAppAlternativeApiService.sendTicketWhatsApp(
         phone: phone,
         plate: plate,
@@ -138,5 +167,3 @@ class WhatsAppService {
     return '${m}m';
   }
 }
-
-

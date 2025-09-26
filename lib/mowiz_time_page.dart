@@ -33,7 +33,12 @@ class MowizTimePage extends StatefulWidget {
   final String zone;
   final String plate;
   final String? selectedCompany;
-  const MowizTimePage({super.key, required this.zone, required this.plate, this.selectedCompany});
+  const MowizTimePage({
+    super.key,
+    required this.zone,
+    required this.plate,
+    this.selectedCompany,
+  });
 
   @override
   State<MowizTimePage> createState() => _MowizTimePageState();
@@ -78,10 +83,12 @@ class _MowizTimePageState extends State<MowizTimePage> {
     String apiUrl;
     if (widget.selectedCompany == 'MOWIZ') {
       // MOWIZ usa la rama tariff2 con tarifas diferentes
-      apiUrl = 'https://tariff2.onrender.com/v1/onstreet-service/product/by-zone/${widget.zone}&plate=${widget.plate}';
+      apiUrl =
+          'https://tariff2.onrender.com/v1/onstreet-service/product/by-zone/${widget.zone}&plate=${widget.plate}';
     } else {
       // EYPSA usa la rama main (por defecto)
-      apiUrl = '${ConfigService.apiBaseUrl}/v1/onstreet-service/product/by-zone/${widget.zone}&plate=${widget.plate}';
+      apiUrl =
+          '${ConfigService.apiBaseUrl}/v1/onstreet-service/product/by-zone/${widget.zone}&plate=${widget.plate}';
     }
 
     try {
@@ -90,13 +97,15 @@ class _MowizTimePageState extends State<MowizTimePage> {
         final body = jsonDecode(res.body) as List;
         if (body.isNotEmpty) {
           final rate = body.first['rateSteps'] as Map<String, dynamic>;
-          for (final s in List<Map<String, dynamic>>.from(rate['steps'] ?? [])) {
+          for (final s in List<Map<String, dynamic>>.from(
+            rate['steps'] ?? [],
+          )) {
             final min = (s['timeInSeconds'] as int) ~/ 60;
             _steps[min] = s['priceInCents'] as int;
           }
           _blocks = _steps.keys.toList()..sort();
           _maxDurationSec = rate['maxDurationSeconds'] as int?;
-          
+
           // Inicializar con el tiempo mínimo del servidor
           if (_blocks.isNotEmpty) {
             _currentTimeIndex = 0;
@@ -133,23 +142,75 @@ class _MowizTimePageState extends State<MowizTimePage> {
     }
   }
 
-  void _clear() => setState(() { 
+  void _clear() => setState(() {
     if (_blocks.isNotEmpty) {
       _currentTimeIndex = 0;
       _totalSec = _blocks[0] * 60;
       _totalCents = _steps[_blocks[0]]!;
     }
-    _discountEurosApplied = 0.0; 
+    _discountEurosApplied = 0.0;
   });
+
+  /* ───────────  TIMEZONE HELPERS  ─────────── */
+
+  /// Detecta si estamos en horario de verano en España
+  bool _isDaylightSavingTime(DateTime date) {
+    // En España, el horario de verano va del último domingo de marzo al último domingo de octubre
+    final year = date.year;
+
+    // Último domingo de marzo
+    final marchLastSunday = _getLastSundayOfMonth(year, 3);
+    final marchLastSundayDate = DateTime(year, 3, marchLastSunday, 2, 0, 0);
+
+    // Último domingo de octubre
+    final octoberLastSunday = _getLastSundayOfMonth(year, 10);
+    final octoberLastSundayDate = DateTime(
+      year,
+      10,
+      octoberLastSunday,
+      3,
+      0,
+      0,
+    );
+
+    // Para septiembre 2025, estamos en horario de verano (UTC+2)
+    if (date.month == 9 && date.year == 2025) {
+      return true;
+    }
+
+    return date.isAfter(marchLastSundayDate) &&
+        date.isBefore(octoberLastSundayDate);
+  }
+
+  /// Obtiene el último domingo de un mes
+  int _getLastSundayOfMonth(int year, int month) {
+    final lastDay = DateTime(year, month + 1, 0).day; // Último día del mes
+    for (int day = lastDay; day >= 1; day--) {
+      final date = DateTime(year, month, day);
+      if (date.weekday == DateTime.sunday) {
+        return day;
+      }
+    }
+    return 1; // Fallback
+  }
+
+  /// Obtiene la hora actual de España (Madrid)
+  DateTime _getSpainTime() {
+    // El sistema ya está configurado en la zona horaria de España (UTC+2 en verano)
+    // Por lo tanto, DateTime.now() ya devuelve la hora correcta de Madrid
+    return DateTime.now();
+  }
 
   /* ───────────  LIFE-CYCLE  ─────────── */
 
   @override
   void initState() {
     super.initState();
-    _now = DateTime.now();
-    _clock = Timer.periodic(const Duration(seconds: 1),
-        (_) => setState(() => _now = DateTime.now()));
+    _now = _getSpainTime();
+    _clock = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => setState(() => _now = _getSpainTime()),
+    );
     _load();
   }
 
@@ -163,42 +224,53 @@ class _MowizTimePageState extends State<MowizTimePage> {
 
   @override
   Widget build(BuildContext context) {
-    final t      = AppLocalizations.of(context).t;
+    final t = AppLocalizations.of(context).t;
     final locale = Intl.getCurrentLocale();
 
-    final minutes  = _totalSec ~/ 60;
-    final finish   = _now.add(Duration(seconds: _totalSec));
-    final effectivePrice = ((_totalCents / 100) - _discountEurosApplied).clamp(0, double.infinity);
+    final minutes = _totalSec ~/ 60;
+    final finish = _now.add(Duration(seconds: _totalSec));
+    final effectivePrice = ((_totalCents / 100) - _discountEurosApplied).clamp(
+      0,
+      double.infinity,
+    );
     final priceStr = formatPrice(effectivePrice.toDouble(), locale);
 
     /* ---- time navigation buttons ---- */
-    
-    Widget timeNavigationButton(String text, VoidCallback? onPressed, double width) => ElevatedButton(
-          style: MowizDesignSystem.getSmartWidthButtonStyle(
-            width: width,
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            text: text,
-            isPrimary: false,
-            isEnabled: onPressed != null,
-          ),
-          onPressed: onPressed != null ? () {
-            SoundHelper.playTap();
-            onPressed();
-          } : null,
-          child: AutoSizeText(text, maxLines: 1),
-        );
+
+    Widget timeNavigationButton(
+      String text,
+      VoidCallback? onPressed,
+      double width,
+    ) => ElevatedButton(
+      style: MowizDesignSystem.getSmartWidthButtonStyle(
+        width: width,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        text: text,
+        isPrimary: false,
+        isEnabled: onPressed != null,
+      ),
+      onPressed: onPressed != null
+          ? () {
+              SoundHelper.playTap();
+              onPressed();
+            }
+          : null,
+      child: AutoSizeText(text, maxLines: 1),
+    );
 
     return MowizScaffold(
       title: 'MeyPark - ${t('selectDuration')}',
-      body : LayoutBuilder(
+      body: LayoutBuilder(
         builder: (context, c) {
           final width = c.maxWidth;
           final height = c.maxHeight;
-          
+
           // 🎨 Usar sistema de diseño homogéneo
           final contentWidth = MowizDesignSystem.getContentWidth(width);
-          final horizontalPadding = MowizDesignSystem.getHorizontalPadding(contentWidth);
+          final horizontalPadding = MowizDesignSystem.getHorizontalPadding(
+            contentWidth,
+          );
           final spacing = MowizDesignSystem.getSpacing(width);
           final titleFontSize = MowizDesignSystem.getTitleFontSize(width);
           final bodyFontSize = MowizDesignSystem.getBodyFontSize(width);
@@ -221,13 +293,16 @@ class _MowizTimePageState extends State<MowizTimePage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       AutoSizeText(
-                        DateFormat('EEE, d MMM yyyy - HH:mm', locale)
-                            .format(_now),
+                        DateFormat(
+                          'EEE, d MMM yyyy - HH:mm',
+                          locale,
+                        ).format(_now),
                         textAlign: TextAlign.center,
                         maxLines: 1,
                         style: TextStyle(
-                            fontSize: labelFontSize,
-                            fontWeight: FontWeight.bold),
+                          fontSize: labelFontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       SizedBox(height: spacing),
 
@@ -238,15 +313,26 @@ class _MowizTimePageState extends State<MowizTimePage> {
                           children: [
                             // Layout vertical para aparcímetro - más compacto
                             Container(
-                              padding: EdgeInsets.symmetric(horizontal: spacing * 2, vertical: MowizDesignSystem.paddingXL),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: spacing * 2,
+                                vertical: MowizDesignSystem.paddingXL,
+                              ),
                               decoration: BoxDecoration(
-                                border: Border.all(color: Theme.of(context).colorScheme.outline, width: 2),
-                                borderRadius: BorderRadius.circular(MowizDesignSystem.borderRadiusXL),
+                                border: Border.all(
+                                  color: Theme.of(context).colorScheme.outline,
+                                  width: 2,
+                                ),
+                                borderRadius: BorderRadius.circular(
+                                  MowizDesignSystem.borderRadiusXL,
+                                ),
                               ),
                               child: AutoSizeText(
-                                _blocks.isNotEmpty ? _fmtMin(_blocks[_currentTimeIndex]) : '0 min',
+                                _blocks.isNotEmpty
+                                    ? _fmtMin(_blocks[_currentTimeIndex])
+                                    : '0 min',
                                 style: TextStyle(
-                                  fontSize: bodyFontSize + 8, // Texto más grande
+                                  fontSize:
+                                      bodyFontSize + 8, // Texto más grande
                                   fontWeight: FontWeight.bold,
                                 ),
                                 maxLines: 1,
@@ -265,7 +351,9 @@ class _MowizTimePageState extends State<MowizTimePage> {
                                 SizedBox(width: spacing * 3),
                                 timeNavigationButton(
                                   '+',
-                                  _currentTimeIndex < _blocks.length - 1 ? _incrementTime : null,
+                                  _currentTimeIndex < _blocks.length - 1
+                                      ? _incrementTime
+                                      : null,
                                   width,
                                 ),
                               ],
@@ -278,8 +366,12 @@ class _MowizTimePageState extends State<MowizTimePage> {
                         onPressed: _blocks.isNotEmpty ? _clear : null,
                         style: MowizDesignSystem.getSmartWidthButtonStyle(
                           width: width,
-                          backgroundColor: Theme.of(context).colorScheme.secondary,
-                          foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.secondary,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onSecondary,
                           text: t('clear'),
                           isPrimary: false,
                           isEnabled: _blocks.isNotEmpty,
@@ -288,27 +380,35 @@ class _MowizTimePageState extends State<MowizTimePage> {
                       ),
                       SizedBox(height: spacing * 1.5),
 
-                      AutoSizeText('${minutes ~/ 60}h ${minutes % 60}m',
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          style: TextStyle(
-                              fontSize: titleFontSize,
-                              fontWeight: FontWeight.bold)),
-                      SizedBox(height: MowizDesignSystem.spacingS),
-                      AutoSizeText('${t('price')}: $priceStr',
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          style: TextStyle(
-                              fontSize: labelFontSize,
-                              fontWeight: FontWeight.bold)),
+                      AutoSizeText(
+                        '${minutes ~/ 60}h ${minutes % 60}m',
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontSize: titleFontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       SizedBox(height: MowizDesignSystem.spacingS),
                       AutoSizeText(
-                          '${t('until')}: ${DateFormat('HH:mm', locale).format(finish)}',
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          style: TextStyle(
-                              fontSize: labelFontSize,
-                              fontWeight: FontWeight.bold)),
+                        '${t('price')}: $priceStr',
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontSize: labelFontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: MowizDesignSystem.spacingS),
+                      AutoSizeText(
+                        '${t('until')}: ${DateFormat('HH:mm', locale).format(finish)}',
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontSize: labelFontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       SizedBox(height: spacing),
 
                       if (_loaded) ...[
@@ -318,15 +418,21 @@ class _MowizTimePageState extends State<MowizTimePage> {
                             final sorted = _steps.entries.toList()
                               ..sort((a, b) => a.key.compareTo(b.key));
                             return sorted
-                                .map((e) => Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 2),
-                                      child: AutoSizeText(
-                                        '${_fmtMin(e.key)} - ${formatPrice((e.value / 100).toDouble(), locale)}',
-                                        maxLines: 1,
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(fontSize: bodyFontSize - 4),
+                                .map(
+                                  (e) => Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 2,
+                                    ),
+                                    child: AutoSizeText(
+                                      '${_fmtMin(e.key)} - ${formatPrice((e.value / 100).toDouble(), locale)}',
+                                      maxLines: 1,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: bodyFontSize - 4,
                                       ),
-                                    ))
+                                    ),
+                                  ),
+                                )
                                 .toList();
                           })(),
                         ),
@@ -340,11 +446,11 @@ class _MowizTimePageState extends State<MowizTimePage> {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (_) => MowizSummaryPage(
-                                      plate   : widget.plate,
-                                      zone    : widget.zone,
-                                      start   : _now,
-                                      minutes : minutes,
-                                      price   : effectivePrice.toDouble(),
+                                      plate: widget.plate,
+                                      zone: widget.zone,
+                                      start: _now,
+                                      minutes: minutes,
+                                      price: effectivePrice.toDouble(),
                                       selectedCompany: widget.selectedCompany,
                                     ),
                                   ),
@@ -353,8 +459,12 @@ class _MowizTimePageState extends State<MowizTimePage> {
                             : null,
                         style: MowizDesignSystem.getSmartWidthButtonStyle(
                           width: width,
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onPrimary,
                           text: t('continue'),
                           isPrimary: true,
                           isEnabled: _totalSec > 0,
@@ -367,14 +477,21 @@ class _MowizTimePageState extends State<MowizTimePage> {
                           SoundHelper.playTap();
                           Navigator.of(context).pushAndRemoveUntil(
                             MaterialPageRoute(
-                                builder: (_) => MowizPayPage(selectedCompany: widget.selectedCompany)),
+                              builder: (_) => MowizPayPage(
+                                selectedCompany: widget.selectedCompany,
+                              ),
+                            ),
                             (_) => false,
                           );
                         },
                         style: MowizDesignSystem.getSmartWidthButtonStyle(
                           width: width,
-                          backgroundColor: Theme.of(context).colorScheme.secondary,
-                          foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.secondary,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onSecondary,
                           text: t('back'),
                           isPrimary: false,
                           isEnabled: true,
@@ -384,68 +501,83 @@ class _MowizTimePageState extends State<MowizTimePage> {
                       SizedBox(height: spacing),
                       FilledButton(
                         onPressed: () async {
-                        SoundHelper.playTap();
-                        
-                        try {
-                          // Verificar si el escáner está conectado
-                          final isConnected = await UnifiedService.isScannerConnected();
-                          
-                          if (!isConnected) {
+                          SoundHelper.playTap();
+
+                          try {
+                            // Verificar si el escáner está conectado
+                            final isConnected =
+                                await UnifiedService.isScannerConnected();
+
+                            if (!isConnected) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Escáner QR no disponible'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
+                            }
+
+                            // Mostrar indicador de escaneo
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Escaneando código QR...'),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+
+                            // Escanear código QR
+                            final discount = await UnifiedService.scanQrCode(
+                              context: context,
+                              timeout: 30,
+                            );
+
+                            if (discount != null) {
+                              // Aplicar descuento
+                              setState(() {
+                                _discountEurosApplied =
+                                    -discount; // Convertir a valor positivo para restar
+                              });
+
+                              final finalPrice =
+                                  ((_totalCents / 100) - _discountEurosApplied)
+                                      .clamp(0, double.infinity)
+                                      .toDouble();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Descuento aplicado: ${formatPrice(_discountEurosApplied, locale)} - Precio final: ${formatPrice(finalPrice, locale)}',
+                                  ),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'No se escaneó ningún código QR válido',
+                                  ),
+                                  backgroundColor: Colors.orange,
+                                ),
+                              );
+                            }
+                          } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Escáner QR no disponible'),
+                                content: Text('Error al escanear: $e'),
                                 backgroundColor: Colors.red,
                               ),
                             );
-                            return;
                           }
-                          
-                          // Mostrar indicador de escaneo
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Escaneando código QR...'),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                          
-                          // Escanear código QR
-                          final discount = await UnifiedService.scanQrCode(context: context, timeout: 30);
-                          
-                          if (discount != null) {
-                            // Aplicar descuento
-                            setState(() {
-                              _discountEurosApplied = -discount; // Convertir a valor positivo para restar
-                            });
-                            
-                            final finalPrice = ((_totalCents / 100) - _discountEurosApplied).clamp(0, double.infinity).toDouble();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Descuento aplicado: ${formatPrice(_discountEurosApplied, locale)} - Precio final: ${formatPrice(finalPrice, locale)}'),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('No se escaneó ningún código QR válido'),
-                                backgroundColor: Colors.orange,
-                              ),
-                            );
-                          }
-                          
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Error al escanear: $e'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
                         },
                         style: MowizDesignSystem.getSmartWidthButtonStyle(
                           width: width,
-                          backgroundColor: Theme.of(context).colorScheme.secondary,
-                          foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.secondary,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onSecondary,
                           text: t('scanQrButton'),
                           isPrimary: false,
                           isEnabled: true,
@@ -457,13 +589,20 @@ class _MowizTimePageState extends State<MowizTimePage> {
                         onPressed: () => _showManualCodeDialog(),
                         style: MowizDesignSystem.getSmartWidthButtonStyle(
                           width: width,
-                          backgroundColor: Theme.of(context).colorScheme.tertiary,
-                          foregroundColor: Theme.of(context).colorScheme.onTertiary,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.tertiary,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onTertiary,
                           text: 'Introducir código manualmente',
                           isPrimary: false,
                           isEnabled: true,
                         ),
-                        child: AutoSizeText('Introducir código manualmente', maxLines: 1),
+                        child: AutoSizeText(
+                          'Introducir código manualmente',
+                          maxLines: 1,
+                        ),
                       ),
                     ],
                   ),
@@ -475,14 +614,14 @@ class _MowizTimePageState extends State<MowizTimePage> {
       ),
     );
   }
-  
+
   /* ---- manual code dialog ---- */
-  
+
   void _showManualCodeDialog() {
     final TextEditingController codeController = TextEditingController();
     final t = AppLocalizations.of(context).t;
     final locale = Intl.getCurrentLocale();
-    
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -526,10 +665,10 @@ class _MowizTimePageState extends State<MowizTimePage> {
       },
     );
   }
-  
+
   void _processManualCode(String code, String locale) {
     double discount;
-    
+
     if (code == 'FREE') {
       discount = -99999.0; // Descuento total
     } else if (code.startsWith('-')) {
@@ -556,16 +695,21 @@ class _MowizTimePageState extends State<MowizTimePage> {
       );
       return;
     }
-    
+
     // Aplicar el descuento usando la misma lógica que el QR
     setState(() {
-      _discountEurosApplied = -discount; // Convertir a valor positivo para restar
+      _discountEurosApplied =
+          -discount; // Convertir a valor positivo para restar
     });
-    
-    final finalPrice = ((_totalCents / 100) - _discountEurosApplied).clamp(0, double.infinity).toDouble();
+
+    final finalPrice = ((_totalCents / 100) - _discountEurosApplied)
+        .clamp(0, double.infinity)
+        .toDouble();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Descuento aplicado: ${formatPrice(_discountEurosApplied, locale)} - Precio final: ${formatPrice(finalPrice, locale)}'),
+        content: Text(
+          'Descuento aplicado: ${formatPrice(_discountEurosApplied, locale)} - Precio final: ${formatPrice(finalPrice, locale)}',
+        ),
         backgroundColor: Colors.green,
       ),
     );

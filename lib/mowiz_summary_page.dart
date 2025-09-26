@@ -6,11 +6,9 @@ import 'config_service.dart';
 import 'dart:convert';
 
 import 'l10n/app_localizations.dart';
-import 'mowiz_page.dart';
 import 'mowiz_time_page.dart';
 import 'mowiz_success_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
-import 'styles/mowiz_buttons.dart';
 import 'styles/mowiz_design_system.dart';
 import 'sound_helper.dart';
 
@@ -81,6 +79,24 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
     );
   }
 
+  /// Obtiene el nombre de la zona traducido
+  String _getZoneName(String zone, String Function(String) t) {
+    switch (zone.toLowerCase()) {
+      case 'coche':
+        return t('carZone');
+      case 'moto':
+        return t('motorcycleZone');
+      case 'camion':
+        return t('truckZone');
+      case 'green':
+        return t('greenZone');
+      case 'blue':
+        return t('blueZone');
+      default:
+        return zone;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -89,11 +105,16 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
     final localeCode = l.locale.languageCode == 'es'
         ? 'es_ES'
         : l.locale.languageCode == 'ca'
-            ? 'ca_ES'
-            : 'en_GB';
+        ? 'ca_ES'
+        : 'en_GB';
     final timeFormat = DateFormat('EEE, d MMM yyyy - HH:mm', localeCode);
 
-    Widget paymentButton(String value, IconData icon, String text, double width) {
+    Widget paymentButton(
+      String value,
+      IconData icon,
+      String text,
+      double width,
+    ) {
       final selected = _method == value;
       final scheme = Theme.of(context).colorScheme;
       return SizedBox(
@@ -124,14 +145,18 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
 
           // 🎨 Usar sistema de diseño homogéneo
           final contentWidth = MowizDesignSystem.getContentWidth(width);
-          final horizontalPadding = MowizDesignSystem.getHorizontalPadding(contentWidth);
+          final horizontalPadding = MowizDesignSystem.getHorizontalPadding(
+            contentWidth,
+          );
           final spacing = MowizDesignSystem.getSpacing(width);
-          final titleFontSize = MowizDesignSystem.getTitleFontSize(width);
           final bodyFontSize = MowizDesignSystem.getBodyFontSize(width);
 
+          // 🎨 Info compacta del ticket en tarjeta
           Widget resumenCard = Card(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(MowizDesignSystem.borderRadiusXL),
+              borderRadius: BorderRadius.circular(
+                MowizDesignSystem.borderRadiusXL,
+              ),
             ),
             elevation: 4,
             child: Padding(
@@ -140,38 +165,27 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Info compacta en 3 líneas
                   AutoSizeText(
-                    t('totalTime'),
+                    "🚗 ${widget.plate} • ${_getZoneName(widget.zone, t)}",
                     maxLines: 1,
                     style: TextStyle(
-                      fontSize: titleFontSize,
+                      fontSize: bodyFontSize + 2,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: MowizDesignSystem.spacingS),
+                  SizedBox(height: MowizDesignSystem.spacingXS),
                   AutoSizeText(
-                    '${widget.minutes ~/ 60}h ${widget.minutes % 60}m',
-                    maxLines: 1,
-                    style: TextStyle(fontSize: titleFontSize + 8),
-                  ),
-                  SizedBox(height: MowizDesignSystem.spacingM),
-                  AutoSizeText(
-                    "${t('startTime')}: ${timeFormat.format(widget.start)}",
+                    "⏰ ${timeFormat.format(widget.start)} - ${timeFormat.format(finish)}",
                     maxLines: 1,
                     style: TextStyle(fontSize: bodyFontSize),
                   ),
                   SizedBox(height: MowizDesignSystem.spacingS),
                   AutoSizeText(
-                    "${t('endTime')}: ${timeFormat.format(finish)}",
-                    maxLines: 1,
-                    style: TextStyle(fontSize: bodyFontSize),
-                  ),
-                  SizedBox(height: MowizDesignSystem.spacingM),
-                  AutoSizeText(
-                    "${t('totalPrice')}: ${formatPrice(widget.price, Intl.getCurrentLocale())}",
+                    "💰 ${formatPrice(widget.price, Intl.getCurrentLocale())} • ${widget.minutes ~/ 60}h ${widget.minutes % 60}m",
                     maxLines: 1,
                     style: TextStyle(
-                      fontSize: bodyFontSize,
+                      fontSize: bodyFontSize + 1,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -192,12 +206,44 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
                 children: [
                   resumenCard,
                   SizedBox(height: spacing * 1.2),
-                  paymentButton('card', Icons.credit_card, t('card'), width),
+
+                  // 🎨 Botones de pago en 2 filas
+                  Row(
+                    children: [
+                      Expanded(
+                        child: paymentButton(
+                          'card',
+                          Icons.credit_card,
+                          t('card'),
+                          width,
+                        ),
+                      ),
+                      SizedBox(width: spacing / 2),
+                      Expanded(
+                        child: paymentButton(
+                          'qr',
+                          Icons.qr_code_2,
+                          t('qrPay'),
+                          width,
+                        ),
+                      ),
+                    ],
+                  ),
                   SizedBox(height: spacing),
-                  paymentButton('qr', Icons.qr_code_2, t('qrPay'), width),
-                  SizedBox(height: spacing),
-                  paymentButton('mobile', Icons.phone_iphone, t('mobilePay'), width),
+
+                  // Segunda fila con botón de móvil centrado
+                  SizedBox(
+                    width: width * 0.6,
+                    child: paymentButton(
+                      'mobile',
+                      Icons.phone_iphone,
+                      t('mobilePay'),
+                      width,
+                    ),
+                  ),
                   SizedBox(height: spacing * 1.3),
+
+                  // Botón de volver
                   FilledButton(
                     onPressed: () {
                       SoundHelper.playTap();
@@ -215,7 +261,9 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
                     style: MowizDesignSystem.getSecondaryButtonStyle(
                       width: width,
                       backgroundColor: Theme.of(context).colorScheme.secondary,
-                      foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                      foregroundColor: Theme.of(
+                        context,
+                      ).colorScheme.onSecondary,
                     ),
                     child: AutoSizeText(t('back'), maxLines: 1),
                   ),
@@ -227,7 +275,7 @@ class _MowizSummaryPageState extends State<MowizSummaryPage> {
           // 🎨 Usar scroll inteligente del sistema de diseño
           return MowizDesignSystem.getScrollableContent(
             availableHeight: height,
-            contentHeight: 600, // Altura estimada del contenido
+            contentHeight: 500, // Altura reducida para diseño más compacto
             child: Center(child: contenido),
           );
         },

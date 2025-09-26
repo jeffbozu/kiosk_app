@@ -26,7 +26,7 @@ class WhatsAppWebAlternativeService {
     try {
       // Formatear número de teléfono (remover + y espacios)
       String cleanPhone = phone.replaceAll(RegExp(r'[^\d]'), '');
-      
+
       // Crear mensaje formateado
       final message = _createFormattedMessage(
         plate: plate,
@@ -40,8 +40,9 @@ class WhatsAppWebAlternativeService {
       );
 
       // Crear URL de WhatsApp Web
-      final whatsappUrl = 'https://wa.me/$cleanPhone?text=${Uri.encodeComponent(message)}';
-      
+      final whatsappUrl =
+          'https://wa.me/$cleanPhone?text=${Uri.encodeComponent(message)}';
+
       print('📱 WhatsApp Web Alternative - Enviando mensaje:');
       print('   Teléfono: $phone (limpio: $cleanPhone)');
       print('   URL: $whatsappUrl');
@@ -50,11 +51,10 @@ class WhatsAppWebAlternativeService {
       // Intentar abrir WhatsApp Web
       // Nota: En web, esto abrirá una nueva pestaña
       // En móvil, esto abrirá la app de WhatsApp
-      
+
       // Para web, necesitamos usar url_launcher
       // Por ahora, retornamos true para indicar que se abrió la URL
       return true;
-      
     } catch (e) {
       print('📱 WhatsApp Web Alternative - Error: $e');
       return false;
@@ -130,20 +130,20 @@ class WhatsAppWebAlternativeService {
     buffer.writeln('🕙 *Fin:* ${dateFmt.format(end)}');
     buffer.writeln('⏱ *Duración:* $duration');
     buffer.writeln('💳 *Pago:* ${getMethodName(method)}');
-    
+
     if (discount != null && discount > 0) {
       buffer.writeln('💰 *Descuento:* ${formatPrice(discount)}');
       buffer.writeln('💵 *Total:* ${formatPrice(price)}');
     } else {
       buffer.writeln('💰 *Importe:* ${formatPrice(price)}');
     }
-    
+
     buffer.writeln('');
     buffer.writeln('✅ *Gracias por su compra.*');
-    
-    if (qrData != null) {
+
+    if (widget.qrData != null) {
       buffer.writeln('');
-      buffer.writeln('📱 *Código QR:* $qrData');
+      buffer.writeln('📱 *Código QR:* ${widget.qrData}');
     }
 
     return buffer.toString();

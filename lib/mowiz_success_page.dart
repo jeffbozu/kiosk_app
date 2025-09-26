@@ -4,20 +4,20 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:intl/intl.dart';
-import 'package:lottie/lottie.dart';
+// import 'package:lottie/lottie.dart'; // Removido - ya no se usa
 import 'package:qr_flutter/qr_flutter.dart';
-import 'widgets/success_check_animation.dart';
+// import 'widgets/success_check_animation.dart'; // Removido para mejorar diseño
 
 import 'l10n/app_localizations.dart';
 import 'mowiz_page.dart';
 import 'mowiz/mowiz_scaffold.dart';
-// Estilo de botones grandes reutilizable para toda la app
-import 'styles/mowiz_buttons.dart';
 import 'styles/mowiz_design_system.dart';
 import 'sound_helper.dart';
 import 'services/unified_service.dart';
 import 'services/email_service.dart';
 import 'services/whatsapp_service.dart';
+// import 'services/sms_service.dart'; // No se usa directamente
+import 'widgets/sms_dialog.dart';
 
 /// Helper function to format price with correct decimal separator based on locale
 String formatPrice(double price, String locale) {
@@ -28,7 +28,7 @@ String formatPrice(double price, String locale) {
     // Use dot as decimal separator for English and others
     return '${price.toStringAsFixed(2)} €';
   }
-  
+
   /// Genera datos QR con etiquetas traducidas según el idioma
   String _generateTranslatedQRData({
     required String plate,
@@ -65,13 +65,13 @@ String formatPrice(double price, String locale) {
           return key;
       }
     }
-    
+
     // Formatear fechas según el idioma
     String formatDateTime(DateTime date) {
       final formatter = DateFormat('dd/MM/yyyy HH:mm', locale);
       return formatter.format(date);
     }
-    
+
     // Formatear precio según el idioma
     String formatPrice(double price) {
       if (locale.startsWith('es') || locale.startsWith('ca')) {
@@ -80,7 +80,7 @@ String formatPrice(double price, String locale) {
         return '${price.toStringAsFixed(2)} €';
       }
     }
-    
+
     // Mapear zona
     String getZoneName(String zone) {
       switch (zone) {
@@ -94,7 +94,7 @@ String formatPrice(double price, String locale) {
           return zone;
       }
     }
-    
+
     // Mapear método de pago
     String getMethodName(String method) {
       switch (method) {
@@ -108,7 +108,7 @@ String formatPrice(double price, String locale) {
           return method;
       }
     }
-    
+
     // Generar datos QR traducidos
     final qrData = {
       getLabel('ticket'): 'Meypark',
@@ -118,10 +118,11 @@ String formatPrice(double price, String locale) {
       getLabel('end'): formatDateTime(end),
       getLabel('price'): formatPrice(price),
       getLabel('method'): getMethodName(method),
-      if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
+      if (discount != null && discount != 0)
+        getLabel('discount'): formatPrice(discount),
       'timestamp': DateTime.now().toIso8601String(),
     };
-    
+
     return jsonEncode(qrData);
   }
 }
@@ -153,7 +154,7 @@ class MowizSuccessPage extends StatefulWidget {
 class _MowizSuccessPageState extends State<MowizSuccessPage> {
   int _seconds = 30;
   Timer? _timer;
-  bool _showSuccessAnimation = true;
+  // bool _showSuccessAnimation = true; // Removido para mejorar diseño
 
   @override
   void initState() {
@@ -178,7 +179,9 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
       case 'camion':
         return t('zoneCamion');
       default:
-        print('🐛 DEBUG: Zone ID no reconocido: "$zoneId", devolviendo como fallback');
+        print(
+          '🐛 DEBUG: Zone ID no reconocido: "$zoneId", devolviendo como fallback',
+        );
         return zoneId; // Fallback al ID si no se reconoce
     }
   }
@@ -196,7 +199,19 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
   }
 
   void _pauseTimer() {
+    print('⏸️ Pausando timer - Segundos restantes: $_seconds');
     _timer?.cancel();
+  }
+
+  /// Reanuda el timer manteniendo el estado actual
+  void _resumeTimer() {
+    print('🔄 Reanudando timer - Segundos restantes: $_seconds');
+    if (_seconds > 0) {
+      _startTimer();
+      print('✅ Timer reanudado correctamente');
+    } else {
+      print('⚠️ Timer no se puede reanudar - segundos: $_seconds');
+    }
   }
 
   void _goHome() {
@@ -211,7 +226,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
     try {
       // Pausar el temporizador mientras se imprime
       _pauseTimer();
-      
+
       // Mostrar indicador de impresión
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -219,10 +234,10 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
           duration: Duration(seconds: 2),
         ),
       );
-      
+
       // Calcular fecha de fin basada en los minutos
       final endTime = widget.start.add(Duration(minutes: widget.minutes));
-      
+
       // Generar QR con etiquetas traducidas
       final qrData = _generateTranslatedQRData(
         plate: widget.plate,
@@ -234,7 +249,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         discount: widget.discount,
         locale: AppLocalizations.of(context).locale.languageCode,
       );
-      
+
       // Imprimir ticket usando el servicio unificado
       final success = await UnifiedService.printTicket(
         plate: widget.plate,
@@ -247,7 +262,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         discount: widget.discount,
         locale: AppLocalizations.of(context).locale.languageCode,
       );
-      
+
       if (success) {
         // Ticket impreso exitosamente
         ScaffoldMessenger.of(context).showSnackBar(
@@ -267,7 +282,6 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
           ),
         );
       }
-      
     } catch (e) {
       // Error inesperado
       ScaffoldMessenger.of(context).showSnackBar(
@@ -279,7 +293,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
       );
     } finally {
       // Reanudar el temporizador
-      _startTimer();
+      _resumeTimer();
     }
   }
 
@@ -296,7 +310,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         price: widget.price,
         method: widget.method,
         discount: widget.discount,
-        onClose: _startTimer,
+        onClose: _resumeTimer,
       ),
     );
     if (!mounted) return;
@@ -322,11 +336,30 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         price: widget.price,
         method: widget.method,
         discount: widget.discount,
-        onClose: _startTimer,
+        onClose: _resumeTimer,
       ),
     );
   }
-  
+
+  /// Muestra el diálogo de SMS con estados
+  void _showSMSDialogWithStates() {
+    _pauseTimer();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => SMSDialogWithStates(
+        plate: widget.plate,
+        zone: widget.zone,
+        start: widget.start,
+        minutes: widget.minutes,
+        price: widget.price,
+        method: widget.method,
+        discount: widget.discount,
+        onClose: _resumeTimer,
+      ),
+    );
+  }
+
   /// Envía el ticket por email
   Future<void> _sendTicketEmail(String email) async {
     try {
@@ -338,10 +371,10 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
           backgroundColor: Colors.blue,
         ),
       );
-      
+
       // Calcular fecha de fin
       final endTime = widget.start.add(Duration(minutes: widget.minutes));
-      
+
       // Generar QR con etiquetas traducidas
       final qrData = _generateTranslatedQRData(
         plate: widget.plate,
@@ -353,7 +386,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         discount: widget.discount,
         locale: AppLocalizations.of(context).locale.languageCode,
       );
-      
+
       // Enviar email
       final success = await EmailService.sendTicketEmail(
         recipientEmail: email,
@@ -366,9 +399,10 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         qrData: qrData,
         locale: Localizations.localeOf(context).languageCode,
         customSubject: 'Tu Ticket de Estacionamiento - ${widget.plate}',
-        customMessage: 'Hemos procesado tu pago exitosamente. Adjunto encontrarás tu ticket de estacionamiento.',
+        customMessage:
+            'Hemos procesado tu pago exitosamente. Adjunto encontrarás tu ticket de estacionamiento.',
       );
-      
+
       if (success) {
         // Email enviado exitosamente
         await showDialog(
@@ -387,7 +421,6 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         );
         _startTimer();
       }
-      
     } catch (e) {
       // Error inesperado
       ScaffoldMessenger.of(context).showSnackBar(
@@ -420,7 +453,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         );
 
         final endTime = widget.start.add(Duration(minutes: widget.minutes));
-        
+
         // Generar QR con etiquetas traducidas
         final qrData = _generateTranslatedQRData(
           plate: widget.plate,
@@ -432,7 +465,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
           discount: widget.discount,
           locale: AppLocalizations.of(context).locale.languageCode,
         );
-        
+
         // Enviar usando WhatsApp API
         bool success = await WhatsAppService.sendTicketWhatsApp(
           phone: phone,
@@ -444,7 +477,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
           method: widget.method,
           discount: widget.discount,
           qrData: qrData,
-          localeCode: AppLocalizations.of(context).locale.toString(),
+          localeCode: AppLocalizations.of(context).locale.languageCode,
         );
 
         if (success) {
@@ -492,8 +525,8 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
     final localeCode = l.locale.languageCode == 'es'
         ? 'es_ES'
         : l.locale.languageCode == 'ca'
-            ? 'ca_ES'
-            : 'en_US';
+        ? 'ca_ES'
+        : 'en_US';
     final timeFormat = l.locale.languageCode == 'en'
         ? DateFormat('MMM d, yyyy – HH:mm', localeCode)
         : DateFormat('d MMM yyyy – HH:mm', localeCode);
@@ -505,8 +538,8 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
       'cash': l.locale.languageCode == 'es'
           ? 'Efectivo'
           : l.locale.languageCode == 'ca'
-              ? 'Efectiu'
-              : 'Cash',
+          ? 'Efectiu'
+          : 'Cash',
       'bizum': 'Bizum',
     };
     final ticketJson =
@@ -516,14 +549,17 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
     // 🎨 Contenido principal usando sistema de diseño homogéneo
     Widget mainContent(double width, double height) {
       final contentWidth = MowizDesignSystem.getContentWidth(width);
-      final horizontalPadding = MowizDesignSystem.getHorizontalPadding(contentWidth);
+      final horizontalPadding = MowizDesignSystem.getHorizontalPadding(
+        contentWidth,
+      );
       final spacing = MowizDesignSystem.getSpacing(width);
       final titleFontSize = MowizDesignSystem.getTitleFontSize(width);
       final bodyFontSize = MowizDesignSystem.getBodyFontSize(width);
       final labelFontSize = MowizDesignSystem.getSubtitleFontSize(width);
-      
-      // Tamaño del QR basado en el ancho del contenido
-      final qrSize = contentWidth * (MowizDesignSystem.isMobile(width) ? 0.6 : 0.4);
+
+      // Tamaño del QR reducido en 30% para mejor diseño
+      final qrSize =
+          contentWidth * (MowizDesignSystem.isMobile(width) ? 0.30 : 0.20);
 
       return Center(
         child: ConstrainedBox(
@@ -536,20 +572,26 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Lottie.asset(
-                  'assets/success.json',
-                  height: qrSize * 0.5,
-                  repeat: false,
-                ),
-                SizedBox(height: spacing / 2),
-                AutoSizeText(
-                  t('paymentSuccess'),
-                  maxLines: 1,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: titleFontSize,
-                    fontWeight: FontWeight.bold,
-                  ),
+                // Título con check al lado
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.check_circle,
+                      color: Colors.green,
+                      size: titleFontSize + 10,
+                    ),
+                    SizedBox(width: spacing / 2),
+                    AutoSizeText(
+                      t('paymentSuccess'),
+                      maxLines: 1,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: titleFontSize,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
                 SizedBox(height: spacing / 2),
                 Center(
@@ -563,7 +605,9 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                 // Tarjeta resumen
                 Card(
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(MowizDesignSystem.borderRadiusXL),
+                    borderRadius: BorderRadius.circular(
+                      MowizDesignSystem.borderRadiusXL,
+                    ),
                   ),
                   elevation: 4,
                   child: Padding(
@@ -580,28 +624,17 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                           ),
                         ),
                         SizedBox(height: MowizDesignSystem.spacingS),
+                        // Información reducida del ticket
                         AutoSizeText(
-                          "${t('plate')}: ${widget.plate}",
+                          "${widget.plate} • ${_getZoneName(widget.zone, t)}",
+                          maxLines: 1,
+                          style: TextStyle(fontSize: bodyFontSize - 1),
+                        ),
+                        SizedBox(height: MowizDesignSystem.spacingXS),
+                        AutoSizeText(
+                          "${timeFormat.format(widget.start)} - ${timeFormat.format(finish)}",
                           maxLines: 1,
                           style: TextStyle(fontSize: bodyFontSize - 2),
-                        ),
-                        SizedBox(height: MowizDesignSystem.spacingXS),
-                        AutoSizeText(
-                          "${t('zone')}: ${_getZoneName(widget.zone, t)}",
-                          maxLines: 1,
-                          style: TextStyle(fontSize: bodyFontSize - 3),
-                        ),
-                        SizedBox(height: MowizDesignSystem.spacingXS),
-                        AutoSizeText(
-                          "${t('startTime')}: ${timeFormat.format(widget.start)}",
-                          maxLines: 1,
-                          style: TextStyle(fontSize: bodyFontSize - 4),
-                        ),
-                        SizedBox(height: MowizDesignSystem.spacingXS),
-                        AutoSizeText(
-                          "${t('endTime')}: ${timeFormat.format(finish)}",
-                          maxLines: 1,
-                          style: TextStyle(fontSize: bodyFontSize - 4),
                         ),
                         SizedBox(height: MowizDesignSystem.spacingS),
                         AutoSizeText(
@@ -617,7 +650,10 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                           AutoSizeText(
                             "${t('discount')}: ${formatPrice(widget.discount!, localeCode)}",
                             maxLines: 1,
-                            style: TextStyle(fontSize: bodyFontSize - 3, color: Colors.green),
+                            style: TextStyle(
+                              fontSize: bodyFontSize - 3,
+                              color: Colors.green,
+                            ),
                           ),
                         ],
                         SizedBox(height: MowizDesignSystem.spacingXS),
@@ -631,60 +667,114 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
                   ),
                 ),
                 SizedBox(height: spacing),
-                // Botones de acción usando sistema de diseño
-                MowizDesignSystem.getButtonWrapLayout(
-                  width: width,
-                  buttons: [
-                    FilledButton(
-                      onPressed: () async {
-                        SoundHelper.playTap();
-                        await _printTicket();
-                      },
-                      style: MowizDesignSystem.getSecondaryButtonStyle(
-                        width: width,
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      ),
-                      child: AutoSizeText(t('printTicket'), maxLines: 1),
+                // Botones de acción en layout compacto
+                Column(
+                  children: [
+                    // Primera fila de botones principales
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () async {
+                              SoundHelper.playTap();
+                              await _printTicket();
+                            },
+                            style: MowizDesignSystem.getSecondaryButtonStyle(
+                              width: width,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.onPrimary,
+                            ),
+                            child: AutoSizeText(t('printTicket'), maxLines: 1),
+                          ),
+                        ),
+                        SizedBox(width: spacing / 2),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () {
+                              SoundHelper.playTap();
+                              _showWhatsAppDialogWithStates();
+                            },
+                            style: MowizDesignSystem.getSecondaryButtonStyle(
+                              width: width,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.secondary,
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.onSecondary,
+                            ),
+                            child: AutoSizeText('📱 WhatsApp', maxLines: 1),
+                          ),
+                        ),
+                      ],
                     ),
-                    FilledButton(
-                      onPressed: () {
-                        SoundHelper.playTap();
-                        _showWhatsAppDialogWithStates();
-                      },
-                      style: MowizDesignSystem.getSecondaryButtonStyle(
-                        width: width,
-                        backgroundColor: Theme.of(context).colorScheme.secondary,
-                        foregroundColor: Theme.of(context).colorScheme.onSecondary,
-                      ),
-                      child: AutoSizeText(t('sendBySms'), maxLines: 1),
+                    SizedBox(height: spacing / 2),
+                    // Segunda fila de botones
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () {
+                              SoundHelper.playTap();
+                              _showSMSDialogWithStates();
+                            },
+                            style: MowizDesignSystem.getSecondaryButtonStyle(
+                              width: width,
+                              backgroundColor: const Color(
+                                0xFFE62144,
+                              ), // Rojo corporativo
+                              foregroundColor: Colors.white,
+                            ),
+                            child: AutoSizeText('📱 SMS', maxLines: 1),
+                          ),
+                        ),
+                        SizedBox(width: spacing / 2),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () {
+                              SoundHelper.playTap();
+                              _showEmailDialog();
+                            },
+                            style: MowizDesignSystem.getSecondaryButtonStyle(
+                              width: width,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.tertiary,
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.onTertiary,
+                            ),
+                            child: AutoSizeText('📧 Email', maxLines: 1),
+                          ),
+                        ),
+                      ],
                     ),
-                    FilledButton(
-                      onPressed: () {
-                        SoundHelper.playTap();
-                        _showEmailDialog();
-                      },
-                      style: MowizDesignSystem.getSecondaryButtonStyle(
-                        width: width,
-                        backgroundColor: Theme.of(context).colorScheme.tertiary,
-                        foregroundColor: Theme.of(context).colorScheme.onTertiary,
+                    SizedBox(height: spacing / 2),
+                    // Botón de inicio centrado
+                    SizedBox(
+                      width: width * 0.6,
+                      child: FilledButton(
+                        onPressed: () {
+                          SoundHelper.playTap();
+                          _goHome();
+                        },
+                        style: MowizDesignSystem.getSecondaryButtonStyle(
+                          width: width,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surface,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onSurface,
+                        ),
+                        child: AutoSizeText(t('home'), maxLines: 1),
                       ),
-                      child: AutoSizeText(t('sendByEmail'), maxLines: 1),
-                    ),
-                    FilledButton(
-                      onPressed: () {
-                        SoundHelper.playTap();
-                        _goHome();
-                      },
-                      style: MowizDesignSystem.getSecondaryButtonStyle(
-                        width: width,
-                        backgroundColor: Theme.of(context).colorScheme.surface,
-                        foregroundColor: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      child: AutoSizeText(t('home'), maxLines: 1),
                     ),
                   ],
-                  spacing: spacing,
                 ),
                 SizedBox(height: spacing * 1.2),
                 // Temporizador de retorno
@@ -710,37 +800,14 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
           // 🎨 Usar scroll inteligente del sistema de diseño
           return MowizDesignSystem.getScrollableContent(
             availableHeight: height,
-            contentHeight: 1000, // Altura estimada del contenido
-            child: Stack(
-              children: [
-                // Animación de éxito elegante
-                if (_showSuccessAnimation)
-                  Positioned(
-                    top: 50,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: SuccessCheckAnimation(
-                        size: 150,
-                        color: Colors.green,
-                        animationDuration: const Duration(milliseconds: 4000),
-                        onAnimationComplete: () {
-                          setState(() {
-                            _showSuccessAnimation = false;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                mainContent(width, height),
-              ],
-            ),
+            contentHeight: 700, // Altura reducida para diseño más compacto
+            child: mainContent(width, height),
           );
         },
       ),
     );
   }
-  
+
   /// Genera datos QR con etiquetas traducidas según el idioma
   String _generateTranslatedQRData({
     required String plate,
@@ -777,13 +844,13 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
           return key;
       }
     }
-    
+
     // Formatear fechas según el idioma
     String formatDateTime(DateTime date) {
       final formatter = DateFormat('dd/MM/yyyy HH:mm', locale);
       return formatter.format(date);
     }
-    
+
     // Formatear precio según el idioma
     String formatPrice(double price) {
       if (locale.startsWith('es') || locale.startsWith('ca')) {
@@ -792,7 +859,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
         return '${price.toStringAsFixed(2)} €';
       }
     }
-    
+
     // Mapear zona
     String getZoneName(String zone) {
       switch (zone) {
@@ -806,7 +873,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
           return zone;
       }
     }
-    
+
     // Mapear método de pago
     String getMethodName(String method) {
       switch (method) {
@@ -820,7 +887,7 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
           return method;
       }
     }
-    
+
     // Generar datos QR traducidos
     final qrData = {
       getLabel('ticket'): 'Meypark',
@@ -830,10 +897,11 @@ class _MowizSuccessPageState extends State<MowizSuccessPage> {
       getLabel('end'): formatDateTime(end),
       getLabel('price'): formatPrice(price),
       getLabel('method'): getMethodName(method),
-      if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
+      if (discount != null && discount != 0)
+        getLabel('discount'): formatPrice(discount),
       'timestamp': DateTime.now().toIso8601String(),
     };
-    
+
     return jsonEncode(qrData);
   }
 }
@@ -852,7 +920,7 @@ class _EmailDialogWithStates extends StatefulWidget {
   final String method;
   final double? discount;
   final VoidCallback? onClose;
-  
+
   const _EmailDialogWithStates({
     required this.plate,
     required this.zone,
@@ -875,10 +943,10 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
 
   Future<void> _sendEmail() async {
     setState(() => _state = DialogState.sending);
-    
+
     try {
       final endTime = widget.start.add(Duration(minutes: widget.minutes));
-      
+
       bool success = await EmailService.sendTicketEmail(
         recipientEmail: _email.trim(),
         plate: widget.plate,
@@ -887,10 +955,11 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
         end: endTime,
         price: widget.price,
         method: widget.method,
-        qrData: 'ticket|plate:${widget.plate}|zone:${widget.zone}|start:${widget.start.toIso8601String()}|end:${endTime.toIso8601String()}|price:${widget.price}${widget.discount != null && widget.discount != 0 ? '|discount:${widget.discount}' : ''}',
+        qrData:
+            'ticket|plate:${widget.plate}|zone:${widget.zone}|start:${widget.start.toIso8601String()}|end:${endTime.toIso8601String()}|price:${widget.price}${widget.discount != null && widget.discount != 0 ? '|discount:${widget.discount}' : ''}',
         locale: AppLocalizations.of(context).locale.languageCode,
       );
-      
+
       if (success) {
         setState(() => _state = DialogState.success);
         // Reanudar temporizador después de 2 segundos
@@ -925,7 +994,7 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    
+
     return AlertDialog(
       title: Text(l.t('enterEmail')),
       content: _buildContent(l),
@@ -945,7 +1014,7 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
             border: OutlineInputBorder(),
           ),
         );
-        
+
       case DialogState.sending:
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -954,10 +1023,13 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
             SizedBox(height: 16),
             Text(l.t('sendingEmail')),
             SizedBox(height: 8),
-            Text(l.t('pleaseWait'), style: TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(
+              l.t('pleaseWait'),
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
           ],
         );
-        
+
       case DialogState.success:
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -969,7 +1041,7 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
             Text(l.t('emailSent')),
           ],
         );
-        
+
       case DialogState.error:
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -978,7 +1050,10 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
             SizedBox(height: 16),
             Text(l.t('sendError')),
             SizedBox(height: 8),
-            Text(_errorMessage ?? 'Error desconocido', style: TextStyle(fontSize: 12)),
+            Text(
+              _errorMessage ?? 'Error desconocido',
+              style: TextStyle(fontSize: 12),
+            ),
           ],
         );
     }
@@ -989,7 +1064,10 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
       case DialogState.input:
         return [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context);
+              widget.onClose?.call();
+            },
             child: Text(l.t('cancel')),
           ),
           ElevatedButton(
@@ -997,15 +1075,18 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
             child: Text(l.t('send')),
           ),
         ];
-        
+
       case DialogState.sending:
         return [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context);
+              widget.onClose?.call();
+            },
             child: Text(l.t('cancel')),
           ),
         ];
-        
+
       case DialogState.success:
         return [
           ElevatedButton(
@@ -1013,11 +1094,14 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
             child: Text(l.t('close')),
           ),
         ];
-        
+
       case DialogState.error:
         return [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context);
+              widget.onClose?.call();
+            },
             child: Text(l.t('cancel')),
           ),
           ElevatedButton(
@@ -1029,7 +1113,7 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
         ];
     }
   }
-  
+
   /// Genera datos QR con etiquetas traducidas según el idioma
   String _generateTranslatedQRData({
     required String plate,
@@ -1066,13 +1150,13 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
           return key;
       }
     }
-    
+
     // Formatear fechas según el idioma
     String formatDateTime(DateTime date) {
       final formatter = DateFormat('dd/MM/yyyy HH:mm', locale);
       return formatter.format(date);
     }
-    
+
     // Formatear precio según el idioma
     String formatPrice(double price) {
       if (locale.startsWith('es') || locale.startsWith('ca')) {
@@ -1081,7 +1165,7 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
         return '${price.toStringAsFixed(2)} €';
       }
     }
-    
+
     // Mapear zona
     String getZoneName(String zone) {
       switch (zone) {
@@ -1095,7 +1179,7 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
           return zone;
       }
     }
-    
+
     // Mapear método de pago
     String getMethodName(String method) {
       switch (method) {
@@ -1109,7 +1193,7 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
           return method;
       }
     }
-    
+
     // Generar datos QR traducidos
     final qrData = {
       getLabel('ticket'): 'Meypark',
@@ -1119,10 +1203,11 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
       getLabel('end'): formatDateTime(end),
       getLabel('price'): formatPrice(price),
       getLabel('method'): getMethodName(method),
-      if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
+      if (discount != null && discount != 0)
+        getLabel('discount'): formatPrice(discount),
       'timestamp': DateTime.now().toIso8601String(),
     };
-    
+
     return jsonEncode(qrData);
   }
 }
@@ -1141,13 +1226,14 @@ class _SmsDialogState extends State<_SmsDialog> {
   String _formatPhoneNumber(String phone) {
     // Remover todos los caracteres no numéricos
     String cleanPhone = phone.replaceAll(RegExp(r'[^\d]'), '');
-    
+
     // Si empieza con 34 (España), mantenerlo
     if (cleanPhone.startsWith('34')) {
       return '+$cleanPhone';
     }
     // Si empieza con 6, 7, 8, 9 (móviles españoles), agregar +34
-    else if (cleanPhone.startsWith(RegExp(r'[6789]')) && cleanPhone.length == 9) {
+    else if (cleanPhone.startsWith(RegExp(r'[6789]')) &&
+        cleanPhone.length == 9) {
       return '+34$cleanPhone';
     }
     // Si tiene 9 dígitos y no empieza con 34, agregar +34
@@ -1206,7 +1292,7 @@ class _SmsDialogState extends State<_SmsDialog> {
       ],
     );
   }
-  
+
   /// Genera datos QR con etiquetas traducidas según el idioma
   String _generateTranslatedQRData({
     required String plate,
@@ -1243,13 +1329,13 @@ class _SmsDialogState extends State<_SmsDialog> {
           return key;
       }
     }
-    
+
     // Formatear fechas según el idioma
     String formatDateTime(DateTime date) {
       final formatter = DateFormat('dd/MM/yyyy HH:mm', locale);
       return formatter.format(date);
     }
-    
+
     // Formatear precio según el idioma
     String formatPrice(double price) {
       if (locale.startsWith('es') || locale.startsWith('ca')) {
@@ -1258,7 +1344,7 @@ class _SmsDialogState extends State<_SmsDialog> {
         return '${price.toStringAsFixed(2)} €';
       }
     }
-    
+
     // Mapear zona
     String getZoneName(String zone) {
       switch (zone) {
@@ -1272,7 +1358,7 @@ class _SmsDialogState extends State<_SmsDialog> {
           return zone;
       }
     }
-    
+
     // Mapear método de pago
     String getMethodName(String method) {
       switch (method) {
@@ -1286,7 +1372,7 @@ class _SmsDialogState extends State<_SmsDialog> {
           return method;
       }
     }
-    
+
     // Generar datos QR traducidos
     final qrData = {
       getLabel('ticket'): 'Meypark',
@@ -1296,10 +1382,11 @@ class _SmsDialogState extends State<_SmsDialog> {
       getLabel('end'): formatDateTime(end),
       getLabel('price'): formatPrice(price),
       getLabel('method'): getMethodName(method),
-      if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
+      if (discount != null && discount != 0)
+        getLabel('discount'): formatPrice(discount),
       'timestamp': DateTime.now().toIso8601String(),
     };
-    
+
     return jsonEncode(qrData);
   }
 }
@@ -1363,7 +1450,7 @@ class _EmailSentDialogState extends State<_EmailSentDialog> {
       ],
     );
   }
-  
+
   /// Genera datos QR con etiquetas traducidas según el idioma
   String _generateTranslatedQRData({
     required String plate,
@@ -1400,13 +1487,13 @@ class _EmailSentDialogState extends State<_EmailSentDialog> {
           return key;
       }
     }
-    
+
     // Formatear fechas según el idioma
     String formatDateTime(DateTime date) {
       final formatter = DateFormat('dd/MM/yyyy HH:mm', locale);
       return formatter.format(date);
     }
-    
+
     // Formatear precio según el idioma
     String formatPrice(double price) {
       if (locale.startsWith('es') || locale.startsWith('ca')) {
@@ -1415,7 +1502,7 @@ class _EmailSentDialogState extends State<_EmailSentDialog> {
         return '${price.toStringAsFixed(2)} €';
       }
     }
-    
+
     // Mapear zona
     String getZoneName(String zone) {
       switch (zone) {
@@ -1429,7 +1516,7 @@ class _EmailSentDialogState extends State<_EmailSentDialog> {
           return zone;
       }
     }
-    
+
     // Mapear método de pago
     String getMethodName(String method) {
       switch (method) {
@@ -1443,7 +1530,7 @@ class _EmailSentDialogState extends State<_EmailSentDialog> {
           return method;
       }
     }
-    
+
     // Generar datos QR traducidos
     final qrData = {
       getLabel('ticket'): 'Meypark',
@@ -1453,10 +1540,11 @@ class _EmailSentDialogState extends State<_EmailSentDialog> {
       getLabel('end'): formatDateTime(end),
       getLabel('price'): formatPrice(price),
       getLabel('method'): getMethodName(method),
-      if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
+      if (discount != null && discount != 0)
+        getLabel('discount'): formatPrice(discount),
       'timestamp': DateTime.now().toIso8601String(),
     };
-    
+
     return jsonEncode(qrData);
   }
 }
@@ -1520,7 +1608,7 @@ class _SmsSentDialogState extends State<_SmsSentDialog> {
       ],
     );
   }
-  
+
   /// Genera datos QR con etiquetas traducidas según el idioma
   String _generateTranslatedQRData({
     required String plate,
@@ -1557,13 +1645,13 @@ class _SmsSentDialogState extends State<_SmsSentDialog> {
           return key;
       }
     }
-    
+
     // Formatear fechas según el idioma
     String formatDateTime(DateTime date) {
       final formatter = DateFormat('dd/MM/yyyy HH:mm', locale);
       return formatter.format(date);
     }
-    
+
     // Formatear precio según el idioma
     String formatPrice(double price) {
       if (locale.startsWith('es') || locale.startsWith('ca')) {
@@ -1572,7 +1660,7 @@ class _SmsSentDialogState extends State<_SmsSentDialog> {
         return '${price.toStringAsFixed(2)} €';
       }
     }
-    
+
     // Mapear zona
     String getZoneName(String zone) {
       switch (zone) {
@@ -1586,7 +1674,7 @@ class _SmsSentDialogState extends State<_SmsSentDialog> {
           return zone;
       }
     }
-    
+
     // Mapear método de pago
     String getMethodName(String method) {
       switch (method) {
@@ -1600,7 +1688,7 @@ class _SmsSentDialogState extends State<_SmsSentDialog> {
           return method;
       }
     }
-    
+
     // Generar datos QR traducidos
     final qrData = {
       getLabel('ticket'): 'Meypark',
@@ -1610,10 +1698,11 @@ class _SmsSentDialogState extends State<_SmsSentDialog> {
       getLabel('end'): formatDateTime(end),
       getLabel('price'): formatPrice(price),
       getLabel('method'): getMethodName(method),
-      if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
+      if (discount != null && discount != 0)
+        getLabel('discount'): formatPrice(discount),
       'timestamp': DateTime.now().toIso8601String(),
     };
-    
+
     return jsonEncode(qrData);
   }
 }
@@ -1628,7 +1717,7 @@ class _WhatsAppDialogWithStates extends StatefulWidget {
   final String method;
   final double? discount;
   final VoidCallback? onClose;
-  
+
   const _WhatsAppDialogWithStates({
     required this.plate,
     required this.zone,
@@ -1641,7 +1730,8 @@ class _WhatsAppDialogWithStates extends StatefulWidget {
   });
 
   @override
-  State<_WhatsAppDialogWithStates> createState() => _WhatsAppDialogWithStatesState();
+  State<_WhatsAppDialogWithStates> createState() =>
+      _WhatsAppDialogWithStatesState();
 }
 
 class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
@@ -1651,10 +1741,10 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
 
   Future<void> _sendWhatsApp() async {
     setState(() => _state = DialogState.sending);
-    
+
     try {
       final endTime = widget.start.add(Duration(minutes: widget.minutes));
-      
+
       // Formatear número de teléfono
       String formattedPhone = _phone.trim();
       if (!formattedPhone.startsWith('+')) {
@@ -1662,7 +1752,8 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
         String cleanPhone = formattedPhone.replaceAll(RegExp(r'[^\d]'), '');
         if (cleanPhone.startsWith('34')) {
           formattedPhone = '+$cleanPhone';
-        } else if (cleanPhone.startsWith(RegExp(r'[6789]')) && cleanPhone.length == 9) {
+        } else if (cleanPhone.startsWith(RegExp(r'[6789]')) &&
+            cleanPhone.length == 9) {
           formattedPhone = '+34$cleanPhone';
         } else if (cleanPhone.length == 9) {
           formattedPhone = '+34$cleanPhone';
@@ -1670,10 +1761,10 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
           formattedPhone = '+34$cleanPhone';
         }
       }
-      
+
       print('📱 WhatsApp Dialog - Número original: ${_phone.trim()}');
       print('📱 WhatsApp Dialog - Número formateado: $formattedPhone');
-      
+
       bool success = await WhatsAppService.sendTicketWhatsApp(
         phone: formattedPhone,
         plate: widget.plate,
@@ -1683,9 +1774,9 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
         price: widget.price,
         method: widget.method,
         discount: widget.discount,
-        localeCode: AppLocalizations.of(context).locale.toString(),
+        localeCode: AppLocalizations.of(context).locale.languageCode,
       );
-      
+
       if (success) {
         setState(() => _state = DialogState.success);
         // Reanudar temporizador después de 2 segundos
@@ -1726,7 +1817,7 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    
+
     return AlertDialog(
       title: Text(l.t('sendTicketSms')),
       content: _buildContent(l),
@@ -1746,7 +1837,7 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
             border: OutlineInputBorder(),
           ),
         );
-        
+
       case DialogState.sending:
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -1755,10 +1846,13 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
             SizedBox(height: 16),
             Text(l.t('sendingWhatsApp')),
             SizedBox(height: 8),
-            Text(l.t('pleaseWait'), style: TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(
+              l.t('pleaseWait'),
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
           ],
         );
-        
+
       case DialogState.success:
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -1770,7 +1864,7 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
             Text(l.t('whatsappSent')), // Traducción específica para WhatsApp
           ],
         );
-        
+
       case DialogState.error:
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -1779,7 +1873,10 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
             SizedBox(height: 16),
             Text(l.t('sendError')),
             SizedBox(height: 8),
-            Text(_errorMessage ?? 'Error desconocido', style: TextStyle(fontSize: 12)),
+            Text(
+              _errorMessage ?? 'Error desconocido',
+              style: TextStyle(fontSize: 12),
+            ),
           ],
         );
     }
@@ -1790,7 +1887,10 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
       case DialogState.input:
         return [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context);
+              widget.onClose?.call();
+            },
             child: Text(l.t('cancel')),
           ),
           ElevatedButton(
@@ -1798,15 +1898,18 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
             child: Text(l.t('send')),
           ),
         ];
-        
+
       case DialogState.sending:
         return [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context);
+              widget.onClose?.call();
+            },
             child: Text(l.t('cancel')),
           ),
         ];
-        
+
       case DialogState.success:
         return [
           ElevatedButton(
@@ -1814,11 +1917,14 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
             child: Text(l.t('close')),
           ),
         ];
-        
+
       case DialogState.error:
         return [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context);
+              widget.onClose?.call();
+            },
             child: Text(l.t('cancel')),
           ),
           ElevatedButton(
@@ -1830,7 +1936,7 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
         ];
     }
   }
-  
+
   /// Genera datos QR con etiquetas traducidas según el idioma
   String _generateTranslatedQRData({
     required String plate,
@@ -1867,13 +1973,13 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
           return key;
       }
     }
-    
+
     // Formatear fechas según el idioma
     String formatDateTime(DateTime date) {
       final formatter = DateFormat('dd/MM/yyyy HH:mm', locale);
       return formatter.format(date);
     }
-    
+
     // Formatear precio según el idioma
     String formatPrice(double price) {
       if (locale.startsWith('es') || locale.startsWith('ca')) {
@@ -1882,7 +1988,7 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
         return '${price.toStringAsFixed(2)} €';
       }
     }
-    
+
     // Mapear zona
     String getZoneName(String zone) {
       switch (zone) {
@@ -1896,7 +2002,7 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
           return zone;
       }
     }
-    
+
     // Mapear método de pago
     String getMethodName(String method) {
       switch (method) {
@@ -1910,7 +2016,7 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
           return method;
       }
     }
-    
+
     // Generar datos QR traducidos
     final qrData = {
       getLabel('ticket'): 'Meypark',
@@ -1920,10 +2026,11 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
       getLabel('end'): formatDateTime(end),
       getLabel('price'): formatPrice(price),
       getLabel('method'): getMethodName(method),
-      if (discount != null && discount != 0) getLabel('discount'): formatPrice(discount),
+      if (discount != null && discount != 0)
+        getLabel('discount'): formatPrice(discount),
       'timestamp': DateTime.now().toIso8601String(),
     };
-    
+
     return jsonEncode(qrData);
   }
 }

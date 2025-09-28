@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 /// Las credenciales están ocultas en el servidor proxy
 class TwilioSecureService {
   // URL del proxy de Twilio (credenciales ocultas en servidor)
-  static const String _proxyUrl = 'https://twilio-proxy-server.onrender.com';
+  static const String _proxyUrl = 'https://render-whatsapp-tih4.onrender.com';
 
   /// Envía WhatsApp usando proxy seguro
   static Future<bool> sendTicketWhatsApp({
@@ -54,9 +54,23 @@ class TwilioSecureService {
       // Enviar a través del proxy (credenciales ocultas)
       final response = await http
           .post(
-            Uri.parse('$_proxyUrl/send-whatsapp'),
+            Uri.parse('$_proxyUrl/v1/whatsapp/send'),
             headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'to': phone, 'message': message}),
+            body: jsonEncode({
+              'phone': phone,
+              'ticket': {
+                'plate': plate,
+                'zone': zone,
+                'start': startFormatted,
+                'end': endFormatted,
+                'duration': duration,
+                'price': price,
+                'method': method,
+                'discount': discount,
+                'qrData': qrData,
+              },
+              'localeCode': localeCode ?? 'es',
+            }),
           )
           .timeout(const Duration(seconds: 30));
 

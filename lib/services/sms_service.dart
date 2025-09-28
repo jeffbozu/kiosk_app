@@ -9,7 +9,7 @@ import 'twilio_proxy_service.dart';
 class SMSService {
   static String baseUrl = const String.fromEnvironment(
     'SMS_BASE_URL',
-    defaultValue: 'https://render-whatsapp-tih4.onrender.com',
+    defaultValue: 'https://sms-b9ex.onrender.com',
   );
 
   static Future<bool> sendTicketSMS({

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'whatsapp_alternative_api_service.dart';
-import 'twilio_direct_service.dart';
+import 'twilio_secure_service.dart';
 import 'twilio_proxy_service.dart';
 
 class WhatsAppService {
@@ -26,8 +26,8 @@ class WhatsAppService {
     try {
       print('📱 WhatsApp Service - Intentando envío directo a Twilio...');
 
-      // 🚀 NUEVO: Intentar primero con Twilio Direct
-      final twilioSuccess = await TwilioDirectService.sendTicketWhatsApp(
+      // 🚀 NUEVO: Intentar primero con Twilio Secure (proxy)
+      final twilioSuccess = await TwilioSecureService.sendTicketWhatsApp(
         phone: phone,
         plate: plate,
         zone: zone,

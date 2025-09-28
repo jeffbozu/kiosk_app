@@ -6,14 +6,11 @@ import 'package:intl/intl.dart';
 /// Servicio directo de Twilio para WhatsApp
 /// Conecta directamente con la API de Twilio sin servidor intermedio
 class TwilioDirectService {
-  // Credenciales de Twilio (configuradas para producción)
-  static const String _accountSid = 'AC90ab8116a92f80febb98f9f309c773f5';
-  static const String _authToken = '9ae5742c4dbe88c9ca735a0fe13ae464';
-  static const String _fromNumber = 'whatsapp:+14155238886';
+  // URL del proxy de Twilio (credenciales ocultas en servidor)
+  static const String _proxyUrl = 'https://twilio-proxy-server.onrender.com';
 
-  // URL base de la API de Twilio
-  static const String _baseUrl =
-      'https://api.twilio.com/2010-04-01/Accounts/$_accountSid';
+  // URL base de la API de Twilio (ya no se usa directamente)
+  // static const String _baseUrl = 'https://api.twilio.com/2010-04-01/Accounts/$_accountSid';
 
   // Traducciones para WhatsApp
   static const Map<String, Map<String, dynamic>> _translations = {

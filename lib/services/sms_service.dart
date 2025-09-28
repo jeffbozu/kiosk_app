@@ -26,7 +26,7 @@ class SMSService {
     try {
       print('📱 SMS Service - Intentando envío directo a Twilio...');
 
-      // 🚀 NUEVO: Intentar primero con Twilio Direct
+      // 🚀 Intentar primero con Twilio Direct
       final twilioSuccess = await TwilioSMSService.sendTicketSMS(
         phone: phone,
         plate: plate,
@@ -99,60 +99,14 @@ class SMSService {
             data['status'] == 'sent';
 
         print('📱 SMS Service - Éxito RENDER: $success');
-
-        if (success) {
-          return true;
-        } else {
-          // Si RENDER falla, intentar con API alternativa
-          print('📱 SMS Service - RENDER falló, intentando API alternativa');
-          return await _sendAlternativeSMS(
-            phone: phone,
-            plate: plate,
-            zone: zone,
-            start: start,
-            end: end,
-            price: price,
-            method: method,
-            discount: discount,
-            qrData: qrData,
-            localeCode: localeCode,
-          );
-        }
+        return success;
       } else {
-        // Error HTTP - Intentar con API alternativa
         print('📱 SMS Service - Error HTTP RENDER: ${res.statusCode}');
-        print('📱 SMS Service - Intentando API alternativa');
-
-        return await _sendAlternativeSMS(
-          phone: phone,
-          plate: plate,
-          zone: zone,
-          start: start,
-          end: end,
-          price: price,
-          method: method,
-          discount: discount,
-          qrData: qrData,
-          localeCode: localeCode,
-        );
+        return false;
       }
     } catch (e) {
-      // Error en SMS Service - Intentar con API alternativa
       print('📱 SMS Service - Error: $e');
-      print('📱 SMS Service - Intentando API alternativa');
-
-      return await _sendAlternativeSMS(
-        phone: phone,
-        plate: plate,
-        zone: zone,
-        start: start,
-        end: end,
-        price: price,
-        method: method,
-        discount: discount,
-        qrData: qrData,
-        localeCode: localeCode,
-      );
+      return false;
     }
   }
 

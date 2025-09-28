@@ -8,7 +8,7 @@ class TwilioSMSService {
   // Credenciales de Twilio (configuradas para producción)
   static const String _accountSid = 'AC90ab8116a92f80febb98f9f309c773f5';
   static const String _authToken = '9ae5742c4dbe88c9ca735a0fe13ae464';
-  static const String _fromNumber = '+14155238886';
+  static const String _fromNumber = '+15342009076';
 
   // URL base de la API de Twilio
   static const String _baseUrl =

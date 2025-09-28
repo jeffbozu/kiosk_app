@@ -84,7 +84,7 @@ class SMSService {
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode(payload),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 30));
 
       print('📱 SMS Service - Respuesta RENDER:');
       print('   Status Code: ${res.statusCode}');

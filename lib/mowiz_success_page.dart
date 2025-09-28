@@ -985,7 +985,7 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
           Navigator.of(context).pop(); // Cerrar el diálogo
-          widget.onClose?.call();
+          widget.onClose?.call(); // Esto debería reanudar el timer
         }
       });
     }
@@ -1066,7 +1066,7 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              widget.onClose?.call();
+              widget.onClose?.call(); // Esto debería reanudar el timer
             },
             child: Text(l.t('cancel')),
           ),
@@ -1081,7 +1081,7 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              widget.onClose?.call();
+              widget.onClose?.call(); // Esto debería reanudar el timer
             },
             child: Text(l.t('cancel')),
           ),
@@ -1100,7 +1100,7 @@ class _EmailDialogWithStatesState extends State<_EmailDialogWithStates> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              widget.onClose?.call();
+              widget.onClose?.call(); // Esto debería reanudar el timer
             },
             child: Text(l.t('cancel')),
           ),
@@ -1783,7 +1783,8 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
             Navigator.of(context).pop(); // Cerrar el diálogo
-            widget.onClose?.call();
+            widget.onClose
+                ?.call(); // Esto debería reanudar el timer // Esto debería reanudar el timer
           }
         });
       } else {
@@ -1795,7 +1796,8 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
             Navigator.of(context).pop(); // Cerrar el diálogo
-            widget.onClose?.call();
+            widget.onClose
+                ?.call(); // Esto debería reanudar el timer // Esto debería reanudar el timer
           }
         });
       }
@@ -1808,7 +1810,7 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
           Navigator.of(context).pop(); // Cerrar el diálogo
-          widget.onClose?.call();
+          widget.onClose?.call(); // Esto debería reanudar el timer
         }
       });
     }
@@ -1889,7 +1891,7 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              widget.onClose?.call();
+              widget.onClose?.call(); // Esto debería reanudar el timer
             },
             child: Text(l.t('cancel')),
           ),
@@ -1904,7 +1906,7 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              widget.onClose?.call();
+              widget.onClose?.call(); // Esto debería reanudar el timer
             },
             child: Text(l.t('cancel')),
           ),
@@ -1923,7 +1925,7 @@ class _WhatsAppDialogWithStatesState extends State<_WhatsAppDialogWithStates> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              widget.onClose?.call();
+              widget.onClose?.call(); // Esto debería reanudar el timer
             },
             child: Text(l.t('cancel')),
           ),

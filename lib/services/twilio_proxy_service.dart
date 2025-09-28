@@ -7,9 +7,9 @@ import 'package:intl/intl.dart';
 class TwilioProxyService {
   // Proxy público para Twilio (evita CORS)
   static const String _proxyUrl =
-      'https://your-twilio-proxy.onrender.com/send-whatsapp';
+      'https://render-whatsapp-tih4.onrender.com/v1/whatsapp/send';
   static const String _smsProxyUrl =
-      'https://your-twilio-proxy.onrender.com/send-sms';
+      'https://sms-b9ex.onrender.com/v1/sms/send';
 
   /// Envía WhatsApp usando proxy público
   static Future<bool> sendTicketWhatsApp({

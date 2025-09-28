@@ -439,64 +439,74 @@ class _MowizTimePageState extends State<MowizTimePage> {
                       ],
 
                       SizedBox(height: spacing * 1.5),
-                      FilledButton(
-                        onPressed: _totalSec > 0
-                            ? () {
+                      // 🎨 BOTONES CONTINUAR Y ATRÁS - Lado a lado
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: () {
                                 SoundHelper.playTap();
-                                Navigator.of(context).push(
+                                Navigator.of(context).pushAndRemoveUntil(
                                   MaterialPageRoute(
-                                    builder: (_) => MowizSummaryPage(
-                                      plate: widget.plate,
-                                      zone: widget.zone,
-                                      start: _now,
-                                      minutes: minutes,
-                                      price: effectivePrice.toDouble(),
+                                    builder: (_) => MowizPayPage(
                                       selectedCompany: widget.selectedCompany,
                                     ),
                                   ),
+                                  (_) => false,
                                 );
-                              }
-                            : null,
-                        style: MowizDesignSystem.getSmartWidthButtonStyle(
-                          width: width,
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
-                          foregroundColor: Theme.of(
-                            context,
-                          ).colorScheme.onPrimary,
-                          text: t('continue'),
-                          isPrimary: true,
-                          isEnabled: _totalSec > 0,
-                        ),
-                        child: AutoSizeText(t('continue'), maxLines: 1),
-                      ),
-                      SizedBox(height: spacing),
-                      FilledButton(
-                        onPressed: () {
-                          SoundHelper.playTap();
-                          Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(
-                              builder: (_) => MowizPayPage(
-                                selectedCompany: widget.selectedCompany,
+                              },
+                              style: MowizDesignSystem.getSmartWidthButtonStyle(
+                                width: width,
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.secondary,
+                                foregroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.onSecondary,
+                                text: t('back'),
+                                isPrimary: false,
+                                isEnabled: true,
                               ),
+                              child: AutoSizeText(t('back'), maxLines: 1),
                             ),
-                            (_) => false,
-                          );
-                        },
-                        style: MowizDesignSystem.getSmartWidthButtonStyle(
-                          width: width,
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.secondary,
-                          foregroundColor: Theme.of(
-                            context,
-                          ).colorScheme.onSecondary,
-                          text: t('back'),
-                          isPrimary: false,
-                          isEnabled: true,
-                        ),
-                        child: AutoSizeText(t('back'), maxLines: 1),
+                          ),
+                          SizedBox(width: MowizDesignSystem.spacingS),
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: _totalSec > 0
+                                  ? () {
+                                      SoundHelper.playTap();
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => MowizSummaryPage(
+                                            plate: widget.plate,
+                                            zone: widget.zone,
+                                            start: _now,
+                                            minutes: minutes,
+                                            price: effectivePrice.toDouble(),
+                                            selectedCompany:
+                                                widget.selectedCompany,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  : null,
+                              style: MowizDesignSystem.getSmartWidthButtonStyle(
+                                width: width,
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary,
+                                foregroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimary,
+                                text: t('continue'),
+                                isPrimary: true,
+                                isEnabled: _totalSec > 0,
+                              ),
+                              child: AutoSizeText(t('continue'), maxLines: 1),
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(height: spacing),
                       FilledButton(

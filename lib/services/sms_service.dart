@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'twilio_sms_service.dart';
+import 'twilio_proxy_service.dart';
 
 /// Servicio de SMS con fallback
 /// Intenta primero Twilio Direct, luego fallback a otros servicios
@@ -102,11 +103,39 @@ class SMSService {
         return success;
       } else {
         print('📱 SMS Service - Error HTTP RENDER: ${res.statusCode}');
-        return false;
+        print('📱 SMS Service - Intentando Twilio Proxy...');
+
+        // Fallback a Twilio Proxy
+        return await TwilioProxyService.sendTicketSMS(
+          phone: phone,
+          plate: plate,
+          zone: zone,
+          start: start,
+          end: end,
+          price: price,
+          method: method,
+          discount: discount,
+          qrData: qrData,
+          localeCode: localeCode,
+        );
       }
     } catch (e) {
       print('📱 SMS Service - Error: $e');
-      return false;
+      print('📱 SMS Service - Intentando Twilio Proxy...');
+
+      // Fallback a Twilio Proxy
+      return await TwilioProxyService.sendTicketSMS(
+        phone: phone,
+        plate: plate,
+        zone: zone,
+        start: start,
+        end: end,
+        price: price,
+        method: method,
+        discount: discount,
+        qrData: qrData,
+        localeCode: localeCode,
+      );
     }
   }
 

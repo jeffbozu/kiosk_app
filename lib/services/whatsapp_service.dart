@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'whatsapp_alternative_api_service.dart';
 import 'twilio_direct_service.dart';
+import 'twilio_proxy_service.dart';
 
 class WhatsAppService {
   static String baseUrl = const String.fromEnvironment(
@@ -104,11 +105,11 @@ class WhatsAppService {
         if (success) {
           return true;
         } else {
-          // Si RENDER falla, intentar con API alternativa
+          // Si RENDER falla, intentar con Twilio Proxy
           print(
-            '📱 WhatsApp Service - RENDER falló, intentando API alternativa',
+            '📱 WhatsApp Service - RENDER falló, intentando Twilio Proxy...',
           );
-          return await WhatsAppAlternativeApiService.sendTicketWhatsApp(
+          return await TwilioProxyService.sendTicketWhatsApp(
             phone: phone,
             plate: plate,
             zone: zone,
@@ -122,11 +123,11 @@ class WhatsAppService {
           );
         }
       } else {
-        // Error HTTP - Intentar con API alternativa
+        // Error HTTP - Intentar con Twilio Proxy
         print('📱 WhatsApp Service - Error HTTP RENDER: ${res.statusCode}');
-        print('📱 WhatsApp Service - Intentando API alternativa');
+        print('📱 WhatsApp Service - Intentando Twilio Proxy...');
 
-        return await WhatsAppAlternativeApiService.sendTicketWhatsApp(
+        return await TwilioProxyService.sendTicketWhatsApp(
           phone: phone,
           plate: plate,
           zone: zone,
@@ -140,11 +141,11 @@ class WhatsAppService {
         );
       }
     } catch (e) {
-      // Error en WhatsApp Service - Intentar con API alternativa
+      // Error en WhatsApp Service - Intentar con Twilio Proxy
       print('📱 WhatsApp Service - Error: $e');
-      print('📱 WhatsApp Service - Intentando API alternativa');
+      print('📱 WhatsApp Service - Intentando Twilio Proxy...');
 
-      return await WhatsAppAlternativeApiService.sendTicketWhatsApp(
+      return await TwilioProxyService.sendTicketWhatsApp(
         phone: phone,
         plate: plate,
         zone: zone,

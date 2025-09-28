@@ -5,12 +5,10 @@ import 'package:intl/intl.dart';
 /// Servicio directo de Twilio para SMS
 /// Conecta directamente con la API de Twilio para envío de SMS
 class TwilioSMSService {
-  // Credenciales de Twilio (hardcodeadas para producción)
-  static const String _accountSid =
-      'ACa1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6'; // Reemplazar con tu Account SID real
-  static const String _authToken =
-      'tu_auth_token_real'; // Reemplazar con tu Auth Token real
-  static const String _fromNumber = '+15342009076'; // Tu número de Twilio
+  // Credenciales de Twilio (configuradas para producción)
+  static const String _accountSid = 'AC90ab8116a92f80febb98f9f309c773f5';
+  static const String _authToken = '9ae5742c4dbe88c9ca735a0fe13ae464';
+  static const String _fromNumber = '+14155238886';
 
   // URL base de la API de Twilio
   static const String _baseUrl =

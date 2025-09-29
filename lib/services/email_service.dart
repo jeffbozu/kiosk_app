@@ -54,7 +54,7 @@ class EmailService {
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode(emailData),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 30));
 
       print('📧 Email Service - Respuesta del servidor:');
       print('   Status Code: ${response.statusCode}');
@@ -71,105 +71,19 @@ class EmailService {
           print(
             '❌ Error del servidor: ${responseData['error'] ?? 'Error desconocido'}',
           );
-          print('📧 Email Service - Intentando SendGrid directo...');
-
-          // Fallback a SendGrid directo
-          return await SendGridDirectService.sendTicketEmail(
-            recipientEmail: recipientEmail,
-            plate: plate,
-            zone: zone,
-            start: start,
-            end: end,
-            price: price,
-            method: method,
-            qrData: qrData,
-            customSubject: customSubject,
-            customMessage: customMessage,
-            locale: locale,
-          );
+          print('📧 Email Service - Error del servidor proxy');
+          return false;
         }
       } else {
         print('❌ Error HTTP: ${response.statusCode}');
-        print('📧 Email Service - Intentando SendGrid directo...');
-
-        // Fallback a SendGrid directo
-        final directSuccess = await SendGridDirectService.sendTicketEmail(
-          recipientEmail: recipientEmail,
-          plate: plate,
-          zone: zone,
-          start: start,
-          end: end,
-          price: price,
-          method: method,
-          qrData: qrData,
-          customSubject: customSubject,
-          customMessage: customMessage,
-          locale: locale,
-        );
-
-        if (directSuccess) {
-          return true;
-        }
-
-        // Último fallback a SendGrid con proxy
-        print(
-          '📧 Email Service - SendGrid directo falló, intentando con proxy...',
-        );
-        return await SendGridProxyService.sendTicketEmail(
-          recipientEmail: recipientEmail,
-          plate: plate,
-          zone: zone,
-          start: start,
-          end: end,
-          price: price,
-          method: method,
-          qrData: qrData,
-          customSubject: customSubject,
-          customMessage: customMessage,
-          locale: locale,
-        );
+        print('📧 Email Service - Error del servidor proxy');
+        return false;
       }
     } catch (e) {
-      // Error en EmailService - Intentar SendGrid directo
+      // Error en EmailService
       print('❌ Error en EmailService: $e');
-      print('📧 Email Service - Intentando SendGrid directo...');
-
-      // Fallback a SendGrid directo
-      final directSuccess = await SendGridDirectService.sendTicketEmail(
-        recipientEmail: recipientEmail,
-        plate: plate,
-        zone: zone,
-        start: start,
-        end: end,
-        price: price,
-        method: method,
-        qrData: qrData,
-        customSubject: customSubject,
-        customMessage: customMessage,
-        locale: locale,
-      );
-
-      if (directSuccess) {
-        return true;
-      }
-
-      // Último fallback a SendGrid con proxy
-      print(
-        '📧 Email Service - SendGrid directo falló, intentando con proxy...',
-      );
-      return await SendGridProxyService.sendTicketEmail(
-        recipientEmail: recipientEmail,
-        plate: plate,
-        zone: zone,
-        start: start,
-        end: end,
-        price: price,
-        method: method,
-        qrData: qrData,
-        customSubject: customSubject,
-        customMessage: customMessage,
-        locale: locale,
-      );
+      print('📧 Email Service - Error del servidor proxy');
+      return false;
     }
   }
 

@@ -41,9 +41,7 @@ class TwilioProxyService {
         localeCode: localeCode ?? 'es_ES',
       );
 
-      final whatsappData = {
-        'phone': phone,
-        'message': message,
+      final ticket = {
         'plate': plate,
         'zone': zone,
         'start': start.toIso8601String(),
@@ -52,6 +50,12 @@ class TwilioProxyService {
         'method': method,
         'discount': discount,
         'qrData': qrData,
+      };
+
+      final whatsappData = {
+        'phone': phone,
+        'message': message,
+        'ticket': ticket,
         'localeCode': localeCode ?? 'es_ES',
       };
 
@@ -120,9 +124,7 @@ class TwilioProxyService {
         localeCode: localeCode ?? 'es_ES',
       );
 
-      final smsData = {
-        'phone': phone,
-        'message': message,
+      final ticket = {
         'plate': plate,
         'zone': zone,
         'start': start.toIso8601String(),
@@ -131,6 +133,12 @@ class TwilioProxyService {
         'method': method,
         'discount': discount,
         'qrData': qrData,
+      };
+
+      final smsData = {
+        'phone': phone,
+        'message': message,
+        'ticket': ticket,
         'localeCode': localeCode ?? 'es_ES',
       };
 

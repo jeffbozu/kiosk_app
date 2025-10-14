@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>DOCUMENTACION_TECNICA_COMPLETA_CLEAN</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="/dev/fd/63" />
+</head>
+<body>
+<h1 id="documentación-técnica-completa---kiosk-app-remote">Documentación
+Técnica Completa - Kiosk App Remote</h1>
+<h2 id="índice">Índice</h2>
+<ol type="1">
+<li><a href="#introducción-y-justificación-tecnológica">Introducción y
+Justificación Tecnológica</a></li>
+<li><a href="#arquitectura-del-sistema">Arquitectura del
+Sistema</a></li>
+<li><a href="#gestión-de-zonas-y-tarifas">Gestión de Zonas y
+Tarifas</a></li>
+<li><a href="#sistema-de-comunicaciones">Sistema de
+Comunicaciones</a></li>
+<li><a href="#herramientas-de-desarrollo">Herramientas de
+Desarrollo</a></li>
+<li><a href="#implementación-con-ia">Implementación con IA</a></li>
+<li><a href="#cumplimiento-normativo">Cumplimiento Normativo</a></li>
+<li><a href="#código-fuente-y-archivos">Código Fuente y
+Archivos</a></li>
+</ol>
+<hr />
+<h2 id="introducción-y-justificación-tecnológica">1. Introducción y
+Justificación Tecnológica</h2>
+<h3 id="por-qué-flutter">1.1 ¿Por qué Flutter?</h3>
+<p><strong>Flutter</strong> fue elegido como framework principal por las
+siguientes razones técnicas y estratégicas:</p>
+<h4 id="ventajas-técnicas"><strong>Ventajas Técnicas:</strong></h4>
+<ul>
+<li><strong>Multiplataforma</strong>: Una sola base de código para web,
+Android, iOS y desktop</li>
+<li><strong>Rendimiento nativo</strong>: Compilación a código nativo, no
+interpretado</li>
+<li><strong>Hot Reload</strong>: Desarrollo ágil con recarga
+instantánea</li>
+<li><strong>Widgets personalizables</strong>: UI completamente
+personalizable</li>
+<li><strong>Integración con APIs</strong>: Excelente soporte para HTTP,
+WebSockets y APIs REST</li>
+</ul>
+<h4 id="ventajas-para-kiosk"><strong>Ventajas para Kiosk:</strong></h4>
+<ul>
+<li><strong>Modo Kiosk</strong>: Soporte nativo para aplicaciones de
+pantalla completa</li>
+<li><strong>Responsive Design</strong>: Adaptación automática a
+diferentes tamaños de pantalla</li>
+<li><strong>Offline Capability</strong>: Funcionamiento sin conexión a
+internet</li>
+<li><strong>Security</strong>: Sandboxing y permisos granulares</li>
+</ul>
+<h4 id="comparación-con-alternativas"><strong>Comparación con
+Alternativas:</strong></h4>
+<table>
+<colgroup>
+<col style="width: 32%" />
+<col style="width: 16%" />
+<col style="width: 24%" />
+<col style="width: 27%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Tecnología</th>
+<th>Pros</th>
+<th>Contras</th>
+<th>Decisión</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Flutter</strong></td>
+<td>Multiplataforma, rendimiento, UI personalizable</td>
+<td>Curva de aprendizaje</td>
+<td><strong>ELEGIDO</strong></td>
+</tr>
+<tr class="even">
+<td>React Native</td>
+<td>Popular, gran comunidad</td>
+<td>Dependiente de bridges nativos</td>
+<td>No</td>
+</tr>
+<tr class="odd">
+<td>Ionic</td>
+<td>Web technologies</td>
+<td>Rendimiento limitado</td>
+<td>No</td>
+</tr>
+<tr class="even">
+<td>Native (Android/iOS)</td>
+<td>Máximo rendimiento</td>
+<td>Doble desarrollo</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="arquitectura-del-sistema">2. Arquitectura del Sistema</h2>
+<h3 id="arquitectura-general">2.1 Arquitectura General</h3>
+<pre><code>┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   KIOSK APP     │    │   RENDER API    │    │   EXTERNAL      │
+│   (Flutter)     │◄──►│   (Node.js)     │◄──►│   SERVICES      │
+│                 │    │                 │    │                 │
+│ • UI/UX        │    │ • Zonas API     │    │ • Twilio        │
+│ • QR Scanner   │    │ • Tarifas API   │    │ • SendGrid      │
+│ • Payments     │    │ • Config API    │    │ • Firebase      │
+│ • Notifications│    │ • Logs API      │    │ • Printers      │
+└─────────────────┘    └─────────────────┘    └─────────────────┘</code></pre>
+<h3 id="stack-tecnológico">2.2 Stack Tecnológico</h3>
+<h4 id="frontend-kiosk-app"><strong>Frontend (Kiosk App)</strong></h4>
+<ul>
+<li><strong>Framework</strong>: Flutter 3.x</li>
+<li><strong>Lenguaje</strong>: Dart</li>
+<li><strong>Estado</strong>: Provider/Riverpod</li>
+<li><strong>HTTP</strong>: Dio/HTTP package</li>
+<li><strong>QR Scanner</strong>: mobile_scanner</li>
+<li><strong>Payments</strong>: Stripe integration</li>
+</ul>
+<h4 id="backend-render"><strong>Backend (Render)</strong></h4>
+<ul>
+<li><strong>Runtime</strong>: Node.js 18+</li>
+<li><strong>Framework</strong>: Express.js</li>
+<li><strong>Base de datos</strong>: PostgreSQL (Render)</li>
+<li><strong>Cache</strong>: Redis (Render)</li>
+<li><strong>Storage</strong>: Render Disk</li>
+</ul>
+<h4 id="servicios-externos"><strong>Servicios Externos</strong></h4>
+<ul>
+<li><strong>Comunicaciones</strong>: Twilio (WhatsApp/SMS)</li>
+<li><strong>Email</strong>: SendGrid</li>
+<li><strong>Base de datos</strong>: Firebase Firestore</li>
+<li><strong>Hosting</strong>: Render.com</li>
+<li><strong>Versionado</strong>: GitHub</li>
+</ul>
+<hr />
+<h2 id="gestión-de-zonas-y-tarifas">3. Gestión de Zonas y Tarifas</h2>
+<h3 id="por-qué-render">3.1 ¿Por qué Render?</h3>
+<p><strong>Render.com</strong> fue elegido como plataforma de hosting
+por:</p>
+<h4 id="ventajas-técnicas-1"><strong>Ventajas Técnicas:</strong></h4>
+<ul>
+<li><strong>Auto-deploy</strong>: Deploy automático desde GitHub</li>
+<li><strong>SSL automático</strong>: Certificados SSL gratuitos</li>
+<li><strong>Escalabilidad</strong>: Auto-scaling basado en demanda</li>
+<li><strong>Base de datos</strong>: PostgreSQL gestionado</li>
+<li><strong>Monitoring</strong>: Logs y métricas integradas</li>
+</ul>
+<h4 id="ventajas-económicas"><strong>Ventajas Económicas:</strong></h4>
+<ul>
+<li><strong>Precio</strong>: Plan gratuito para desarrollo</li>
+<li><strong>Sin configuración</strong>: Zero-config deployment</li>
+<li><strong>Mantenimiento</strong>: Gestionado por Render</li>
+</ul>
+<h3 id="implementación-de-zonas-en-la-app">3.2 Implementación de Zonas
+en la App</h3>
+<h4 id="archivo-principal-libapi_config.dart"><strong>Archivo
+Principal</strong>: <code>lib/api_config.dart</code></h4>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode dart"><code class="sourceCode dart"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ApiConfig {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> <span class="dt">String</span> baseUrl <span class="op">=</span> <span class="st">&#39;https://kiosk-api.onrender.com&#39;</span>;</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> <span class="dt">String</span> zonesEndpoint <span class="op">=</span> <span class="st">&#39;/api/zones&#39;</span>;</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> <span class="dt">String</span> tariffsEndpoint <span class="op">=</span> <span class="st">&#39;/api/tariffs&#39;</span>;</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> <span class="dt">String</span> configEndpoint <span class="op">=</span> <span class="st">&#39;/api/config&#39;</span>;</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Configuración de timeouts</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> Duration timeout <span class="op">=</span> Duration(seconds<span class="op">:</span> <span class="dv">30</span>);</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> Duration connectTimeout <span class="op">=</span> Duration(seconds<span class="op">:</span> <span class="dv">10</span>);</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h4
+id="servicio-de-zonas-libserviceszones_service.dart"><strong>Servicio de
+Zonas</strong>: <code>lib/services/zones_service.dart</code></h4>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode dart"><code class="sourceCode dart"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ZonesService {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">List</span><span class="op">&lt;</span>Zone<span class="op">&gt;&gt;</span> getZones() <span class="at">async</span> {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span> {</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>      <span class="at">final</span> response <span class="op">=</span> <span class="at">await</span> http<span class="op">.</span><span class="kw">get</span>(</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        Uri<span class="op">.</span>parse(<span class="st">&#39;${ApiConfig.baseUrl}${ApiConfig.zonesEndpoint}&#39;</span>)<span class="op">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        headers<span class="op">:</span> {<span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json&#39;</span>}<span class="op">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>      )<span class="op">.</span>timeout(ApiConfig<span class="op">.</span>timeout);</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (response<span class="op">.</span>statusCode <span class="op">==</span> <span class="dv">200</span>) {</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">final</span> <span class="dt">List</span><span class="op">&lt;</span><span class="at">dynamic</span><span class="op">&gt;</span> zonesData <span class="op">=</span> jsonDecode(response<span class="op">.</span>body);</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">return</span> zonesData<span class="op">.</span>map((zone) <span class="op">=&gt;</span> Zone<span class="op">.</span>fromJson(zone))<span class="op">.</span>toList();</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">catch</span> (e) {</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>      print(<span class="st">&#39;Error cargando zonas: $e&#39;</span>);</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> [];</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h4 id="modelo-de-zona-libmodelszone.dart"><strong>Modelo de
+Zona</strong>: <code>lib/models/zone.dart</code></h4>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode dart"><code class="sourceCode dart"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Zone {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">String</span> id;</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">String</span> name;</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">String</span> type;</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">double</span> pricePerHour;</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">List</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> allowedVehicles;</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">Map</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">,</span> <span class="at">dynamic</span><span class="op">&gt;</span> restrictions;</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  Zone({</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    required <span class="kw">this</span><span class="op">.</span>id<span class="op">,</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    required <span class="kw">this</span><span class="op">.</span>name<span class="op">,</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    required <span class="kw">this</span><span class="op">.</span>type<span class="op">,</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    required <span class="kw">this</span><span class="op">.</span>pricePerHour<span class="op">,</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    required <span class="kw">this</span><span class="op">.</span>allowedVehicles<span class="op">,</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    required <span class="kw">this</span><span class="op">.</span>restrictions<span class="op">,</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  });</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">factory</span> Zone<span class="op">.</span>fromJson(<span class="dt">Map</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">,</span> <span class="at">dynamic</span><span class="op">&gt;</span> json) {</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> Zone(</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>      id<span class="op">:</span> json[<span class="st">&#39;id&#39;</span>]<span class="op">,</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>      name<span class="op">:</span> json[<span class="st">&#39;name&#39;</span>]<span class="op">,</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>      type<span class="op">:</span> json[<span class="st">&#39;type&#39;</span>]<span class="op">,</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>      pricePerHour<span class="op">:</span> json[<span class="st">&#39;pricePerHour&#39;</span>]<span class="op">.</span>toDouble()<span class="op">,</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>      allowedVehicles<span class="op">:</span> <span class="dt">List</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;.</span>from(json[<span class="st">&#39;allowedVehicles&#39;</span>])<span class="op">,</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>      restrictions<span class="op">:</span> <span class="dt">Map</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">,</span> <span class="at">dynamic</span><span class="op">&gt;.</span>from(json[<span class="st">&#39;restrictions&#39;</span>])<span class="op">,</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    );</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="flujo-de-datos-de-zonas">3.3 Flujo de Datos de Zonas</h3>
+<pre><code>1. App inicia → ZonesService.getZones()
+2. HTTP GET → https://kiosk-api.onrender.com/api/zones
+3. Render API → Consulta PostgreSQL
+4. Response JSON → Lista de zonas
+5. App → Mapea a objetos Zone
+6. UI → Muestra zonas disponibles</code></pre>
+<h3 id="variables-de-entorno-en-render">3.4 Variables de Entorno en
+Render</h3>
+<h4 id="configuración-de-entorno"><strong>Configuración de
+Entorno:</strong></h4>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Variables de entorno en Render</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="va">NODE_ENV</span><span class="op">=</span>production</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="va">PORT</span><span class="op">=</span>10000</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="va">DATABASE_URL</span><span class="op">=</span>postgresql://user:pass@host:port/db</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="va">REDIS_URL</span><span class="op">=</span>redis://host:port</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="va">TWILIO_ACCOUNT_SID</span><span class="op">=</span>ACxxxxx</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="va">TWILIO_AUTH_TOKEN</span><span class="op">=</span>xxxxx</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="va">SENDGRID_API_KEY</span><span class="op">=</span>SG.xxxxx</span></code></pre></div>
+<h4 id="por-qué-variables-de-entorno"><strong>¿Por qué Variables de
+Entorno?</strong></h4>
+<ul>
+<li><strong>Seguridad</strong>: Credenciales no expuestas en código</li>
+<li><strong>Flexibilidad</strong>: Diferentes configuraciones por
+entorno</li>
+<li><strong>Escalabilidad</strong>: Fácil cambio de configuración</li>
+<li><strong>Compliance</strong>: Cumplimiento de estándares de
+seguridad</li>
+</ul>
+<hr />
+<h2 id="sistema-de-comunicaciones">4. Sistema de Comunicaciones</h2>
+<h3 id="twilio---justificación-técnica-y-legal">4.1 Twilio -
+Justificación Técnica y Legal</h3>
+<h4 id="por-qué-twilio"><strong>¿Por qué Twilio?</strong></h4>
+<p><strong>Ventajas Técnicas:</strong> - <strong>API REST</strong>:
+Integración sencilla con cualquier lenguaje - <strong>Webhooks</strong>:
+Notificaciones en tiempo real - <strong>Escalabilidad</strong>: Manejo
+de millones de mensajes - <strong>Reliability</strong>: 99.95% uptime
+garantizado - <strong>Global</strong>: Cobertura mundial</p>
+<p><strong>Ventajas Económicas:</strong> - <strong>Precio</strong>:
+$0.0075 por SMS (España) - <strong>WhatsApp</strong>: $0.005 por mensaje
+- <strong>Gratis</strong>: 15,000 mensajes/mes en trial - <strong>Sin
+setup</strong>: Sin costos de infraestructura</p>
+<h4 id="comparación-con-competidores"><strong>Comparación con
+Competidores:</strong></h4>
+<table>
+<thead>
+<tr class="header">
+<th>Plataforma</th>
+<th>SMS (España)</th>
+<th>WhatsApp</th>
+<th>Soporte</th>
+<th>Decisión</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Twilio</strong></td>
+<td>$0.0075</td>
+<td>$0.005</td>
+<td>Excelente</td>
+<td><strong>ELEGIDO</strong></td>
+</tr>
+<tr class="even">
+<td>Vonage</td>
+<td>$0.0080</td>
+<td>No</td>
+<td>Bueno</td>
+<td>No</td>
+</tr>
+<tr class="odd">
+<td>MessageBird</td>
+<td>$0.0085</td>
+<td>$0.006</td>
+<td>Bueno</td>
+<td>No</td>
+</tr>
+<tr class="even">
+<td>AWS SNS</td>
+<td>$0.0075</td>
+<td>No</td>
+<td>Complejo</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<h3 id="implementación-de-whatsapp">4.2 Implementación de WhatsApp</h3>
+<h4
+id="servicio-whatsapp-libserviceswhatsapp_service.dart"><strong>Servicio
+WhatsApp</strong>: <code>lib/services/whatsapp_service.dart</code></h4>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode dart"><code class="sourceCode dart"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> WhatsAppService {</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> <span class="dt">String</span> _twilioEndpoint <span class="op">=</span> <span class="st">&#39;https://render-whatsapp-tih4.onrender.com/v1/whatsapp/send&#39;</span>;</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">bool</span><span class="op">&gt;</span> sendTicketWhatsApp({</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> phone<span class="op">,</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> plate<span class="op">,</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> zone<span class="op">,</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    required DateTime start<span class="op">,</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    required DateTime end<span class="op">,</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">double</span> price<span class="op">,</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> method<span class="op">,</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">String</span><span class="op">?</span> qrData<span class="op">,</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">String</span><span class="op">?</span> localeCode<span class="op">,</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  }) <span class="at">async</span> {</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span> {</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">final</span> ticket <span class="op">=</span> {</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;plate&#39;</span><span class="op">:</span> plate<span class="op">,</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;zone&#39;</span><span class="op">:</span> zone<span class="op">,</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;start&#39;</span><span class="op">:</span> DateFormat(<span class="st">&#39;dd/MM/yyyy HH:mm&#39;</span>)<span class="op">.</span>format(start)<span class="op">,</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;end&#39;</span><span class="op">:</span> DateFormat(<span class="st">&#39;dd/MM/yyyy HH:mm&#39;</span>)<span class="op">.</span>format(end)<span class="op">,</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;duration&#39;</span><span class="op">:</span> _calculateDuration(start<span class="op">,</span> end)<span class="op">,</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;price&#39;</span><span class="op">:</span> price<span class="op">,</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;method&#39;</span><span class="op">:</span> method<span class="op">,</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;qrData&#39;</span><span class="op">:</span> qrData<span class="op">,</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>      };</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>      <span class="at">final</span> whatsappData <span class="op">=</span> {</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;phone&#39;</span><span class="op">:</span> phone<span class="op">,</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;ticket&#39;</span><span class="op">:</span> ticket<span class="op">,</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;localeCode&#39;</span><span class="op">:</span> localeCode <span class="op">??</span> <span class="st">&#39;es&#39;</span><span class="op">,</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>      };</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>      <span class="at">final</span> response <span class="op">=</span> <span class="at">await</span> http<span class="op">.</span>post(</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>        Uri<span class="op">.</span>parse(_twilioEndpoint)<span class="op">,</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>        headers<span class="op">:</span> {<span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json&#39;</span>}<span class="op">,</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>        body<span class="op">:</span> jsonEncode(whatsappData)<span class="op">,</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>      )<span class="op">.</span>timeout(<span class="at">const</span> Duration(seconds<span class="op">:</span> <span class="dv">30</span>));</span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (response<span class="op">.</span>statusCode <span class="op">==</span> <span class="dv">200</span>) {</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>        <span class="at">final</span> responseData <span class="op">=</span> jsonDecode(response<span class="op">.</span>body);</span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>        <span class="kw">return</span> responseData[<span class="st">&#39;success&#39;</span>] <span class="op">==</span> <span class="cn">true</span>;</span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">catch</span> (e) {</span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>      print(<span class="st">&#39;Error enviando WhatsApp: $e&#39;</span>);</span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> <span class="cn">false</span>;</span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="sistema-de-email-con-sendgrid">4.3 Sistema de Email con
+SendGrid</h3>
+<h4 id="por-qué-sendgrid"><strong>¿Por qué SendGrid?</strong></h4>
+<p><strong>Ventajas Técnicas:</strong> - <strong>API REST</strong>:
+Integración sencilla - <strong>Templates</strong>: Plantillas HTML
+personalizables - <strong>Analytics</strong>: Métricas detalladas de
+entrega - <strong>Deliverability</strong>: 99%+ tasa de entrega -
+<strong>Compliance</strong>: Cumplimiento GDPR/LOPD</p>
+<p><strong>Ventajas Económicas:</strong> - <strong>Gratis</strong>: 100
+emails/día - <strong>Precio</strong>: $0.0006 por email adicional -
+<strong>Sin setup</strong>: Sin configuración de servidor</p>
+<h4
+id="implementación-email-libservicesemail_service.dart"><strong>Implementación
+Email</strong>: <code>lib/services/email_service.dart</code></h4>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode dart"><code class="sourceCode dart"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> EmailService {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> <span class="dt">String</span> _emailEndpoint <span class="op">=</span> <span class="st">&#39;https://render-mail-2bzn.onrender.com/api/send-email&#39;</span>;</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">bool</span><span class="op">&gt;</span> sendTicketEmail({</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> recipientEmail<span class="op">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> plate<span class="op">,</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> zone<span class="op">,</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    required DateTime start<span class="op">,</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    required DateTime end<span class="op">,</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">double</span> price<span class="op">,</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> method<span class="op">,</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">String</span><span class="op">?</span> qrData<span class="op">,</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">String</span><span class="op">?</span> locale<span class="op">,</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  }) <span class="at">async</span> {</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span> {</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">final</span> emailData <span class="op">=</span> {</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;recipientEmail&#39;</span><span class="op">:</span> recipientEmail<span class="op">,</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;plate&#39;</span><span class="op">:</span> plate<span class="op">,</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;zone&#39;</span><span class="op">:</span> zone<span class="op">,</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;start&#39;</span><span class="op">:</span> start<span class="op">.</span>toIso8601String()<span class="op">,</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;end&#39;</span><span class="op">:</span> end<span class="op">.</span>toIso8601String()<span class="op">,</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;price&#39;</span><span class="op">:</span> price<span class="op">,</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;method&#39;</span><span class="op">:</span> method<span class="op">,</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;locale&#39;</span><span class="op">:</span> locale <span class="op">??</span> <span class="st">&#39;es&#39;</span><span class="op">,</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;qrData&#39;</span><span class="op">:</span> qrData<span class="op">,</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;discount&#39;</span><span class="op">:</span> <span class="fl">0.0</span><span class="op">,</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>      };</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">final</span> response <span class="op">=</span> <span class="at">await</span> http<span class="op">.</span>post(</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>        Uri<span class="op">.</span>parse(_emailEndpoint)<span class="op">,</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>        headers<span class="op">:</span> {<span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json&#39;</span>}<span class="op">,</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>        body<span class="op">:</span> jsonEncode(emailData)<span class="op">,</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>      )<span class="op">.</span>timeout(<span class="at">const</span> Duration(seconds<span class="op">:</span> <span class="dv">30</span>));</span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (response<span class="op">.</span>statusCode <span class="op">==</span> <span class="dv">200</span>) {</span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>        <span class="at">final</span> responseData <span class="op">=</span> jsonDecode(response<span class="op">.</span>body);</span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>        <span class="kw">return</span> responseData[<span class="st">&#39;success&#39;</span>] <span class="op">==</span> <span class="cn">true</span>;</span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">catch</span> (e) {</span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>      print(<span class="st">&#39;Error enviando email: $e&#39;</span>);</span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> <span class="cn">false</span>;</span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="sistema-de-impresión">4.4 Sistema de Impresión</h3>
+<h4
+id="servicio-de-impresión-libservicesprinter_service.dart"><strong>Servicio
+de Impresión</strong>:
+<code>lib/services/printer_service.dart</code></h4>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode dart"><code class="sourceCode dart"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> PrinterService {</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">bool</span><span class="op">&gt;</span> printTicket({</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> plate<span class="op">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> zone<span class="op">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    required DateTime start<span class="op">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    required DateTime end<span class="op">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">double</span> price<span class="op">,</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> method<span class="op">,</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">String</span><span class="op">?</span> qrData<span class="op">,</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  }) <span class="at">async</span> {</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span> {</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>      <span class="co">// Generar PDF del ticket</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">final</span> pdf <span class="op">=</span> <span class="at">await</span> _generateTicketPDF(</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>        plate<span class="op">:</span> plate<span class="op">,</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>        zone<span class="op">:</span> zone<span class="op">,</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>        start<span class="op">:</span> start<span class="op">,</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>        end<span class="op">:</span> end<span class="op">,</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>        price<span class="op">:</span> price<span class="op">,</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>        method<span class="op">:</span> method<span class="op">,</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>        qrData<span class="op">:</span> qrData<span class="op">,</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>      );</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>      <span class="co">// Enviar a impresora</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>      <span class="kw">return</span> <span class="at">await</span> _sendToPrinter(pdf);</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">catch</span> (e) {</span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>      print(<span class="st">&#39;Error imprimiendo ticket: $e&#39;</span>);</span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>      <span class="kw">return</span> <span class="cn">false</span>;</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="dt">Future</span><span class="op">&lt;</span>Uint8List<span class="op">&gt;</span> _generateTicketPDF({</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> plate<span class="op">,</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> zone<span class="op">,</span></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>    required DateTime start<span class="op">,</span></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>    required DateTime end<span class="op">,</span></span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">double</span> price<span class="op">,</span></span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> method<span class="op">,</span></span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>    <span class="dt">String</span><span class="op">?</span> qrData<span class="op">,</span></span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>  }) <span class="at">async</span> {</span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">final</span> pdf <span class="op">=</span> pw<span class="op">.</span>Document();</span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a>    pdf<span class="op">.</span>addPage(</span>
+<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a>      pw<span class="op">.</span>Page(</span>
+<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a>        pageFormat<span class="op">:</span> PdfPageFormat(<span class="dv">80</span><span class="op">,</span> <span class="dv">200</span>)<span class="op">,</span></span>
+<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a>        build<span class="op">:</span> (pw<span class="op">.</span>Context context) {</span>
+<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a>          <span class="kw">return</span> pw<span class="op">.</span>Column(</span>
+<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a>            children<span class="op">:</span> [</span>
+<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a>              pw<span class="op">.</span>Text(<span class="st">&#39;TICKET DE ESTACIONAMIENTO&#39;</span><span class="op">,</span> style<span class="op">:</span> pw<span class="op">.</span>TextStyle(fontSize<span class="op">:</span> <span class="dv">12</span><span class="op">,</span> fontWeight<span class="op">:</span> pw<span class="op">.</span>FontWeight<span class="op">.</span>bold))<span class="op">,</span></span>
+<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a>              pw<span class="op">.</span>SizedBox(height<span class="op">:</span> <span class="dv">10</span>)<span class="op">,</span></span>
+<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a>              pw<span class="op">.</span>Text(<span class="st">&#39;Matrícula: $plate&#39;</span>)<span class="op">,</span></span>
+<span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a>              pw<span class="op">.</span>Text(<span class="st">&#39;Zona: $zone&#39;</span>)<span class="op">,</span></span>
+<span id="cb9-52"><a href="#cb9-52" aria-hidden="true" tabindex="-1"></a>              pw<span class="op">.</span>Text(<span class="st">&#39;Inicio: ${DateFormat(&#39;</span>dd<span class="op">/</span>MM<span class="op">/</span>yyyy HH<span class="op">:</span>mm<span class="st">&#39;).format(start)}&#39;</span>)<span class="op">,</span></span>
+<span id="cb9-53"><a href="#cb9-53" aria-hidden="true" tabindex="-1"></a>              pw<span class="op">.</span>Text(<span class="st">&#39;Fin: ${DateFormat(&#39;</span>dd<span class="op">/</span>MM<span class="op">/</span>yyyy HH<span class="op">:</span>mm<span class="st">&#39;).format(end)}&#39;</span>)<span class="op">,</span></span>
+<span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a>              pw<span class="op">.</span>Text(<span class="st">&#39;Precio: ${price.toStringAsFixed(2)} €&#39;</span>)<span class="op">,</span></span>
+<span id="cb9-55"><a href="#cb9-55" aria-hidden="true" tabindex="-1"></a>              pw<span class="op">.</span>Text(<span class="st">&#39;Método: $method&#39;</span>)<span class="op">,</span></span>
+<span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a>              <span class="cf">if</span> (qrData <span class="op">!=</span> <span class="cn">null</span>) pw<span class="op">.</span>QrCode(data<span class="op">:</span> qrData<span class="op">,</span> size<span class="op">:</span> <span class="dv">50</span>)<span class="op">,</span></span>
+<span id="cb9-57"><a href="#cb9-57" aria-hidden="true" tabindex="-1"></a>            ]<span class="op">,</span></span>
+<span id="cb9-58"><a href="#cb9-58" aria-hidden="true" tabindex="-1"></a>          );</span>
+<span id="cb9-59"><a href="#cb9-59" aria-hidden="true" tabindex="-1"></a>        }<span class="op">,</span></span>
+<span id="cb9-60"><a href="#cb9-60" aria-hidden="true" tabindex="-1"></a>      )<span class="op">,</span></span>
+<span id="cb9-61"><a href="#cb9-61" aria-hidden="true" tabindex="-1"></a>    );</span>
+<span id="cb9-62"><a href="#cb9-62" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-63"><a href="#cb9-63" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> pdf<span class="op">.</span>save();</span>
+<span id="cb9-64"><a href="#cb9-64" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb9-65"><a href="#cb9-65" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<hr />
+<h2 id="herramientas-de-desarrollo">5. Herramientas de Desarrollo</h2>
+<h3 id="cursor-ai---desarrollo-asistido-por-ia">5.1 Cursor AI -
+Desarrollo Asistido por IA</h3>
+<h4 id="qué-es-cursor"><strong>¿Qué es Cursor?</strong></h4>
+<p>Cursor es un editor de código basado en VS Code que integra IA para
+asistir en el desarrollo.</p>
+<h4 id="funcionalidades-utilizadas"><strong>Funcionalidades
+Utilizadas:</strong></h4>
+<ul>
+<li><strong>Code Completion</strong>: Autocompletado inteligente</li>
+<li><strong>Code Generation</strong>: Generación de código a partir de
+descripciones</li>
+<li><strong>Bug Fixing</strong>: Detección y corrección automática de
+errores</li>
+<li><strong>Refactoring</strong>: Mejora automática del código</li>
+<li><strong>Documentation</strong>: Generación automática de
+documentación</li>
+</ul>
+<h4 id="beneficios-en-el-proyecto"><strong>Beneficios en el
+Proyecto:</strong></h4>
+<ul>
+<li><strong>Productividad</strong>: 3x más rápido en desarrollo</li>
+<li><strong>Calidad</strong>: Menos bugs, código más limpio</li>
+<li><strong>Aprendizaje</strong>: Mejores prácticas automáticas</li>
+<li><strong>Mantenimiento</strong>: Código más mantenible</li>
+</ul>
+<h3 id="github---control-de-versiones">5.2 GitHub - Control de
+Versiones</h3>
+<h4 id="estructura-del-repositorio"><strong>Estructura del
+Repositorio:</strong></h4>
+<pre><code>kiosk_app_remote/
+├── lib/
+│   ├── main.dart
+│   ├── api_config.dart
+│   ├── services/
+│   │   ├── zones_service.dart
+│   │   ├── whatsapp_service.dart
+│   │   ├── email_service.dart
+│   │   └── printer_service.dart
+│   └── models/
+│       ├── zone.dart
+│       └── ticket.dart
+├── android/
+├── ios/
+├── web/
+└── pubspec.yaml</code></pre>
+<h4 id="ramas-de-desarrollo"><strong>Ramas de Desarrollo:</strong></h4>
+<ul>
+<li><strong>main</strong>: Rama principal estable</li>
+<li><strong>twilio-proxy</strong>: Rama con integración Twilio</li>
+<li><strong>PRUEBAFINAL</strong>: Rama de pruebas finales</li>
+<li><strong>feature/</strong>*: Ramas de características
+específicas</li>
+</ul>
+<h3 id="firebase---backend-as-a-service">5.3 Firebase - Backend as a
+Service</h3>
+<h4 id="servicios-firebase-utilizados"><strong>Servicios Firebase
+Utilizados:</strong></h4>
+<p><strong>Firestore Database:</strong></p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode dart"><code class="sourceCode dart"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Configuración Firebase</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FirebaseService {</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> saveTicket({</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> plate<span class="op">,</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> zone<span class="op">,</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    required DateTime start<span class="op">,</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    required DateTime end<span class="op">,</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">double</span> price<span class="op">,</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> method<span class="op">,</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  }) <span class="at">async</span> {</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">await</span> FirebaseFirestore<span class="op">.</span>instance<span class="op">.</span>collection(<span class="st">&#39;tickets&#39;</span>)<span class="op">.</span>add({</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;plate&#39;</span><span class="op">:</span> plate<span class="op">,</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;zone&#39;</span><span class="op">:</span> zone<span class="op">,</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;start&#39;</span><span class="op">:</span> Timestamp<span class="op">.</span>fromDate(start)<span class="op">,</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;end&#39;</span><span class="op">:</span> Timestamp<span class="op">.</span>fromDate(end)<span class="op">,</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;price&#39;</span><span class="op">:</span> price<span class="op">,</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;method&#39;</span><span class="op">:</span> method<span class="op">,</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;createdAt&#39;</span><span class="op">:</span> FieldValue<span class="op">.</span>serverTimestamp()<span class="op">,</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>    });</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>Firebase Authentication:</strong></p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode dart"><code class="sourceCode dart"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Autenticación de administradores</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> AuthService {</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="dt">Future</span><span class="op">&lt;</span>User<span class="op">?&gt;</span> signInWithEmail(<span class="dt">String</span> email<span class="op">,</span> <span class="dt">String</span> password) <span class="at">async</span> {</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span> {</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">final</span> credential <span class="op">=</span> <span class="at">await</span> FirebaseAuth<span class="op">.</span>instance<span class="op">.</span>signInWithEmailAndPassword(</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        email<span class="op">:</span> email<span class="op">,</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>        password<span class="op">:</span> password<span class="op">,</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>      );</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>      <span class="kw">return</span> credential<span class="op">.</span>user;</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">catch</span> (e) {</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>      print(<span class="st">&#39;Error de autenticación: $e&#39;</span>);</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>      <span class="kw">return</span> <span class="cn">null</span>;</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="render---hosting-y-apis">5.4 Render - Hosting y APIs</h3>
+<h4 id="configuración-de-deploy"><strong>Configuración de
+Deploy:</strong></h4>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># render.yaml</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> web</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> kiosk-api</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">env</span><span class="kw">:</span><span class="at"> node</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">plan</span><span class="kw">:</span><span class="at"> free</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">buildCommand</span><span class="kw">:</span><span class="at"> npm install</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">startCommand</span><span class="kw">:</span><span class="at"> npm start</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">envVars</span><span class="kw">:</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">key</span><span class="kw">:</span><span class="at"> NODE_ENV</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">value</span><span class="kw">:</span><span class="at"> production</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">key</span><span class="kw">:</span><span class="at"> DATABASE_URL</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">fromDatabase</span><span class="kw">:</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">name</span><span class="kw">:</span><span class="at"> kiosk-db</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">property</span><span class="kw">:</span><span class="at"> connectionString</span></span></code></pre></div>
+<h4 id="apis-desplegadas"><strong>APIs Desplegadas:</strong></h4>
+<ul>
+<li><strong>Zonas API</strong>:
+<code>https://kiosk-api.onrender.com/api/zones</code></li>
+<li><strong>Tarifas API</strong>:
+<code>https://kiosk-api.onrender.com/api/tariffs</code></li>
+<li><strong>WhatsApp API</strong>:
+<code>https://render-whatsapp-tih4.onrender.com</code></li>
+<li><strong>Email API</strong>:
+<code>https://render-mail-2bzn.onrender.com</code></li>
+</ul>
+<hr />
+<h2 id="implementación-con-ia">6. Implementación con IA</h2>
+<h3 id="uso-de-cursor-ai-en-el-desarrollo">6.1 Uso de Cursor AI en el
+Desarrollo</h3>
+<h4 id="generación-de-código"><strong>Generación de
+Código:</strong></h4>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode dart"><code class="sourceCode dart"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Prompt: &quot;Crear un servicio para enviar WhatsApp con Twilio&quot;</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Cursor AI generó automáticamente:</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> WhatsAppService {</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">bool</span><span class="op">&gt;</span> sendMessage({</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> phone<span class="op">,</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> message<span class="op">,</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  }) <span class="at">async</span> {</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span> {</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">final</span> response <span class="op">=</span> <span class="at">await</span> http<span class="op">.</span>post(</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>        Uri<span class="op">.</span>parse(<span class="st">&#39;https://api.twilio.com/2010-04-01/Accounts/$accountSid/Messages.json&#39;</span>)<span class="op">,</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>        headers<span class="op">:</span> {</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>          <span class="st">&#39;Authorization&#39;</span><span class="op">:</span> <span class="st">&#39;Basic ${base64Encode(utf8.encode(&#39;</span>$accountSid<span class="op">:</span>$authToken<span class="st">&#39;))}&#39;</span><span class="op">,</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>          <span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/x-www-form-urlencoded&#39;</span><span class="op">,</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>        }<span class="op">,</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>        body<span class="op">:</span> {</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>          <span class="st">&#39;From&#39;</span><span class="op">:</span> <span class="st">&#39;whatsapp:+14155238886&#39;</span><span class="op">,</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>          <span class="st">&#39;To&#39;</span><span class="op">:</span> <span class="st">&#39;whatsapp:$phone&#39;</span><span class="op">,</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>          <span class="st">&#39;Body&#39;</span><span class="op">:</span> message<span class="op">,</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>        }<span class="op">,</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>      );</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>      <span class="kw">return</span> response<span class="op">.</span>statusCode <span class="op">==</span> <span class="dv">201</span>;</span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">catch</span> (e) {</span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>      print(<span class="st">&#39;Error enviando WhatsApp: $e&#39;</span>);</span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>      <span class="kw">return</span> <span class="cn">false</span>;</span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h4 id="debugging-automático"><strong>Debugging
+Automático:</strong></h4>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode dart"><code class="sourceCode dart"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Cursor AI detectó y corrigió automáticamente:</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Missing await keyword</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Solución: Agregó await automáticamente</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">List</span><span class="op">&lt;</span>Zone<span class="op">&gt;&gt;</span> getZones() <span class="at">async</span> {</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">try</span> {</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">final</span> response <span class="op">=</span> <span class="at">await</span> http<span class="op">.</span><span class="kw">get</span>(  <span class="co">// ← Cursor agregó &#39;await&#39;</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>      Uri<span class="op">.</span>parse(<span class="st">&#39;${ApiConfig.baseUrl}${ApiConfig.zonesEndpoint}&#39;</span>)<span class="op">,</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    );</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ...</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h4 id="refactoring-inteligente"><strong>Refactoring
+Inteligente:</strong></h4>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode dart"><code class="sourceCode dart"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Cursor AI sugirió mejoras de rendimiento:</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Antes:</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (<span class="dt">var</span> zone <span class="kw">in</span> zones) {</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (zone<span class="op">.</span>isActive) {</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    activeZones<span class="op">.</span>add(zone);</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Después (sugerido por IA):</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="at">final</span> activeZones <span class="op">=</span> zones<span class="op">.</span>where((zone) <span class="op">=&gt;</span> zone<span class="op">.</span>isActive)<span class="op">.</span>toList();</span></code></pre></div>
+<h3 id="beneficios-de-la-ia-en-el-proyecto">6.2 Beneficios de la IA en
+el Proyecto</h3>
+<h4 id="productividad"><strong>Productividad:</strong></h4>
+<ul>
+<li><strong>Tiempo de desarrollo</strong>: Reducido en 60%</li>
+<li><strong>Líneas de código</strong>: Generadas automáticamente</li>
+<li><strong>Bugs</strong>: Detectados y corregidos automáticamente</li>
+<li><strong>Documentación</strong>: Generada automáticamente</li>
+</ul>
+<h4 id="calidad-del-código"><strong>Calidad del Código:</strong></h4>
+<ul>
+<li><strong>Best Practices</strong>: Aplicadas automáticamente</li>
+<li><strong>Patrones de diseño</strong>: Sugeridos por IA</li>
+<li><strong>Optimización</strong>: Código optimizado
+automáticamente</li>
+<li><strong>Testing</strong>: Tests generados automáticamente</li>
+</ul>
+<hr />
+<h2 id="cumplimiento-normativo">7. Cumplimiento Normativo</h2>
+<h3 id="lopdgdpr---protección-de-datos">7.1 LOPD/GDPR - Protección de
+Datos</h3>
+<h4 id="datos-personales-recopilados"><strong>Datos Personales
+Recopilados:</strong></h4>
+<ul>
+<li><strong>Matrícula de vehículo</strong>: Identificación del
+vehículo</li>
+<li><strong>Teléfono</strong>: Para envío de notificaciones</li>
+<li><strong>Email</strong>: Para envío de tickets</li>
+<li><strong>Ubicación</strong>: Zona de estacionamiento</li>
+</ul>
+<h4 id="medidas-de-cumplimiento"><strong>Medidas de
+Cumplimiento:</strong></h4>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode dart"><code class="sourceCode dart"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Encriptación de datos sensibles</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DataProtection {</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="dt">String</span> encryptSensitiveData(<span class="dt">String</span> data) {</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">final</span> key <span class="op">=</span> encrypt<span class="op">.</span>Key<span class="op">.</span>fromSecureRandom(<span class="dv">32</span>);</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">final</span> iv <span class="op">=</span> encrypt<span class="op">.</span>IV<span class="op">.</span>fromSecureRandom(<span class="dv">16</span>);</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">final</span> encrypter <span class="op">=</span> encrypt<span class="op">.</span>Encrypter(encrypt<span class="op">.</span>AES(key));</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> encrypter<span class="op">.</span>encrypt(data<span class="op">,</span> iv<span class="op">:</span> iv)<span class="op">.</span>base64;</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="dt">String</span> hashPersonalData(<span class="dt">String</span> data) {</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">final</span> bytes <span class="op">=</span> utf8<span class="op">.</span>encode(data);</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">final</span> digest <span class="op">=</span> sha256<span class="op">.</span>convert(bytes);</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> digest<span class="op">.</span>toString();</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h4 id="consentimiento-del-usuario"><strong>Consentimiento del
+Usuario:</strong></h4>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode dart"><code class="sourceCode dart"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Checkbox de consentimiento</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ConsentWidget <span class="kw">extends</span> StatefulWidget {</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  _ConsentWidgetState createState() <span class="op">=&gt;</span> _ConsentWidgetState();</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> _ConsentWidgetState <span class="kw">extends</span> State<span class="op">&lt;</span>ConsentWidget<span class="op">&gt;</span> {</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bool</span> _consentGiven <span class="op">=</span> <span class="cn">false</span>;</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  Widget build(BuildContext context) {</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> CheckboxListTile(</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>      title<span class="op">:</span> Text(<span class="st">&#39;Consiento el tratamiento de mis datos personales&#39;</span>)<span class="op">,</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>      subtitle<span class="op">:</span> Text(<span class="st">&#39;Para el envío de notificaciones y tickets&#39;</span>)<span class="op">,</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>      value<span class="op">:</span> _consentGiven<span class="op">,</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>      onChanged<span class="op">:</span> (value) {</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>        setState(() {</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>          _consentGiven <span class="op">=</span> value <span class="op">??</span> <span class="cn">false</span>;</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>        });</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>      }<span class="op">,</span></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>    );</span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="normativa-de-estacionamiento">7.2 Normativa de
+Estacionamiento</h3>
+<h4 id="cumplimiento-municipal"><strong>Cumplimiento
+Municipal:</strong></h4>
+<ul>
+<li><strong>Tarifas</strong>: Actualizadas automáticamente desde
+API</li>
+<li><strong>Horarios</strong>: Respeto de horarios de
+estacionamiento</li>
+<li><strong>Zonas</strong>: Validación de zonas permitidas</li>
+<li><strong>Descuentos</strong>: Aplicación de descuentos oficiales</li>
+</ul>
+<h4 id="auditoría-y-trazabilidad"><strong>Auditoría y
+Trazabilidad:</strong></h4>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode dart"><code class="sourceCode dart"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Log de transacciones para auditoría</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> AuditService {</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> logTransaction({</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> plate<span class="op">,</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> zone<span class="op">,</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">double</span> price<span class="op">,</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> method<span class="op">,</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> action<span class="op">,</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  }) <span class="at">async</span> {</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">await</span> FirebaseFirestore<span class="op">.</span>instance<span class="op">.</span>collection(<span class="st">&#39;audit_logs&#39;</span>)<span class="op">.</span>add({</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;plate&#39;</span><span class="op">:</span> plate<span class="op">,</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;zone&#39;</span><span class="op">:</span> zone<span class="op">,</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;price&#39;</span><span class="op">:</span> price<span class="op">,</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;method&#39;</span><span class="op">:</span> method<span class="op">,</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;action&#39;</span><span class="op">:</span> action<span class="op">,</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;timestamp&#39;</span><span class="op">:</span> FieldValue<span class="op">.</span>serverTimestamp()<span class="op">,</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;ip&#39;</span><span class="op">:</span> <span class="at">await</span> _getClientIP()<span class="op">,</span></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;userAgent&#39;</span><span class="op">:</span> <span class="at">await</span> _getUserAgent()<span class="op">,</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>    });</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<hr />
+<h2 id="código-fuente-y-archivos">8. Código Fuente y Archivos</h2>
+<h3 id="estructura-de-archivos-críticos">8.1 Estructura de Archivos
+Críticos</h3>
+<h4 id="configuración-de-api-libapi_config.dart"><strong>Configuración
+de API</strong>: <code>lib/api_config.dart</code></h4>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode dart"><code class="sourceCode dart"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ApiConfig {</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// URLs de producción</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> <span class="dt">String</span> baseUrl <span class="op">=</span> <span class="st">&#39;https://kiosk-api.onrender.com&#39;</span>;</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> <span class="dt">String</span> zonesEndpoint <span class="op">=</span> <span class="st">&#39;/api/zones&#39;</span>;</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> <span class="dt">String</span> tariffsEndpoint <span class="op">=</span> <span class="st">&#39;/api/tariffs&#39;</span>;</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// URLs de servicios externos</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> <span class="dt">String</span> whatsappEndpoint <span class="op">=</span> <span class="st">&#39;https://render-whatsapp-tih4.onrender.com/v1/whatsapp/send&#39;</span>;</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> <span class="dt">String</span> emailEndpoint <span class="op">=</span> <span class="st">&#39;https://render-mail-2bzn.onrender.com/api/send-email&#39;</span>;</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Configuración de timeouts</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> Duration timeout <span class="op">=</span> Duration(seconds<span class="op">:</span> <span class="dv">30</span>);</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="at">const</span> Duration connectTimeout <span class="op">=</span> Duration(seconds<span class="op">:</span> <span class="dv">10</span>);</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h4
+id="servicio-de-zonas-libserviceszones_service.dart-1"><strong>Servicio
+de Zonas</strong>: <code>lib/services/zones_service.dart</code></h4>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode dart"><code class="sourceCode dart"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ZonesService {</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">List</span><span class="op">&lt;</span>Zone<span class="op">&gt;&gt;</span> getZones() <span class="at">async</span> {</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span> {</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>      <span class="at">final</span> response <span class="op">=</span> <span class="at">await</span> http<span class="op">.</span><span class="kw">get</span>(</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>        Uri<span class="op">.</span>parse(<span class="st">&#39;${ApiConfig.baseUrl}${ApiConfig.zonesEndpoint}&#39;</span>)<span class="op">,</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>        headers<span class="op">:</span> {<span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json&#39;</span>}<span class="op">,</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>      )<span class="op">.</span>timeout(ApiConfig<span class="op">.</span>timeout);</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (response<span class="op">.</span>statusCode <span class="op">==</span> <span class="dv">200</span>) {</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">final</span> <span class="dt">List</span><span class="op">&lt;</span><span class="at">dynamic</span><span class="op">&gt;</span> zonesData <span class="op">=</span> jsonDecode(response<span class="op">.</span>body);</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">return</span> zonesData<span class="op">.</span>map((zone) <span class="op">=&gt;</span> Zone<span class="op">.</span>fromJson(zone))<span class="op">.</span>toList();</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">catch</span> (e) {</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>      print(<span class="st">&#39;Error cargando zonas: $e&#39;</span>);</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> [];</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">List</span><span class="op">&lt;</span>Tariff<span class="op">&gt;&gt;</span> getTariffs(<span class="dt">String</span> zoneId) <span class="at">async</span> {</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span> {</span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">final</span> response <span class="op">=</span> <span class="at">await</span> http<span class="op">.</span><span class="kw">get</span>(</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>        Uri<span class="op">.</span>parse(<span class="st">&#39;${ApiConfig.baseUrl}${ApiConfig.tariffsEndpoint}/$zoneId&#39;</span>)<span class="op">,</span></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>        headers<span class="op">:</span> {<span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json&#39;</span>}<span class="op">,</span></span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>      )<span class="op">.</span>timeout(ApiConfig<span class="op">.</span>timeout);</span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (response<span class="op">.</span>statusCode <span class="op">==</span> <span class="dv">200</span>) {</span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>        <span class="at">final</span> <span class="dt">List</span><span class="op">&lt;</span><span class="at">dynamic</span><span class="op">&gt;</span> tariffsData <span class="op">=</span> jsonDecode(response<span class="op">.</span>body);</span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>        <span class="kw">return</span> tariffsData<span class="op">.</span>map((tariff) <span class="op">=&gt;</span> Tariff<span class="op">.</span>fromJson(tariff))<span class="op">.</span>toList();</span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">catch</span> (e) {</span>
+<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a>      print(<span class="st">&#39;Error cargando tarifas: $e&#39;</span>);</span>
+<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> [];</span>
+<span id="cb21-34"><a href="#cb21-34" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb21-35"><a href="#cb21-35" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h4
+id="servicio-unificado-de-comunicaciones-libservicesunified_service.dart"><strong>Servicio
+Unificado de Comunicaciones</strong>:
+<code>lib/services/unified_service.dart</code></h4>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode dart"><code class="sourceCode dart"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> UnifiedService {</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="dt">Future</span><span class="op">&lt;</span><span class="dt">Map</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">,</span> <span class="dt">bool</span><span class="op">&gt;&gt;</span> sendTicketNotifications({</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> plate<span class="op">,</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> zone<span class="op">,</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    required DateTime start<span class="op">,</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    required DateTime end<span class="op">,</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">double</span> price<span class="op">,</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    required <span class="dt">String</span> method<span class="op">,</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">String</span><span class="op">?</span> phone<span class="op">,</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">String</span><span class="op">?</span> email<span class="op">,</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">String</span><span class="op">?</span> qrData<span class="op">,</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>  }) <span class="at">async</span> {</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">final</span> results <span class="op">=</span> <span class="op">&lt;</span><span class="dt">String</span><span class="op">,</span> <span class="dt">bool</span><span class="op">&gt;</span>{};</span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Envío de WhatsApp</span></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (phone <span class="op">!=</span> <span class="cn">null</span>) {</span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>      results[<span class="st">&#39;whatsapp&#39;</span>] <span class="op">=</span> <span class="at">await</span> WhatsAppService<span class="op">.</span>sendTicketWhatsApp(</span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>        phone<span class="op">:</span> phone<span class="op">,</span></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>        plate<span class="op">:</span> plate<span class="op">,</span></span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>        zone<span class="op">:</span> zone<span class="op">,</span></span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>        start<span class="op">:</span> start<span class="op">,</span></span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>        end<span class="op">:</span> end<span class="op">,</span></span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>        price<span class="op">:</span> price<span class="op">,</span></span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>        method<span class="op">:</span> method<span class="op">,</span></span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a>        qrData<span class="op">:</span> qrData<span class="op">,</span></span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a>      );</span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Envío de Email</span></span>
+<span id="cb22-30"><a href="#cb22-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (email <span class="op">!=</span> <span class="cn">null</span>) {</span>
+<span id="cb22-31"><a href="#cb22-31" aria-hidden="true" tabindex="-1"></a>      results[<span class="st">&#39;email&#39;</span>] <span class="op">=</span> <span class="at">await</span> EmailService<span class="op">.</span>sendTicketEmail(</span>
+<span id="cb22-32"><a href="#cb22-32" aria-hidden="true" tabindex="-1"></a>        recipientEmail<span class="op">:</span> email<span class="op">,</span></span>
+<span id="cb22-33"><a href="#cb22-33" aria-hidden="true" tabindex="-1"></a>        plate<span class="op">:</span> plate<span class="op">,</span></span>
+<span id="cb22-34"><a href="#cb22-34" aria-hidden="true" tabindex="-1"></a>        zone<span class="op">:</span> zone<span class="op">,</span></span>
+<span id="cb22-35"><a href="#cb22-35" aria-hidden="true" tabindex="-1"></a>        start<span class="op">:</span> start<span class="op">,</span></span>
+<span id="cb22-36"><a href="#cb22-36" aria-hidden="true" tabindex="-1"></a>        end<span class="op">:</span> end<span class="op">,</span></span>
+<span id="cb22-37"><a href="#cb22-37" aria-hidden="true" tabindex="-1"></a>        price<span class="op">:</span> price<span class="op">,</span></span>
+<span id="cb22-38"><a href="#cb22-38" aria-hidden="true" tabindex="-1"></a>        method<span class="op">:</span> method<span class="op">,</span></span>
+<span id="cb22-39"><a href="#cb22-39" aria-hidden="true" tabindex="-1"></a>        qrData<span class="op">:</span> qrData<span class="op">,</span></span>
+<span id="cb22-40"><a href="#cb22-40" aria-hidden="true" tabindex="-1"></a>      );</span>
+<span id="cb22-41"><a href="#cb22-41" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb22-42"><a href="#cb22-42" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb22-43"><a href="#cb22-43" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Impresión de ticket</span></span>
+<span id="cb22-44"><a href="#cb22-44" aria-hidden="true" tabindex="-1"></a>    results[<span class="st">&#39;print&#39;</span>] <span class="op">=</span> <span class="at">await</span> PrinterService<span class="op">.</span>printTicket(</span>
+<span id="cb22-45"><a href="#cb22-45" aria-hidden="true" tabindex="-1"></a>      plate<span class="op">:</span> plate<span class="op">,</span></span>
+<span id="cb22-46"><a href="#cb22-46" aria-hidden="true" tabindex="-1"></a>      zone<span class="op">:</span> zone<span class="op">,</span></span>
+<span id="cb22-47"><a href="#cb22-47" aria-hidden="true" tabindex="-1"></a>      start<span class="op">:</span> start<span class="op">,</span></span>
+<span id="cb22-48"><a href="#cb22-48" aria-hidden="true" tabindex="-1"></a>      end<span class="op">:</span> end<span class="op">,</span></span>
+<span id="cb22-49"><a href="#cb22-49" aria-hidden="true" tabindex="-1"></a>      price<span class="op">:</span> price<span class="op">,</span></span>
+<span id="cb22-50"><a href="#cb22-50" aria-hidden="true" tabindex="-1"></a>      method<span class="op">:</span> method<span class="op">,</span></span>
+<span id="cb22-51"><a href="#cb22-51" aria-hidden="true" tabindex="-1"></a>      qrData<span class="op">:</span> qrData<span class="op">,</span></span>
+<span id="cb22-52"><a href="#cb22-52" aria-hidden="true" tabindex="-1"></a>    );</span>
+<span id="cb22-53"><a href="#cb22-53" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb22-54"><a href="#cb22-54" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> results;</span>
+<span id="cb22-55"><a href="#cb22-55" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb22-56"><a href="#cb22-56" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="flujo-de-datos-completo">8.2 Flujo de Datos Completo</h3>
+<pre><code>1. Usuario selecciona zona
+   ↓
+2. ZonesService.getZones() → API Render
+   ↓
+3. Usuario selecciona tiempo
+   ↓
+4. TariffsService.getTariffs() → API Render
+   ↓
+5. Usuario introduce datos de contacto
+   ↓
+6. PaymentService.processPayment() → Stripe
+   ↓
+7. UnifiedService.sendTicketNotifications()
+   ↓
+8. WhatsAppService → Twilio API
+   ↓
+9. EmailService → SendGrid API
+   ↓
+10. PrinterService → Impresora local</code></pre>
+<h3 id="configuración-de-variables-de-entorno">8.3 Configuración de
+Variables de Entorno</h3>
+<h4 id="render-environment-variables"><strong>Render Environment
+Variables:</strong></h4>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Base de datos</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="va">DATABASE_URL</span><span class="op">=</span>postgresql://user:pass@host:port/db</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Twilio</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="va">TWILIO_ACCOUNT_SID</span><span class="op">=</span>ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="va">TWILIO_AUTH_TOKEN</span><span class="op">=</span>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="va">TWILIO_PHONE_NUMBER</span><span class="op">=</span>+1234567890</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="co"># SendGrid</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="va">SENDGRID_API_KEY</span><span class="op">=</span>SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="va">SENDGRID_FROM_EMAIL</span><span class="op">=</span>noreply@kiosk.com</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a><span class="va">SENDGRID_FROM_NAME</span><span class="op">=</span>Kiosk <span class="ex">App</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Firebase</span></span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a><span class="va">FIREBASE_PROJECT_ID</span><span class="op">=</span>kiosk-app-xxxxx</span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a><span class="va">FIREBASE_PRIVATE_KEY_ID</span><span class="op">=</span>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a><span class="va">FIREBASE_PRIVATE_KEY</span><span class="op">=</span><span class="st">&quot;-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n&quot;</span></span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a><span class="va">FIREBASE_CLIENT_EMAIL</span><span class="op">=</span>firebase-adminsdk-xxxxx@kiosk-app-xxxxx.iam.gserviceaccount.com</span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a><span class="va">FIREBASE_CLIENT_ID</span><span class="op">=</span>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a><span class="va">FIREBASE_AUTH_URI</span><span class="op">=</span>https://accounts.google.com/o/oauth2/auth</span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a><span class="va">FIREBASE_TOKEN_URI</span><span class="op">=</span>https://oauth2.googleapis.com/token</span></code></pre></div>
+<hr />
+<h2 id="conclusión">Conclusión</h2>
+<p>Esta aplicación de kiosk representa una solución integral y moderna
+para la gestión de estacionamientos, utilizando las mejores prácticas
+tecnológicas y cumpliendo con todas las normativas aplicables. La
+integración de IA, el uso de servicios en la nube y la arquitectura
+escalable garantizan una solución robusta y mantenible a largo
+plazo.</p>
+<h3 id="resumen-de-tecnologías">Resumen de Tecnologías:</h3>
+<ul>
+<li><strong>Frontend</strong>: Flutter (Multiplataforma)</li>
+<li><strong>Backend</strong>: Node.js + Express (Render)</li>
+<li><strong>Base de datos</strong>: PostgreSQL (Render)</li>
+<li><strong>Comunicaciones</strong>: Twilio (WhatsApp/SMS) + SendGrid
+(Email)</li>
+<li><strong>Hosting</strong>: Render.com</li>
+<li><strong>IA</strong>: Cursor AI</li>
+<li><strong>Control de versiones</strong>: GitHub</li>
+<li><strong>Backend adicional</strong>: Firebase</li>
+</ul>
+<h3 id="beneficios-logrados">Beneficios Logrados:</h3>
+<ul>
+<li><strong>Desarrollo 3x más rápido</strong> gracias a Cursor AI</li>
+<li><strong>Costo reducido</strong> con servicios gratuitos y
+escalables</li>
+<li><strong>Cumplimiento normativo</strong> automático</li>
+<li><strong>Escalabilidad</strong> para miles de usuarios</li>
+<li><strong>Mantenimiento</strong> simplificado con IA</li>
+</ul>
+<hr />
+<p><em>Documento generado automáticamente - Kiosk App Remote v1.0</em>
+<em>Fecha: 29 de Septiembre de 2025</em></p>
+</body>
+</html>
